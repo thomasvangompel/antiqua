@@ -1,0 +1,76 @@
+boekenzot/
+│
+├── app/                         # Hoofdapplicatie map
+│   ├── __init__.py              # Maakt de app aan, configureert extensies
+│   ├── routes.py                # Alle Flask-routes (home, login, dashboard, etc.)
+│   ├── models.py                # Database modellen (User, Book)
+│   ├── forms.py                 # Flask-WTF formulieren (LoginForm, RegisterForm, BookForm)
+│   ├── templates/              # Jinja2 HTML-templates
+│   │   ├── base.html           # Basis layout met Bootstrap en navbar
+│   │   ├── home.html           # Startpagina (hero + CTA)
+│   │   ├── register.html       # Registratieformulier
+│   │   ├── login.html          # Loginformulier
+│   │   ├── dashboard.html      # Boekenoverzicht voor ingelogde gebruiker
+│   │   ├── new_book.html       # Formulier om nieuw boek toe te voegen
+│   │   └── edit_book.html      # Formulier om boek te bewerken
+│   └── static/                 # (optioneel) CSS, JS, afbeeldingen
+│
+├── init_db.py                  # Script om de database aan te maken
+├── run.py (of main.py)         # Start de Flask app (optioneel, afhankelijk van je setup)
+├── requirements.txt            # (optioneel) Lijst van Python packages
+└── venv/ (optioneel)           # Virtuele omgeving voor Python packages
+
+
+voor chatgpt: 
+
+"Ik werk aan een Flask-project genaamd BoekenZot. Het is een app waar gebruikers zich registreren,
+ inloggen en hun eigen boeken kunnen beheren (CRUD). Ik heb gebruikersbeheer, boekenbeheer en templates al werkend.
+  We hebben ook Bootstrap toegevoegd. Ik wil graag verder werken aan [vul hier je volgende doel in, bv: responsive design, 
+  upload van boekcovers, of online deployment met Render/Heroku]."
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+   Database-structuur (datamodel)
+Je hebt twee modellen/tabeldefinities: User en Book.
+
+🧑‍💼 User-tabel
+Kolomnaam	Type	Eigenschappen
+id	Integer	Primaire sleutel, uniek
+username	String(150)	Uniek, verplicht
+email	String(150)	Uniek, verplicht
+password	String(200)	Gehashed wachtwoord, verplicht
+
+✅ Relatie:
+Eén gebruiker kan meerdere boeken hebben → One-to-Many met Book.
+
+📚 Book-tabel
+Kolomnaam	Type	Eigenschappen
+id	Integer	Primaire sleutel, uniek
+title	String(150)	Verplicht
+author	String(100)	Verplicht
+description	Text	Optioneel
+user_id	Integer	Verwijzing naar User.id (foreign key)
+
+✅ Relatie:
+Elk boek is gekoppeld aan één gebruiker → Many-to-One.
+
+🔗 Relatieschema visueel
+scss
+Copy
+Edit
+User (1) ─────────────┐
+                      │
+                      ▼
+                 Book (veel)
+Met de SQLAlchemy-relatie:
+
+python
+Copy
+Edit
+# In User:
+books = db.relationship('Book', back_populates='user', lazy=True)
+
+# In Book:
+user = db.relationship('User', back_populates='books')

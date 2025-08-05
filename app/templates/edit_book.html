@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+  <h2>Boek bewerken</h2>
+  <form method="POST">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      {{ form.title.label(class="form-label") }}
+      {{ form.title(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.author.label(class="form-label") }}
+      {{ form.author(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.author_description.label(class="form-label") }}
+      {{ form.author_description(class="form-control", rows=4) }}
+      <small class="form-text text-muted">Bewerk de auteursbeschrijving</small>
+    </div>
+
+
+    <div class="mb-3">
+      {{ form.description.label(class="form-label") }}
+      {{ form.description(class="form-control", rows=4) }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.genre.label(class="form-label") }}
+      {{ form.genre(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.price.label(class="form-label") }}
+      {{ form.price(class="form-control", step="0.01") }}
+      <small class="form-text text-muted">Geef de prijs op in euro's, bijvoorbeeld 12.50</small>
+    </div>
+
+    <div class="mb-3">
+      {{ form.tags.label(class="form-label") }}
+      {{ form.tags(class="form-control") }}
+      <small class="form-text text-muted">Gebruik max. 5 tags, gescheiden door komma's</small>
+    </div>
+
+    {{ form.submit(class="btn btn-primary") }}
+  </form>
+</div>
+{% endblock %}

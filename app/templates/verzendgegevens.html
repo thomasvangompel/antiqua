@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Verzendgegevens{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Standaard verzend- en betaalinstellingen</h2>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+
+        <div class="row">
+            <!-- TRANSPORT -->
+            <div class="col-md-6">
+                <h5>Transportopties</h5>
+                <div class="form-check mb-3">
+                    {{ form.allow_shipping(class="form-check-input", id="allowShipping") }}
+                    <label class="form-check-label" for="allowShipping">Verzending toestaan?</label>
+                    {% for error in form.allow_shipping.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3" id="shippingCostGroup">
+                    {{ form.shipping_cost.label(class="form-label") }}
+                    {{ form.shipping_cost(class="form-control", placeholder="Bijv. 4.95") }}
+                    {% for error in form.shipping_cost.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-check mb-3">
+                     {{ form.pickup_only(class="form-check-input", id="pickupOnly") }}
+                     <label class="form-check-label" for="pickupOnly">Afhalen toestaan?</label>
+                </div>
+
+            </div>
+
+            <!-- BETALING -->
+            <div class="col-md-6">
+                <h5>Betaalmethoden</h5>
+                <div class="form-check mb-3">
+                    {{ form.platform_payment_only(class="form-check-input", id="platformPayment") }}
+                    <label class="form-check-label" for="platformPayment">Betaling via platform (aanbevolen)</label>
+                    {% for error in form.platform_payment_only.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-check mb-3">
+                    {{ form.cash_payment_allowed(class="form-check-input", id="cashPayment") }}
+                    <label class="form-check-label" for="cashPayment">Ter plaatse betalen bij afhaling toestaan</label>
+                    {% for error in form.cash_payment_allowed.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">{{ form.submit.label.text }}</button>
+    </form>
+</div>
+
+<script>
+    const allowShipping = document.getElementById("allowShipping");
+    const shippingCostGroup = document.getElementById("shippingCostGroup");
+
+    function toggleShippingCost() {
+        shippingCostGroup.style.display = allowShipping.checked ? "block" : "none";
+    }
+
+    allowShipping.addEventListener("change", toggleShippingCost);
+    window.addEventListener("load", toggleShippingCost);
+</script>
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>{{ seller.business_name or seller.username }}</h2>
+
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <img src="{{ url_for('static', filename='profile_pics/' + seller.image_file) }}"
+           alt="Profielfoto"
+           class="img-fluid rounded"
+           onerror="this.style.display='none'">
+    </div>
+    <div class="col-md-9">
+      <p><strong>Locatie:</strong> {{ seller.city or 'Onbekend' }}</p>
+      <p><strong>Totaal verkochte boeken:</strong> {{ total_sold }}</p>
+    </div>
+  </div>
+
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3">
+    <h4>Reviews</h4>
+    <a href="{{ url_for('main.contact_seller', business_name=seller.business_name) }}" 
+       class="btn btn-success mt-3 mt-md-0">
+      Stuur bericht naar verkoper
+    </a>
+  </div>
+
+  {% if reviews %}
+    <ul class="list-group mb-4">
+      {% for review in reviews %}
+        <li class="list-group-item">
+          <strong>{{ review.author_name }}:</strong> {{ review.content }}
+          <br>
+          <small class="text-muted">{{ review.date_posted.strftime('%d-%m-%Y') }}</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Er zijn nog geen reviews.</p>
+  {% endif %}
+
+  <hr>
+
+  <h4>Genres waarin deze winkel actief is</h4>
+  {% if genres %}
+    <div class="row">
+      {% for genre in genres %}
+        <div class="col-6 col-sm-4 col-md-2 mb-2">
+          <a href="{{ url_for('main.seller_books_by_genre', business_name=seller.business_name, genre=genre) }}"
+             class="btn btn-outline-primary w-100">
+            {{ genre }}
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>Geen genres gevonden.</p>
+  {% endif %}
+
+  <h4 class="mt-4">Tags</h4>
+  {% if tags %}
+    <div class="row">
+      {% for tag in tags %}
+        <div class="col-6 col-sm-4 col-md-2 mb-2">
+          <a href="{{ url_for('main.seller_books_by_tag', business_name=seller.business_name, tag_name=tag.name) }}"
+             class="btn btn-outline-secondary w-100">
+            {{ tag.name }}
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>Geen tags gevonden.</p>
+  {% endif %}
+
+  <hr>
+
+  <h4 class="mt-4">Alle boeken van deze verkoper</h4>
+  {% if books %}
+    <div class="row">
+      {% for book in books %}
+        <div class="col-md-4 mb-4">
+          <div class="card h-100 card-verkoper">
+            {% if book.front_image_url %}
+              <img src="{{ url_for('static', filename='uploads/' + book.front_image) }}"
+                   class="card-img-top"
+                   alt="Boekcover van {{ book.title }}"
+                   style="max-height: 250px; object-fit: contain;">
+            {% endif %}
+            <div class="card-body">
+              <h5 class="card-title">{{ book.title }}</h5>
+              <p class="card-text"><strong>Auteur:</strong> {{ book.author }}</p>
+
+              {% if book.is_auction %}
+                <p class="card-text text-success">
+                  <strong>Hoogste bod:</strong>
+                  {% if highest_bids[book.id] %}
+                    €{{ "%.2f"|format(highest_bids[book.id]) }}
+                  {% else %}
+                    Geen biedingen
+                  {% endif %}
+                </p>
+              {% else %}
+                <p class="card-text"><strong>Prijs:</strong>
+                  {% if book.price is not none %}
+                    €{{ "%.2f"|format(book.price) }}
+                  {% else %}
+                    Niet beschikbaar
+                  {% endif %}
+                </p>
+              {% endif %}
+
+              <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
+                 class="btn btn-primary">
+                Bekijk boek
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>Deze verkoper heeft momenteel geen boeken te koop.</p>
+  {% endif %}
+
+</div>
+{% endblock %}

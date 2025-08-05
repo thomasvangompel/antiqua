@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Zoekresultaten voor "{{ query }}"</h2>
+
+    {% if users %}
+    <h4>Gebruikers</h4>
+    <ul class="list-group mb-4">
+        {% for user in users %}
+        <li class="list-group-item">
+            <a href="{{ url_for('main.books_by_business_name', business_name=user.business_name or user.username) }}">
+                {{ user.business_name or user.username }}
+            </a> - {{ user.city or 'Onbekend' }}
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if results.items %}
+    <h4>Boeken</h4>
+    <div class="row">
+        {% for book in results.items %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 card-verkoper position-relative">
+                {% if book.front_image %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ book.front_image) }}"
+                         alt="Voorkant van {{ book.title }}"
+                         class="card-img-top">
+                    {% if book.sold %}
+                    <span class="badge bg-danger position-absolute top-0 end-0 m-2" style="z-index: 10;">
+                        Verkocht
+                    </span>
+                    {% endif %}
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text"><strong>Auteur:</strong> {{ book.author }}</p>
+                    <p class="card-text"><strong>Genre:</strong> {{ book.genre }}</p>
+                    <p class="card-text"><strong>Prijs:</strong> 
+                        {% if book.price is not none %}
+                            € {{ '%.2f'|format(book.price) }}
+                        {% elif book.is_auction %}
+                            Bieden vanaf €{{ '%.2f'|format(book.auction_min_price) if book.auction_min_price else '0.00' }}
+                        {% else %}
+                            N/B
+                        {% endif %}
+                    </p>
+
+                    <p class="card-text">
+                        <strong>Winkel:</strong>
+                        <a href="{{ url_for('main.public_seller_profile', business_name=book.user.business_name or book.user.username) }}">
+                            {{ book.user.business_name or book.user.username }}
+                        </a>
+                    </p>
+
+                    <p class="card-text"><strong>Plaats:</strong> {{ book.user.city or 'Onbekend' }}</p>
+                    <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="btn btn-primary">Bekijk boek</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Paginatie -->
+    <nav aria-label="Search pagination">
+        <ul class="pagination justify-content-center">
+            {% if results.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.search', query=query, page=results.prev_num) }}">Vorige</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Vorige</span></li>
+            {% endif %}
+
+            {% for p in results.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if p %}
+                <li class="page-item {% if p == results.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('main.search', query=query, page=p) }}">{{ p }}</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if results.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.search', query=query, page=results.next_num) }}">Volgende</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Volgende</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% else %}
+        <p>Geen boeken gevonden.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+
+html, body {
+  height: auto;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    text-align: center;
+    padding-top: 50px;
+}
+
+.profile-pic {
+  width: 125px;
+  height: 125px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: top;
+  display: block;
+}
+
+
+.thumb {
+  border: 2px solid transparent;
+  transition: border-color 0.3s;
+}
+.thumb:hover {
+  border-color: #007bff;
+}
+.active-thumb {
+  border-color: #007bff;
+}
+
+
+
+.custom-container{
+
+max-width: 1400px;
+
+}
+
+
+.brand-bordered{
+
+  border: 2px solid black;
+  border-radius: 0;
+  padding: 5px 10px;
+  display: inline-block;
+
+
+}
+
+.card-verkoper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.card-verkoper img {
+  max-height: 250px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+}
+
+.card-verkoper .card-body {
+  width: 100%;
+}
+
+
+.wrap{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  
+}
+
+.card-promo{
+  border:1px solid black;
+  padding:5px;
+  margin:1px;
+}
+
+.title{
+
+  
+  text-align: center;
+}
+
+.verkoop-sectie{
+
+  margin-top: 3em;
+}
+
+
+
+
+
+
+.btn-main{
+
+  background-color: red;
+}
