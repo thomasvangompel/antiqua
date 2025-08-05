@@ -29,20 +29,18 @@
         {% if current_user.is_authenticated %}
           Hallo {{ current_user.username or current_user.business_name }},
         {% else %}
-          Welkom op Antiqua
+           Grootste Antiqua(riaat) van Belgie
         {% endif %}
       </h1>
 
-      <p class="lead mb-4 text-white">
-        Ontdek waardevolle Oude boeken,posters,postkaarten van Antiquariaten.
-      </p>
+      
 
       <!-- Zoekformulier -->
       <form id="searchForm" action="{{ url_for('main.search') }}" method="GET" class="mb-4">
         <div class="row g-2 justify-content-center">
           <div class="col-12 col-md-8">
             <input type="text" name="query" class="form-control form-control-lg rounded-0"
-                   placeholder="Boek, auteur, genre, regio, tags of handelaars..." required>
+                   placeholder="Zoek waardevolle Boeken, Posters, Postkaarten,..." required>
           </div>
           <div class="col-12 col-md-auto">
             <button class="btn btn-lg w-100 rounded-0"
@@ -56,40 +54,23 @@
     </div>
   </section>
 
-  {% if not current_user.is_authenticated %}
+
     <section class="verkoop-sectie">
-      <div class="title"><h1>Waarom Hier Boeken kopen?</h1></div>
-      <section class="container my-5">
-        <div class="wrap d-flex flex-wrap justify-content-center gap-3">
-          <div class="card-promo text-center rounded-0">Lokaal</div>
-          <div class="card-promo text-center rounded-0">Ecologisch</div>
-          <div class="card-promo text-center rounded-0">Unieke stukken</div>
-          <div class="card-promo text-center rounded-0">Beste service</div>
-          <div class="card-promo text-center rounded-0">Geen kleine letters</div>
-        </div>
-      </section>
+      
 
-      <div class="title"><h1>Waarom Hier Boeken Verkopen?</h1></div>
-      <section class="container my-5">
-        <div class="wrap d-flex flex-wrap justify-content-center gap-3">
-          <div class="card-promo text-center rounded-0">Gratis Klanten</div>
-          <div class="card-promo text-center rounded-0">0% commissie</div>
-          <div class="card-promo text-center rounded-0">Gratis Webwinkel</div>
-          <div class="card-promo text-center rounded-0">Gratis Analyse</div>
-          <div class="card-promo text-center rounded-0">Gratis databeheer voor je boeken</div>
-        </div>
-      </section>
+  <section class="container-section">
+  <div class="oude-postkaarten">
+    <h1>Oude postkaarten</h1>
+  </div>
+  <div class="oude-posters">
+    <h1>Oude posters</h1>
+  </div>
+  <div class="derde-item">
+    <h1>Ephemera</h1>
+  </div>
+</section>
 
-      <section class="container my-5">
-        <div class="text-center rounded-0">
-          <a href="{{ url_for('main.register') }}" class="btn btn-primary rounded-0"
-             style="background-color: #000066; font-size: xx-large; color: white; border: none;">
-            Gratis registreren
-          </a>
-        </div>
-      </section>
-    </section>
-  {% endif %}
+  
 
   <section class="container my-5">
     <div class="d-flex justify-content-between align-items-center mb-3">
