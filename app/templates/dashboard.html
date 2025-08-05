@@ -72,11 +72,13 @@
 
           <!-- Knoppen onderaan -->
           <div class="mt-2">
-            <a href="{{ url_for('main.edit_book', book_id=boek.id) }}" class="btn btn-sm btn-outline-primary me-2">Bewerk</a>
-            <form action="{{ url_for('main.delete_book', book_id=boek.id) }}" method="POST" style="display:inline;">
-              <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Weet je zeker dat je dit boek wilt verwijderen?');">Verwijder</button>
-            </form>
-          </div>
+  <a href="{{ url_for('main.edit_book', book_id=boek.id) }}" class="btn btn-sm btn-outline-primary me-2">Bewerk</a>
+  <a href="{{ url_for('main.book_analytics', book_id=boek.id) }}" class="btn btn-sm btn-outline-info me-2">Analyseer</a>
+  <form action="{{ url_for('main.delete_book', book_id=boek.id) }}" method="POST" style="display:inline;">
+    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Weet je zeker dat je dit boek wilt verwijderen?');">Verwijder</button>
+  </form>
+</div>
+
 
         </div>
       {% endfor %}

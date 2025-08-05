@@ -13,7 +13,7 @@ from geopy.geocoders import Nominatim
 
 from . import db
 from .forms import RegisterForm, LoginForm, BookForm, UpdateProfileForm,MessageForm
-from .models import User, Book, Tag, Message
+from .models import User, Book, Tag, Message,BookView
 from datetime import datetime
 
 from flask_wtf import FlaskForm
@@ -293,6 +293,18 @@ def admin_dashboard():
     return render_template('admin_dashboard.html', users=users, books=books)
 
 
+
+
+@main.route('/admin/delete_book/<int:book_id>', methods=['POST'])
+@login_required
+def delete_book_admin(book_id):
+    boek = Book.query.get_or_404(book_id)
+    db.session.delete(boek)
+    db.session.commit()
+    flash("Boek succesvol verwijderd.", "success")
+    return redirect(url_for('main.admin_dashboard'))
+
+
 @main.route('/admin/delete_user/<int:user_id>', methods=['POST'])
 @login_required
 def delete_user(user_id):
@@ -477,9 +489,18 @@ from flask import request
 from flask import request
 
 @main.route('/books/<int:book_id>', methods=['GET', 'POST'])
-
 def book_detail(book_id):
     book = Book.query.get_or_404(book_id)
+    
+    # NIEUWE BOOKVIEW TOEVOEGEN
+    new_view = BookView(book_id=book.id)
+    db.session.add(new_view)
+    
+    # UPDATE view_count (optioneel, voor snelle access)
+    book.view_count = (book.view_count or 0) + 1
+    
+    db.session.commit()
+
     auction_open = book.is_auction and book.auction_end and book.auction_end > datetime.utcnow()
     seller = book.user  # verkoper van het boek
 
@@ -491,10 +512,8 @@ def book_detail(book_id):
     base_minimum = float(book.auction_min_price or 0)
     
     if user_highest_bid and highest_bid and user_highest_bid.amount == highest_bid.amount:
-        # gebruiker heeft hoogste bod, mag eigenlijk niet hoger bieden, maar we rekenen min_bid toch door
         min_bid = float(user_highest_bid.amount) + 1
     elif highest_bid:
-        # gebruiker niet hoogste bieder, minimaal 5 euro hoger dan hoogste bod
         min_bid = float(highest_bid.amount) + 5
     else:
         min_bid = base_minimum
@@ -519,7 +538,6 @@ def book_detail(book_id):
         hoogste_andere_bod = max(andere_bods) if andere_bods else 0
 
         if user_highest_bid and highest_bid and user_highest_bid.amount == highest_bid.amount:
-            # gebruiker is hoogste bieder, mag niet hoger bieden
             flash('Je hebt al het hoogste bod en kunt niet nog een hoger bod plaatsen.', 'danger')
             return redirect(url_for('main.book_detail', book_id=book.id))
 
@@ -527,7 +545,6 @@ def book_detail(book_id):
             flash(f'Je bod moet minimaal €{hoogste_andere_bod + 5:.2f} zijn.', 'danger')
             return redirect(url_for('main.book_detail', book_id=book.id))
 
-        # Sla het bod op
         bid = Bid(amount=nieuwe_bod, bidder_id=current_user.id, book_id=book.id)
         db.session.add(bid)
         db.session.commit()
@@ -545,6 +562,52 @@ def book_detail(book_id):
         min_bid=min_bid,
         seller=seller
     )
+
+from sqlalchemy import func, extract
+from datetime import datetime, timedelta
+
+@main.route('/books/<int:book_id>/analytics')
+def book_analytics(book_id):
+    book = Book.query.get_or_404(book_id)
+
+    # Views per dag voor de afgelopen 7 dagen
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    views_per_day = (
+        db.session.query(
+            func.date(BookView.timestamp).label('day'),
+            func.count(BookView.id).label('count')
+        )
+        .filter(BookView.book_id == book.id)
+        .filter(BookView.timestamp >= seven_days_ago)
+        .group_by(func.date(BookView.timestamp))
+        .order_by(func.date(BookView.timestamp))
+        .all()
+    )
+    
+    # Views per uur vandaag (middernacht tot nu)
+    today = datetime.utcnow().date()
+    tomorrow = today + timedelta(days=1)
+    views_per_hour = (
+        db.session.query(
+            extract('hour', BookView.timestamp).label('hour'),
+            func.count(BookView.id).label('count')
+        )
+        .filter(BookView.book_id == book.id)
+        .filter(BookView.timestamp >= today)
+        .filter(BookView.timestamp < tomorrow)
+        .group_by(extract('hour', BookView.timestamp))
+        .order_by(extract('hour', BookView.timestamp))
+        .all()
+    )
+    
+    # Omzetten naar dict voor makkelijker gebruik in JS/templates
+    views_per_day_dict = {str(day): count for day, count in views_per_day}
+    views_per_hour_dict = {int(hour): count for hour, count in views_per_hour}
+
+    return render_template('book_analytics.html',
+                           book=book,
+                           views_per_day=views_per_day_dict,
+                           views_per_hour=views_per_hour_dict)
 
 
 

@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: bd3f6d813ebf
+Revision ID: d9bd58a084b3
 Revises: 
-Create Date: 2025-07-18 09:26:00.627041
+Create Date: 2025-08-05 11:34:44.663701
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'bd3f6d813ebf'
+revision = 'd9bd58a084b3'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -41,10 +41,16 @@ def upgrade():
     sa.Column('mfa_enabled', sa.Boolean(), nullable=True),
     sa.Column('mfa_method', sa.String(length=20), nullable=True),
     sa.Column('mfa_secret', sa.String(length=32), nullable=True),
-    sa.Column('is_verified', sa.Boolean(), nullable=True),
-    sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('mfa_code', sa.String(length=10), nullable=True),
     sa.Column('mfa_code_expiry', sa.DateTime(), nullable=True),
+    sa.Column('is_verified', sa.Boolean(), nullable=True),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.Column('allow_shipping', sa.Boolean(), nullable=True),
+    sa.Column('shipping_cost', sa.Numeric(precision=6, scale=2), nullable=True),
+    sa.Column('pickup_only', sa.Boolean(), nullable=True),
+    sa.Column('platform_payment_only', sa.Boolean(), nullable=True),
+    sa.Column('cash_payment_only', sa.Boolean(), nullable=True),
+    sa.Column('is_admin', sa.Boolean(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('business_name'),
     sa.UniqueConstraint('email')
@@ -67,8 +73,8 @@ def upgrade():
     sa.Column('front_image', sa.String(length=150), nullable=True),
     sa.Column('side_image', sa.String(length=150), nullable=True),
     sa.Column('back_image', sa.String(length=150), nullable=True),
-    sa.ForeignKeyConstraint(['buyer_id'], ['user.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.ForeignKeyConstraint(['buyer_id'], ['user.id'], name='fk_book_buyer_id', ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], name='fk_book_user_id', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('message',

@@ -89,10 +89,13 @@ class Book(db.Model):
     sold_count = db.Column(db.Integer, default=0)
     sold = db.Column(db.Boolean, default=False)
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    view_count = db.Column(db.Integer, default=0)
+    views = db.relationship('BookView', back_populates='book', cascade='all, delete-orphan')
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE',name='fk_book_user_id'), nullable=False)
     user = db.relationship('User', back_populates='books', foreign_keys=[user_id], passive_deletes=True)
 
-    buyer_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
+    buyer_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL',name='fk_book_buyer_id'), nullable=True)
     buyer = db.relationship('User', back_populates='bought_books', foreign_keys=[buyer_id], passive_deletes=True)
 
     tags = db.relationship('Tag', secondary='book_tags', back_populates='books', lazy='subquery')
@@ -102,6 +105,10 @@ class Book(db.Model):
     front_image = db.Column(db.String(150), nullable=True)
     side_image = db.Column(db.String(150), nullable=True)
     back_image = db.Column(db.String(150), nullable=True)
+
+
+    
+
 
     @property
     def front_image_url(self):
@@ -114,6 +121,20 @@ class Book(db.Model):
     @property
     def back_image_url(self):
         return url_for('static', filename=f'uploads/{self.back_image}') if self.back_image else None
+
+
+
+
+class BookView(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    book_id = db.Column(db.Integer, db.ForeignKey('book.id', ondelete='CASCADE'), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    book = db.relationship('Book', back_populates='views')
+
+
+
+
 
 class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)

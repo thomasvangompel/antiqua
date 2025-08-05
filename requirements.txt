@@ -7,5 +7,5 @@ flask-migrate
 geopy
 authlib
 Flask-Dance
-google-auth google-auth-oauthlib requests
+google-auth-oauthlib 
 mollie-api-python
