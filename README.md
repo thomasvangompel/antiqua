@@ -1,2 +1,2 @@
 # antiqua
-software for antiquarians
+webapplication with flask. A platform for antiquarians
