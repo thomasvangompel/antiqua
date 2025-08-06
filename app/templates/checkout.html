@@ -3,10 +3,10 @@
 {% block content %}
 <h2>Contacteer {{ seller.business_name or seller.username }}</h2>
 
-<h2>Checkout voor "{{ book.title }}"</h2>
+<h2>Checkout voor "{{ item.title }}"</h2>
 
 <form method="POST">
-  <p>Prijs: €{{ "%.2f"|format(book.price) }}</p>
+  <p>Prijs: €{{ "%.2f"|format(item.price) }}</p>
 
   <p><strong>Kies betaalmethode:</strong></p>
 
@@ -35,5 +35,3 @@
 
 <a href="{{ url_for('main.public_seller_profile', business_name=seller.business_name) }}">Terug naar profiel</a>
 {% endblock %}
-
-

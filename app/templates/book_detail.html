@@ -230,7 +230,8 @@
 </ul>
 
 
-  <a href="{{ url_for('main.checkout', book_id=book.id) }}" class="btn btn-success btn-lg w-100">Checkout</a>
+  <a href="{{ url_for('main.checkout', item_type='book', item_id=book.id)
+ }}" class="btn btn-success btn-lg w-100">Checkout</a>
 </div>
 
         </div>

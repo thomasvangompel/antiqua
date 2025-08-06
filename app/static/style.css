@@ -233,3 +233,8 @@ max-width: 1400px;
 .oude-posters > h1 {
   margin: 0;
 }
+
+
+.active-thumb {
+  border: 2px solid #007bff;
+}

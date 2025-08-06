@@ -1064,13 +1064,21 @@ def get_mollie_client():
     client.set_api_key(current_app.config["MOLLIE_API_KEY"])
     return client
 
-@main.route('/checkout/<int:book_id>', methods=['GET', 'POST'])
+@main.route('/checkout/<string:item_type>/<int:item_id>', methods=['GET', 'POST'])
 @login_required
-def checkout(book_id):
-    book = Book.query.get_or_404(book_id)
-    seller = book.user
-
+def checkout(item_type, item_id):
     mollie_client = get_mollie_client()
+
+    if item_type == 'book':
+        item = Book.query.get_or_404(item_id)
+        description = f"Aankoop van boek: {item.title}"
+    elif item_type == 'postcard':
+        item = Postcard.query.get_or_404(item_id)
+        description = f"Aankoop van postkaart: {item.title}"
+    else:
+        abort(404)
+
+    seller = item.user
 
     if request.method == 'POST':
         selected_method = request.form.get("method")
@@ -1079,13 +1087,14 @@ def checkout(book_id):
         payment = mollie_client.payments.create({
             "amount": {
                 "currency": "EUR",
-                "value": f"{book.price:.2f}"
+                "value": f"{item.price:.2f}"
             },
-            "description": f"Aankoop van boek: {book.title}",
-            "redirectUrl": url_for("main.payment_done",book_id=book.id, _external=True),
-            "webhookUrl": "https://e8dc1f0c0d05.ngrok-free.app/payment/webhook",  # < 👈 BELANGRIJK
+            "description": description,
+            "redirectUrl": url_for("main.payment_done", item_type=item_type, item_id=item.id, _external=True),
+            "webhookUrl": "https://e8dc1f0c0d05.ngrok-free.app/payment/webhook",
             "metadata": {
-                "book_id": book.id,
+                "item_type": item_type,
+                "item_id": item.id,
                 "user_id": current_user.id,
                 "comment": comment
             },
@@ -1094,7 +1103,8 @@ def checkout(book_id):
 
         return redirect(payment.checkout_url)
 
-    return render_template("checkout.html", book=book, seller=seller)
+    return render_template("checkout.html", item=item, seller=seller, item_type=item_type)
+
 
 @main.route('/verzendgegevens', methods=['GET', 'POST'])
 @login_required

@@ -31,10 +31,10 @@
     </div>
 
     <div class="mb-3">
-      {{ form.front_image.label(class="form-label") }}
+      {{ form.front_image_url.label(class="form-label") }}
       {{ form.front_image(class="form-control") }}
-      {% if postcard.front_image %}
-        <img src="{{ url_for('static', filename='uploads/' ~ postcard.front_image) }}" alt="Voorzijde afbeelding" class="img-thumbnail mt-2" style="max-width: 200px;">
+      {% if postcard.front_image_url %}
+        <img src="{{ url_for('static', filename='uploads/' ~ postcard.front_image_url) }}" alt="Voorzijde afbeelding" class="img-thumbnail mt-2" style="max-width: 200px;">
       {% endif %}
       {% for error in form.front_image.errors %}
         <div class="text-danger">{{ error }}</div>
