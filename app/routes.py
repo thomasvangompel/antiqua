@@ -27,6 +27,8 @@ import json
 from flask import jsonify
 from datetime import timedelta
 from app.forms import ShippingForm  # pas 'app' aan naar jouw projectnaam indien nodig
+from app.forms import PostcardForm
+from app.models import Postcard
 
 
 
@@ -183,11 +185,18 @@ def dashboard():
         # Redirect admin naar admin_dashboard
         return redirect(url_for('main.admin_dashboard'))
     
-    # Voor gewone gebruikers: toon hun boeken en ongelezen berichten
+    # Voor gewone gebruikers: toon hun boeken, postkaarten en ongelezen berichten
     boeken = Book.query.filter_by(user_id=current_user.id).all()
+    postkaarten = Postcard.query.filter_by(user_id=current_user.id).all()
     new_message_count = Message.query.filter_by(receiver_id=current_user.id, read=False).count()
     
-    return render_template('dashboard.html', user=current_user, boeken=boeken, new_message_count=new_message_count)
+    return render_template(
+        'dashboard.html', 
+        user=current_user, 
+        boeken=boeken, 
+        postkaarten=postkaarten, 
+        new_message_count=new_message_count
+    )
 
 
 
@@ -705,16 +714,19 @@ def payment_webhook():
 
 
 
+from sqlalchemy import or_
+
 @main.route('/search')
 def search():
     query = request.args.get('query', '')
     page = request.args.get('page', 1, type=int)
 
-    books = []
     users = []
+    books = []
+    postkaarten = []
 
     if query:
-        # Zoek gebruikers op city, username, business_name
+        # Zoek gebruikers
         users = User.query.filter(
             or_(
                 User.city.ilike(f'%{query}%'),
@@ -723,7 +735,7 @@ def search():
             )
         ).all()
 
-        # Zoek boeken met join op tags en user (via user_id)
+        # Zoek boeken met join op tags en user
         books = Book.query \
             .join(Book.tags, isouter=True) \
             .join(User, Book.user_id == User.id) \
@@ -741,7 +753,17 @@ def search():
             .distinct() \
             .paginate(page=page, per_page=12)
 
-    return render_template('search_results.html', query=query, results=books, users=users)
+        # Zoek postkaarten ook met paginatie
+        postkaarten = Postcard.query.filter(
+            or_(
+                Postcard.title.ilike(f'%{query}%'),
+                Postcard.publisher.ilike(f'%{query}%'),
+                Postcard.description.ilike(f'%{query}%'),
+            )
+        ).paginate(page=page, per_page=12)
+
+    return render_template('search_results.html', query=query, users=users, books=books, postcards=postkaarten)
+
 
 
 @main.route('/<business_name>')
@@ -1098,3 +1120,90 @@ def verzendgegevens():
         form.platform_payment_only.data = current_user.platform_payment_only
 
     return render_template('verzendgegevens.html', form=form)
+
+
+
+
+import os
+from flask import current_app
+from werkzeug.utils import secure_filename
+from datetime import datetime
+
+@main.route('/postcards/add', methods=['GET', 'POST'])
+@login_required
+def add_postcard():
+    form = PostcardForm()
+    if form.validate_on_submit():
+        postcard = Postcard(
+            title=form.title.data,
+            publisher=form.publisher.data,
+            auction_end=form.auction_end.data,
+            condition=form.condition.data,
+            description=form.description.data,
+            price=form.price.data,
+            is_auction=form.is_auction.data,
+            auction_min_price=form.auction_min_price.data,
+            sold=form.sold.data,
+            user_id=current_user.id
+        )
+        
+        # Afbeelding uploaden en opslaan
+        if form.front_image.data:
+            front_filename = secure_filename(form.front_image.data.filename)
+            front_path = os.path.join(current_app.root_path, 'static/uploads', front_filename)
+            form.front_image.data.save(front_path)
+            postcard.front_image_url = 'uploads/' + front_filename
+
+        if form.back_image.data:
+            back_filename = secure_filename(form.back_image.data.filename)
+            back_path = os.path.join(current_app.root_path, 'static/uploads', back_filename)
+            form.back_image.data.save(back_path)
+            postcard.back_image_url = 'uploads/' + back_filename
+
+        db.session.add(postcard)
+        db.session.commit()
+        flash('Postkaart succesvol toegevoegd!', 'success')
+        return redirect(url_for('main.dashboard'))
+
+    
+    return render_template('add_postcard.html', form=form)
+
+
+
+
+@main.route('/postcards/edit/<int:postcard_id>', methods=['GET', 'POST'])
+@login_required
+def edit_postcard(postcard_id):
+    postcard = Postcard.query.get_or_404(postcard_id)
+    # Voeg hier je formulier en logica toe om postkaart te bewerken
+    form = PostcardForm(obj=postcard)
+    if form.validate_on_submit():
+        postcard.title = form.title.data
+        postcard.description = form.description.data
+        postcard.condition = form.condition.data
+        # enzovoorts
+        db.session.commit()
+        flash('Postkaart bijgewerkt!', 'success')
+        return redirect(url_for('main.dashboard'))
+    return render_template('edit_postcard.html', form=form, postcard=postcard)
+
+
+
+@main.route('/postcards/<int:postcard_id>/delete', methods=['POST'])
+@login_required
+def delete_postcard(postcard_id):
+    postcard = Postcard.query.get_or_404(postcard_id)
+    if postcard.user_id != current_user.id:
+        abort(403)  # Niet toegestaan
+    db.session.delete(postcard)
+    db.session.commit()
+    flash('Postkaart is verwijderd.', 'success')
+    return redirect(url_for('main.dashboard'))
+
+
+
+@main.route('/postcard/<int:postcard_id>')
+def postcard_detail(postcard_id):
+    postcard = Postcard.query.get_or_404(postcard_id)
+    return render_template('postcard_detail.html', postcard=postcard)
+

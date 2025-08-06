@@ -16,10 +16,10 @@
     </ul>
     {% endif %}
 
-    {% if results.items %}
+    {% if books.items %}
     <h4>Boeken</h4>
     <div class="row">
-        {% for book in results.items %}
+        {% for book in books.items %}
         <div class="col-md-4 mb-4">
             <div class="card h-100 card-verkoper position-relative">
                 {% if book.front_image %}
@@ -60,39 +60,33 @@
         </div>
         {% endfor %}
     </div>
+    {% endif %}
 
-    <!-- Paginatie -->
-    <nav aria-label="Search pagination">
-        <ul class="pagination justify-content-center">
-            {% if results.has_prev %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('main.search', query=query, page=results.prev_num) }}">Vorige</a>
-            </li>
-            {% else %}
-            <li class="page-item disabled"><span class="page-link">Vorige</span></li>
-            {% endif %}
-
-            {% for p in results.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-                {% if p %}
-                <li class="page-item {% if p == results.page %}active{% endif %}">
-                    <a class="page-link" href="{{ url_for('main.search', query=query, page=p) }}">{{ p }}</a>
-                </li>
-                {% else %}
-                <li class="page-item disabled"><span class="page-link">…</span></li>
+    {% if postcards.items %}
+    <h4>Postkaarten</h4>
+    <div class="row">
+        {% for kaart in postcards.items %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 card-verkoper position-relative">
+                {% if kaart.front_image_url %}
+                    <img src="{{ url_for('static', filename=kaart.front_image_url) }}"
+                         alt="Voorkant van {{ kaart.title }}"
+                         class="card-img-top">
                 {% endif %}
-            {% endfor %}
-
-            {% if results.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('main.search', query=query, page=results.next_num) }}">Volgende</a>
-            </li>
-            {% else %}
-            <li class="page-item disabled"><span class="page-link">Volgende</span></li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% else %}
-        <p>Geen boeken gevonden.</p>
+                <div class="card-body">
+                    <h5 class="card-title">{{ kaart.title }}</h5>
+                    <p class="card-text">{{ kaart.description or '' }}</p>
+                    <p class="card-text"><strong>Winkel:</strong>
+                        <a href="{{ url_for('main.public_seller_profile', business_name=kaart.user.business_name or kaart.user.username) }}">
+                            {{ kaart.user.business_name or kaart.user.username }}
+                        </a>
+                    </p>
+                    <a href="{{ url_for('main.postcard_detail', postcard_id=kaart.id) }}" class="btn btn-primary">Bekijk postkaart</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
     {% endif %}
 </div>
 {% endblock %}

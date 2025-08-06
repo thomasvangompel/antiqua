@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Postkaart: {{ postcard.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ postcard.title }}</h1>
+    {% if postcard.front_image_url %}
+        <img src="{{ url_for('static', filename='uploads/' ~ postcard.front_image_url) }}" 
+             alt="Afbeelding van {{ postcard.title }}" 
+             class="img-fluid mb-3" style="max-width: 400px;">
+    {% endif %}
+    
+    <p><strong>Uitgever:</strong> {{ postcard.publisher or 'Onbekend' }}</p>
+    <p><strong>Beschrijving:</strong> {{ postcard.description or 'Geen beschrijving beschikbaar.' }}</p>
+
+    <p><strong>Prijs:</strong> 
+        {% if postcard.price %}
+            € {{ '%.2f'|format(postcard.price) }}
+        {% else %}
+            N/B
+        {% endif %}
+    </p>
+
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary mt-3">Terug naar dashboard</a>
+</div>
+{% endblock %}

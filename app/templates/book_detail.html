@@ -190,14 +190,14 @@
           <div class="shipping-options p-3 border rounded shadow-sm flex-fill">
             <h4 class="mb-3">Verzendopties</h4>
             <ul class="list-unstyled mb-0">
-              {% if book.user.pickup_only %}
+              {% if book.user.pickup_only and not book.user.allow_shipping %}
                 <li class="mb-2">
-                  <i class="bi bi-box-arrow-in-down text-success me-2"></i> Afhalen mogelijk
+                  <i class="bi bi-box-arrow-in-down text-success me-2"></i> Enkel via afhaling
                 </li>
               {% endif %}
-              {% if book.user.allow_shipping %}
+              {% if book.user.allow_shipping and not book.user.pickup_only %}
                 <li class="mb-2">
-                  <i class="bi bi-truck text-success me-2"></i> Verzending via post mogelijk
+                  <i class="bi bi-truck text-success me-2"></i> Verzending via post
                 </li>
               {% endif %}
               {% if not book.user.pickup_only and not book.user.allow_shipping %}
@@ -207,14 +207,32 @@
           </div>
 
           <div class="payment-options p-3 border rounded shadow-sm flex-fill">
-            <h4 class="mb-3">Betaalopties</h4>
-            <ul class="list-unstyled mb-3">
-              <li><i class="bi bi-cash-coin text-primary me-2"></i> Betaling bij afhalen</li>
-              <li><i class="bi bi-credit-card-2-back text-primary me-2"></i> Online betaling</li>
-            </ul>
-            <a href="{{ url_for('main.checkout', book_id=book.id) }}" class="btn btn-success btn-lg w-100">checkout</a>
+  <h4 class="mb-3">Betaalopties</h4>
+  <ul class="list-unstyled mb-3">
+  {% if book.user.cash_payment_only and not book.user.platform_payment_only %}
+    <li>
+      <i class="bi bi-cash-coin text-primary me-2"></i> Enkel betaling bij afhalen
+    </li>
+  {% elif book.user.platform_payment_only and not book.user.cash_payment_only %}
+    <li>
+      <i class="bi bi-credit-card-2-back text-primary me-2"></i> Enkel online betaling via platform
+    </li>
+  {% elif book.user.platform_payment_only and book.user.cash_payment_only %}
+    <li>
+      <i class="bi bi-cash-coin text-primary me-2"></i> Betaling bij afhalen
+    </li>
+    <li>
+      <i class="bi bi-credit-card-2-back text-primary me-2"></i> Online betaling via platform
+    </li>
+  {% else %}
+    <li class="text-muted">Geen betaalopties beschikbaar</li>
+  {% endif %}
+</ul>
 
-          </div>
+
+  <a href="{{ url_for('main.checkout', book_id=book.id) }}" class="btn btn-success btn-lg w-100">Checkout</a>
+</div>
+
         </div>
         {% endif %}
       {% endif %}

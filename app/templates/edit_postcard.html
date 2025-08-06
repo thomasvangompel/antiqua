@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+  <h2>Postkaart bewerken</h2>
+  <form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      {{ form.title.label(class="form-label") }}
+      {{ form.title(class="form-control", placeholder="Titel van de postkaart") }}
+      {% for error in form.title.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.description.label(class="form-label") }}
+      {{ form.description(class="form-control", rows="4", placeholder="Beschrijving") }}
+      {% for error in form.description.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.condition.label(class="form-label") }}
+      {{ form.condition(class="form-select") }}
+      {% for error in form.condition.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.front_image.label(class="form-label") }}
+      {{ form.front_image(class="form-control") }}
+      {% if postcard.front_image %}
+        <img src="{{ url_for('static', filename='uploads/' ~ postcard.front_image) }}" alt="Voorzijde afbeelding" class="img-thumbnail mt-2" style="max-width: 200px;">
+      {% endif %}
+      {% for error in form.front_image.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.back_image.label(class="form-label") }}
+      {{ form.back_image(class="form-control") }}
+      {% if postcard.back_image %}
+        <img src="{{ url_for('static', filename='uploads/' ~ postcard.back_image) }}" alt="Achterzijde afbeelding" class="img-thumbnail mt-2" style="max-width: 200px;">
+      {% endif %}
+      {% for error in form.back_image.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.publisher.label(class="form-label") }}
+      {{ form.publisher(class="form-control", placeholder="Uitgever (optioneel)") }}
+      {% for error in form.publisher.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.price.label(class="form-label") }}
+      {{ form.price(class="form-control") }}
+      {% for error in form.price.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="form-check mb-3">
+      {{ form.is_auction(class="form-check-input") }}
+      {{ form.is_auction.label(class="form-check-label") }}
+      {% for error in form.is_auction.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.auction_min_price.label(class="form-label") }}
+      {{ form.auction_min_price(class="form-control") }}
+      {% for error in form.auction_min_price.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.auction_end.label(class="form-label") }}
+      {{ form.auction_end(class="form-control", placeholder="YYYY-MM-DD HH:MM") }}
+      {% for error in form.auction_end.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="form-check mb-3">
+      {{ form.sold(class="form-check-input") }}
+      {{ form.sold.label(class="form-check-label") }}
+      {% for error in form.sold.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary ms-2">Annuleren</a>
+  </form>
+</div>
+{% endblock %}
