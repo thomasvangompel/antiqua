@@ -108,8 +108,7 @@
                   Staat: {{ kaart.condition or 'Onbekend' }}<br>
                   Jaar: {{ kaart.year or 'n.v.t.' }}
                 </p>
-              </div>
-            </div>
+             
 
             <div class="mt-2">
               <a href="{{ url_for('main.edit_postcard', postcard_id=kaart.id) }}" class="btn btn-sm btn-outline-primary me-2">Bewerk</a>

@@ -72,6 +72,10 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         from werkzeug.security import check_password_hash
         return check_password_hash(self.password, password)
+    
+    #postcard relation
+
+    postcards = db.relationship('Postcard', backref='owner', lazy=True, cascade="all, delete")
 
 class Book(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -152,7 +156,7 @@ class Postcard(db.Model):
     updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship("User", backref="postcards")
+   
 
     def __repr__(self):
         return f"<Postcard {self.title}>"

@@ -29,7 +29,7 @@
         {% if current_user.is_authenticated %}
           Hallo {{ current_user.username or current_user.business_name }},
         {% else %}
-           Grootste Antiqua(riaat) van Belgie
+           Grootste Antiqua(riaat) van België
         {% endif %}
       </h1>
 
@@ -60,13 +60,13 @@
 
   <section class="container-section">
   <div class="oude-postkaarten">
-    <h1>Oude postkaarten</h1>
+    <h1>Postkaarten</h1>
   </div>
   <div class="oude-posters">
-    <h1>Oude posters</h1>
+    <h1>Posters</h1>
   </div>
   <div class="derde-item">
-    <h1>Ephemera</h1>
+    <h1>Boeken</h1>
   </div>
 </section>
 
@@ -74,7 +74,7 @@
 
   <section class="container my-5">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2 class="mb-0">Antiquariaten op de kaart</h2>
+      <h2 class="mb-0">(Antiqua)riaten op de kaart</h2>
       <button class="btn btn-primary rounded-0" onclick="zoomToUserLocation()"
          style="background-color: #000066; font-size: large; color: white; border: none;">
         Zoek jou locatie

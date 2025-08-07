@@ -64,19 +64,19 @@ def inject_new_message_count():
 
 @main.route('/')
 def home():
-    verkopers_met_boeken = (
+    verkopers_met_boeken_of_postkaarten = (
         User.query
-        .join(User.books)  # Alleen users met minstens 1 boek
         .filter(
+            or_(User.books.any(), User.postcards.any()),  # minstens één boek OF postkaart
             User.latitude.isnot(None),
             User.longitude.isnot(None),
             User.business_name.isnot(None),
-            User.show_on_map == True  # Alleen wie op de kaart wil komen
+            User.show_on_map == True
         )
-        .distinct()
         .all()
     )
-    return render_template("home.html", verkopers=verkopers_met_boeken)
+
+    return render_template("home.html", verkopers=verkopers_met_boeken_of_postkaarten)
 
 
 
