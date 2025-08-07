@@ -45,6 +45,7 @@
       <div>
         <a href="{{ url_for('main.new_book') }}" class="btn btn-outline-success me-2">+ Boek</a>
         <a href="{{ url_for('main.add_postcard') }}" class="btn btn-outline-warning">+ Postkaart</a>
+        <a href="{{ url_for('main.add_poster') }}" class="btn btn-outline-warning">+ Poster</a>
       </div>
     </div>
 
@@ -122,6 +123,40 @@
       </div>
     {% else %}
       <p>Je hebt nog geen postkaarten toegevoegd. <a href="{{ url_for('main.add_postcard') }}">Voeg er nu één toe!</a></p>
+    {% endif %}
+    <!-- POSTERS -->
+    <h4 class="mt-5">📬 Mijn Posters</h4>
+
+    {% if posters %}
+      <div class="list-group">
+        {% for poster in posters %}
+          <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 rounded shadow-sm p-3">
+
+            <h5 class="mb-1">{{ poster.title or 'Geen titel' }}</h5>
+            <small class="text-muted mb-2 d-block">{{ poster.publisher}}</small>
+
+            {% if poster.front_image_url %}
+             <img src="{{ url_for('static', filename=poster.front_image_url) }}" alt="Voorkant" class="me-3 rounded" style="width: 80px; height: auto; object-fit: cover;">
+            {% endif %}
+
+                <p class="mb-0">
+                  Staat: {{ poster.condition or 'Onbekend' }}<br>
+                  Jaar: {{ poster.year or 'n.v.t.' }}
+                </p>
+               <div class="mt-2">
+              <a href="{{ url_for('main.edit_poster', poster_id=poster.id) }}" class="btn btn-sm btn-outline-primary me-2">Bewerk</a>
+              <form action="{{ url_for('main.delete_poster', poster_id=poster.id) }}" method="POST" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Weet je zeker dat je deze poster wilt verwijderen?');">Verwijder</button>
+              </form>
+            </div>
+
+        
+
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>Je hebt nog geen poster toegevoegd. <a href="{{ url_for('main.add_poster') }}">Voeg er nu één toe!</a></p>
     {% endif %}
 
   </div>

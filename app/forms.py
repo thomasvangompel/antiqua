@@ -236,3 +236,28 @@ class PostcardForm(FlaskForm):
     sold = BooleanField('Verkocht')
     
     submit = SubmitField('Opslaan')
+    
+class PosterForm(FlaskForm):
+    title = StringField('Titel', validators=[DataRequired()])
+    description = TextAreaField('Beschrijving', validators=[Optional()])
+    
+    condition = SelectField('Staat', choices=[
+        ('Uitstekend', 'Uitstekend'),
+        ('Goed', 'Goed'),
+        ('Redelijk', 'Redelijk'),
+        ('Slecht', 'Slecht')
+    ], validators=[Optional()])
+    
+    front_image = FileField('Voorzijde Afbeelding', validators=[FileAllowed(['jpg', 'jpeg', 'png'], 'Alleen afbeeldingen zijn toegestaan!'), Optional()])
+    back_image = FileField('Achterzijde Afbeelding', validators=[FileAllowed(['jpg', 'jpeg', 'png'], 'Alleen afbeeldingen zijn toegestaan!'), Optional()])
+    publisher = StringField('Uitgever (optioneel)', validators=[Optional()])
+
+    price = DecimalField('Prijs (€)', places=2, rounding=None, validators=[Optional(), NumberRange(min=0)])
+    
+    is_auction = BooleanField('Veiling actief')
+    auction_min_price = DecimalField('Minimum veilingprijs (€)', places=2, validators=[Optional(), NumberRange(min=0)])
+    auction_end = DateTimeField('Veiling einddatum', format='%Y-%m-%d %H:%M', validators=[Optional()])
+    
+    sold = BooleanField('Verkocht')
+    
+    submit = SubmitField('Opslaan')

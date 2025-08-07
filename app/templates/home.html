@@ -59,15 +59,28 @@
       
 
   <section class="container-section">
-  <div class="oude-postkaarten">
-    <h1>Postkaarten</h1>
-  </div>
-  <div class="oude-posters">
-    <h1>Posters</h1>
-  </div>
-  <div class="derde-item">
-    <h1>Boeken</h1>
-  </div>
+
+  <!-- Postkaarten -->
+  <a href="{{ url_for('main.filter_items', category='postcards') }}" class="oude-postkaarten text-decoration-none text-white">
+    <div>
+      <h1>Postkaarten</h1>
+    </div>
+  </a>
+
+  <!-- Posters -->
+  <a href="{{ url_for('main.filter_items', category='posters') }}" class="oude-posters text-decoration-none text-white">
+    <div>
+      <h1>Posters</h1>
+    </div>
+  </a>
+
+  <!-- Boeken -->
+  <a href="{{ url_for('main.filter_items', category='books') }}" class="derde-item text-decoration-none text-white">
+    <div>
+      <h1>Boeken</h1>
+    </div>
+  </a>
+
 </section>
 
   

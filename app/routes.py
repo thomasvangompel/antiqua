@@ -12,8 +12,8 @@ from sqlalchemy import or_
 from geopy.geocoders import Nominatim
 
 from . import db
-from .forms import RegisterForm, LoginForm, BookForm, UpdateProfileForm,MessageForm
-from .models import User, Book, Tag, Message,BookView
+from .forms import RegisterForm, LoginForm, BookForm, UpdateProfileForm,MessageForm,PosterForm
+from .models import User, Book, Tag, Message,BookView,Postcard,Poster
 from datetime import datetime
 
 from flask_wtf import FlaskForm
@@ -28,7 +28,7 @@ from flask import jsonify
 from datetime import timedelta
 from app.forms import ShippingForm  # pas 'app' aan naar jouw projectnaam indien nodig
 from app.forms import PostcardForm
-from app.models import Postcard
+
 
 
 
@@ -188,13 +188,16 @@ def dashboard():
     # Voor gewone gebruikers: toon hun boeken, postkaarten en ongelezen berichten
     boeken = Book.query.filter_by(user_id=current_user.id).all()
     postkaarten = Postcard.query.filter_by(user_id=current_user.id).all()
+    poster = Poster.query.filter_by(user_id=current_user.id).all()
+   
     new_message_count = Message.query.filter_by(receiver_id=current_user.id, read=False).count()
     
     return render_template(
         'dashboard.html', 
         user=current_user, 
         boeken=boeken, 
-        postkaarten=postkaarten, 
+        postkaarten=postkaarten,
+        posters=poster,
         new_message_count=new_message_count
     )
 
@@ -500,26 +503,23 @@ from flask import request
 @main.route('/books/<int:book_id>', methods=['GET', 'POST'])
 def book_detail(book_id):
     book = Book.query.get_or_404(book_id)
-    
-    # NIEUWE BOOKVIEW TOEVOEGEN
+
+    # Boekweergave vastleggen
     new_view = BookView(book_id=book.id)
     db.session.add(new_view)
-    
-    # UPDATE view_count (optioneel, voor snelle access)
     book.view_count = (book.view_count or 0) + 1
-    
     db.session.commit()
 
+    # Informatie voor veiling
     auction_open = book.is_auction and book.auction_end and book.auction_end > datetime.utcnow()
-    seller = book.user  # verkoper van het boek
-
+    seller = book.user
     highest_bid = max(book.bids, key=lambda b: b.amount) if book.bids else None
 
-    user_bids = [b for b in book.bids if b.bidder_id == current_user.id]
+    user_bids = [b for b in book.bids if current_user.is_authenticated and b.bidder_id == current_user.id]
     user_highest_bid = max(user_bids, key=lambda b: b.amount) if user_bids else None
 
     base_minimum = float(book.auction_min_price or 0)
-    
+
     if user_highest_bid and highest_bid and user_highest_bid.amount == highest_bid.amount:
         min_bid = float(user_highest_bid.amount) + 1
     elif highest_bid:
@@ -529,6 +529,7 @@ def book_detail(book_id):
 
     bid_form = BidForm()
 
+    # Paginate biedingen
     page = request.args.get('page', 1, type=int)
     bids = Bid.query.filter_by(book_id=book.id).order_by(Bid.amount.desc()).paginate(page=page, per_page=5)
 
@@ -543,17 +544,20 @@ def book_detail(book_id):
             flash(f'Je bod moet minimaal €{min_bid:.2f} zijn.', 'danger')
             return redirect(url_for('main.book_detail', book_id=book.id))
 
-        andere_bods = [b.amount for b in book.bids if b.bidder_id != current_user.id]
-        hoogste_andere_bod = max(andere_bods) if andere_bods else 0
-
+        # Extra controle of gebruiker al hoogste bod heeft
         if user_highest_bid and highest_bid and user_highest_bid.amount == highest_bid.amount:
             flash('Je hebt al het hoogste bod en kunt niet nog een hoger bod plaatsen.', 'danger')
             return redirect(url_for('main.book_detail', book_id=book.id))
+
+        # Bieddrempel: moet €5 hoger zijn dan hoogste bod van anderen
+        andere_bods = [b.amount for b in book.bids if b.bidder_id != current_user.id]
+        hoogste_andere_bod = max(andere_bods) if andere_bods else 0
 
         if hoogste_andere_bod > 0 and nieuwe_bod < hoogste_andere_bod + 5:
             flash(f'Je bod moet minimaal €{hoogste_andere_bod + 5:.2f} zijn.', 'danger')
             return redirect(url_for('main.book_detail', book_id=book.id))
 
+        # Bod opslaan
         bid = Bid(amount=nieuwe_bod, bidder_id=current_user.id, book_id=book.id)
         db.session.add(bid)
         db.session.commit()
@@ -1179,23 +1183,79 @@ def add_postcard():
     return render_template('add_postcard.html', form=form)
 
 
+@main.route('/poster/add', methods=['GET', 'POST'])
+@login_required
+def add_poster():
+    form = PosterForm()
+    if form.validate_on_submit():
+        poster = Poster(
+            title=form.title.data,
+            publisher=form.publisher.data,
+            auction_end=form.auction_end.data,
+            condition=form.condition.data,
+            description=form.description.data,
+            price=form.price.data,
+            is_auction=form.is_auction.data,
+            auction_min_price=form.auction_min_price.data,
+            sold=form.sold.data,
+            user_id=current_user.id
+        )
+        
+        # Afbeelding uploaden en opslaan
+        if form.front_image.data:
+            front_filename = secure_filename(form.front_image.data.filename)
+            front_path = os.path.join(current_app.root_path, 'static/uploads', front_filename)
+            form.front_image.data.save(front_path)
+            poster.front_image_url = 'uploads/' + front_filename
+
+        if form.back_image.data:
+            back_filename = secure_filename(form.back_image.data.filename)
+            back_path = os.path.join(current_app.root_path, 'static/uploads', back_filename)
+            form.back_image.data.save(back_path)
+            poster.back_image_url = 'uploads/' + back_filename
+
+        db.session.add(poster)
+        db.session.commit()
+        flash('Poster succesvol toegevoegd!', 'success')
+        return redirect(url_for('main.dashboard'))
+
+    
+    return render_template('add_poster.html', form=form)
+
+
 
 
 @main.route('/postcards/edit/<int:postcard_id>', methods=['GET', 'POST'])
 @login_required
 def edit_postcard(postcard_id):
     postcard = Postcard.query.get_or_404(postcard_id)
-    # Voeg hier je formulier en logica toe om postkaart te bewerken
     form = PostcardForm(obj=postcard)
+
     if form.validate_on_submit():
         postcard.title = form.title.data
         postcard.description = form.description.data
         postcard.condition = form.condition.data
-        # enzovoorts
+        postcard.publisher = form.publisher.data
+        # Voeg meer velden toe als je die hebt
+
+        # Upload nieuwe afbeelding als er een is geüpload
+        if form.front_image.data:
+            # Oude afbeelding verwijderen als die bestaat
+            if postcard.front_image_url:
+                old_image_path = os.path.join(current_app.root_path, 'static', postcard.front_image_url)
+                if os.path.exists(old_image_path):
+                    os.remove(old_image_path)
+
+            # Nieuwe afbeelding opslaan
+            filename = save_image(form.front_image.data)
+            postcard.front_image_url = f'uploads/{filename}'
+
         db.session.commit()
         flash('Postkaart bijgewerkt!', 'success')
         return redirect(url_for('main.dashboard'))
+
     return render_template('edit_postcard.html', form=form, postcard=postcard)
+
 
 
 
@@ -1217,3 +1277,135 @@ def postcard_detail(postcard_id):
     postcard = Postcard.query.get_or_404(postcard_id)
     return render_template('postcard_detail.html', postcard=postcard)
 
+#-------------------------------------------------------------------------------------------------
+
+
+@main.route('/posters/edit/<int:poster_id>', methods=['GET', 'POST'])
+@login_required
+def edit_poster(poster_id):
+    poster = Poster.query.get_or_404(poster_id)
+    form = PosterForm(obj=poster)
+
+    if form.validate_on_submit():
+        poster.title = form.title.data
+        poster.description = form.description.data
+        poster.condition = form.condition.data
+        poster.publisher = form.publisher.data
+        poster.is_auction = form.is_auction.data
+        poster.price = form.price.data
+        poster.auction_min_price = form.auction_min_price.data
+        poster.auction_end = form.auction_end.data
+
+        if form.front_image.data:
+            # Verwijder oude afbeelding als die er is
+            if poster.front_image_url:
+                old_image_path = os.path.join(current_app.root_path, 'static', poster.front_image_url)
+                if os.path.exists(old_image_path):
+                    os.remove(old_image_path)
+
+            # Sla nieuwe afbeelding op en update database
+            filename = save_image(form.front_image.data)
+            poster.front_image_url = f'uploads/{filename}'
+
+        db.session.commit()
+        flash('Poster bijgewerkt!', 'success')
+        return redirect(url_for('main.dashboard'))
+
+    return render_template('edit_poster.html', form=form, poster=poster)
+
+
+def save_image(form_image):
+    """Sla de geüploade afbeelding op met een unieke naam en verklein deze."""
+    random_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(secure_filename(form_image.filename))
+    picture_fn = random_hex + f_ext
+    picture_path = os.path.join(current_app.root_path, 'static/uploads', picture_fn)
+
+    # Open en verklein de afbeelding (optioneel)
+    output_size = (500, 500)
+    i = Image.open(form_image)
+    i.thumbnail(output_size)
+    i.save(picture_path)
+
+    return picture_fn
+
+
+@main.route('/posters/<int:poster_id>/delete', methods=['POST'])
+@login_required
+def delete_poster(poster_id):
+    poster = Poster.query.get_or_404(poster_id)
+    if poster.user_id != current_user.id:
+        abort(403)
+    db.session.delete(poster)
+    db.session.commit()
+    flash('Poster is verwijderd.', 'success')
+    return redirect(url_for('main.dashboard'))
+
+
+@main.route('/poster/<int:poster_id>')
+def poster_detail(poster_id):
+    poster = Poster.query.get_or_404(poster_id)
+    return render_template('poster_detail.html', poster=poster)
+
+
+
+
+
+#-------------------filter--------------------------------
+
+
+from flask import request, render_template, flash, redirect, url_for
+from .models import Postcard, Poster, Book
+
+@main.route('/filter/<category>')
+def filter_items(category):
+    page = request.args.get('page', 1, type=int)
+    per_page = 9
+
+    sort_by = request.args.get('sort_by', 'relevant')
+    location = request.args.get('location', '').strip()
+
+    # Bepaal basismodel en query
+    model = None
+    if category == 'postcards':
+        model = Postcard
+    elif category == 'posters':
+        model = Poster
+    elif category == 'books':
+        model = Book
+    else:
+        flash("Categorie bestaat niet.", "warning")
+        return redirect(url_for('main.home'))
+
+    query = model.query.filter_by(sold=False)
+
+    # Filter op locatie (indien beschikbaar)
+    if location:
+        if hasattr(model, 'location'):
+            query = query.filter(model.location.ilike(f'%{location}%'))
+        else:
+            flash("Locatiefilter wordt niet ondersteund voor deze categorie.", "info")
+
+    # Sorteeropties
+    if sort_by == 'cheap':
+        query = query.order_by(model.price.asc())
+    elif sort_by == 'expensive':
+        query = query.order_by(model.price.desc())
+    else:
+        # Standaard sortering: nieuwste eerst (bijv. op ID of created_at)
+        if hasattr(model, 'created_at'):
+            query = query.order_by(model.created_at.desc())
+        else:
+            query = query.order_by(model.id.desc())
+
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    items = pagination.items
+
+    return render_template(
+        'filter.html',
+        items=items,
+        category=category,
+        selected_sort=sort_by,
+        selected_location=location,
+        pagination=pagination
+    )

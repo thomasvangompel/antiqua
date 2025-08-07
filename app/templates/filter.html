@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category|capitalize }}{% endblock %}
+
+{% block content %}
+<section class="container my-5">
+  <!-- Titel -->
+  <div class="mb-4 text-center">
+    <h2 class="fw-bold">{{ category | capitalize }}</h2>
+  </div>
+
+  <!-- Filterformulier -->
+  <form method="GET" class="mb-5">
+    <input type="hidden" name="category" value="{{ category }}">
+
+    <div class="mb-3">
+      <label for="sort_by" class="form-label">Sorteer op</label>
+      <select name="sort_by" id="sort_by" class="form-select">
+        <option value="relevant" {% if selected_sort == 'relevant' %}selected{% endif %}>Relevantie</option>
+        <option value="cheap" {% if selected_sort == 'cheap' %}selected{% endif %}>Goedkoopste eerst</option>
+        <option value="expensive" {% if selected_sort == 'expensive' %}selected{% endif %}>Duurste eerst</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="location" class="form-label">Locatie (optioneel)</label>
+      <input type="text" name="location" id="location" class="form-control" value="{{ selected_location }}">
+    </div>
+
+    <button type="submit" class="btn btn-primary">Filter</button>
+  </form>
+
+<!-- Resultaten -->
+<div id="itemsContainer" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+  {% for item in items %}
+    <div class="col">
+      <div class="card h-100">
+        {% if item.front_image_url %}
+          <img src="{{ item.front_image_url }}" class="card-img-top" alt="{{ item.title }}">
+        {% else %}
+          <img src="{{ url_for('static', filename='images/placeholder.jpg') }}" class="card-img-top" alt="Geen afbeelding">
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title">{{ item.title }}</h5>
+          <p class="card-text mb-1">Prijs: €{{ item.price }}</p>
+          
+
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <p class="text-muted">Geen resultaten gevonden voor deze categorie.</p>
+  {% endfor %}
+</div>
+
+
+
+{% endblock %}

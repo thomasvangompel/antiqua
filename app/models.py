@@ -77,6 +77,9 @@ class User(db.Model, UserMixin):
 
     postcards = db.relationship('Postcard', backref='owner', lazy=True, cascade="all, delete")
 
+    #posters
+    posters = db.relationship('Poster', backref='owner', lazy=True, cascade="all, delete")
+
 class Book(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
@@ -137,6 +140,32 @@ class BookView(db.Model):
     book = db.relationship('Book', back_populates='views')
 
 class Postcard(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(140), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    condition = db.Column(db.String(50), nullable=True)  # Bijvoorbeeld: 'Uitstekend', 'Goed', 'Redelijk', 'Slecht'
+
+    front_image_url = db.Column(db.String(255), nullable=True)
+    back_image_url = db.Column(db.String(255), nullable=True)
+
+    price = db.Column(db.Numeric(10, 2), nullable=True)
+    is_auction = db.Column(db.Boolean, default=False)
+    auction_min_price = db.Column(db.Numeric(10, 2), nullable=True)
+    auction_end = db.Column(db.DateTime, nullable=True)
+    publisher = db.Column(db.String(140), nullable=True)
+    sold = db.Column(db.Boolean, default=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+   
+
+    def __repr__(self):
+        return f"<Postcard {self.title}>"
+    
+    
+class Poster(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(140), nullable=False)
     description = db.Column(db.Text, nullable=True)
