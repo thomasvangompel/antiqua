@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Winkelwagen{% endblock %}
+{% block content %}
+<h2>Winkelwagen ({{ cart_item_count }} items)</h2>
+<h2>Winkelwagen ({{ cart_item_count }} items)</h2>
+
+{% if items_in_cart %}
+  <ul>
+    {% for entry in items_in_cart %}
+      {% if entry.type == 'book' %}
+        <li>Boek: {{ entry.item.title }} - Aantal: {{ entry.quantity }}</li>
+      {% elif entry.type == 'postcard' %}
+        <li>Ansichtkaart: {{ entry.item.title }} - Aantal: {{ entry.quantity }}</li>
+      {% elif entry.type == 'poster' %}
+        <li>Poster: {{ entry.item.title }} - Aantal: {{ entry.quantity }}</li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>Je winkelwagen is leeg.</p>
+{% endif %}
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

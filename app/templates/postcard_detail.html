@@ -142,10 +142,12 @@
       </div>
 
       {% if postcard.price %}
-        <a href="{{ url_for('main.checkout', item_type='postcard', item_id=postcard.id) }}" class="btn btn-success btn-lg mt-3">Checkout</a>
+        <button class="add-to-cart-btn btn btn-success" data-type="postcard" data-id="{{ postcard.id }}">
+  Voeg toe aan winkelwagen
+</button>
       {% endif %}
 
-      <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary mt-3 ms-2">Terug naar dashboard</a>
+      
     </div>
   </div>
 </div>

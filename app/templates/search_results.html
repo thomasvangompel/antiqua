@@ -88,5 +88,35 @@
         {% endfor %}
     </div>
     {% endif %}
+
+
+
+
+       {% if posters.items %}
+    <h4>Posters</h4>
+    <div class="row">
+        {% for poster in posters.items %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 card-verkoper position-relative">
+                {% if poster.front_image_url %}
+                    <img src="{{ url_for('static', filename=poster.front_image_url) }}"
+                         alt="Voorkant van {{ poster.title }}"
+                         class="card-img-top">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ poster.title }}</h5>
+                    <p class="card-text">{{ poster.description or '' }}</p>
+                    <p class="card-text"><strong>Winkel:</strong>
+                        <a href="{{ url_for('main.public_seller_profile', business_name=poster.user.business_name or poster.user.username) }}">
+                            {{ poster.user.business_name or poster.user.username }}
+                        </a>
+                    </p>
+                    <a href="{{ url_for('main.poster_detail', poster_id=poster.id) }}" class="btn btn-primary">Bekijk poster</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

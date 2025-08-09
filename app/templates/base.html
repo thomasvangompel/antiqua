@@ -127,6 +127,20 @@ body {
               {% endif %}
             </a>
           </li>
+          <!-- Winkelwagen icoon -->
+  <!-- Winkelwagen icoon -->
+<li class="nav-item d-none d-lg-block ms-3 position-relative">
+  <a class="nav-link" href="{{ url_for('main.cart') }}" title="Winkelwagen">
+    <i class="fas fa-shopping-cart fa-lg"></i>
+    <span id="cart-badge" class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle"
+      style="display: {{ 'inline-block' if cart_count > 0 else 'none' }};">
+      {{ cart_count }}
+      <span class="visually-hidden">items in winkelwagen</span>
+    </span>
+  </a>
+</li>
+
+
 
         {% else %}
           <li class="nav-item">
@@ -247,6 +261,35 @@ body {
       });
     });
   
+
+
+
+
+//winkelwagen, hoeveel stuks
+document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const itemType = this.getAttribute('data-type');
+    const itemId = this.getAttribute('data-id');
+
+    fetch(`/api/add_to_cart/${itemType}/${itemId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if(data.success) {
+        const badge = document.getElementById('cart-badge');
+        if (badge) {
+          badge.textContent = data.cart_count;
+        }
+      } else {
+        alert('Fout bij toevoegen aan winkelwagen.');
+      }
+    })
+    .catch(() => alert('Serverfout bij toevoegen aan winkelwagen.'));
+  });
+});
+
 </script>
 
 <!-- Extra scripts vanuit child templates -->

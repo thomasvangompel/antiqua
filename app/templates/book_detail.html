@@ -230,8 +230,11 @@
 </ul>
 
 
-  <a href="{{ url_for('main.checkout', item_type='book', item_id=book.id)
- }}" class="btn btn-success btn-lg w-100">Checkout</a>
+<button class="add-to-cart-btn btn btn-success" data-type="book" data-id="{{ book.id }}">
+  Voeg toe aan winkelwagen
+</button>
+
+
 </div>
 
         </div>

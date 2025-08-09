@@ -37,6 +37,10 @@ client_secrets = os.getenv("GOOGLE_OAUTH_SECRETS")
 
 
 main = Blueprint('main', __name__)
+
+
+
+
 geolocator = Nominatim(user_agent="boekenzot")
 
 
@@ -60,6 +64,15 @@ def inject_new_message_count():
     if current_user.is_authenticated:
         new_message_count = Message.query.filter_by(receiver_id=current_user.id, read=False).count()
     return dict(new_message_count=new_message_count)
+
+
+@main.context_processor
+def inject_cart_count():
+    cart = session.get('cart', [])
+    total_quantity = sum(item['quantity'] for item in cart)
+    return {'cart_count': total_quantity}
+
+
 
 
 @main.route('/')
@@ -624,96 +637,6 @@ def book_analytics(book_id):
 
 
 
-import mollie.api.client
-mollie_client = mollie.api.client.Client()
-from mollie.api.client import Client
-from flask import current_app, url_for, redirect
-
-@main.route('/books/<int:book_id>/buy')
-@login_required
-def buy_book(book_id):
-    book = Book.query.get_or_404(book_id)
-
-    if book.is_auction:
-        flash('Dit boek is alleen via veiling te koop.', 'warning')
-        return redirect(url_for('main.book_detail', book_id=book_id))
-
-    mollie_client = Client()
-    mollie_client.set_api_key(current_app.config['MOLLIE_API_KEY'])
-
-    base_url = current_app.config['BASE_URL']
-
-    payment = mollie_client.payments.create({
-        'amount': {
-            'currency': 'EUR',
-            'value': f'{book.price:.2f}',
-        },
-        'description': f'Aankoop van boek: {book.title}',
-        'redirectUrl': f'{base_url}{url_for("main.payment_done", book_id=book.id)}',
-        'webhookUrl': f'{base_url}{url_for("main.payment_webhook")}',
-        'metadata': {
-            'book_id': book.id,
-            'seller_id': book.user_id
-        }
-    })
-
-    return redirect(payment.checkout_url)
-
-
-
-
-@main.route('/payment/done')
-@login_required
-def payment_done():
-    
-    book_id = request.args.get('book_id')
-    # Hier kun je bv. een bedankpagina tonen of bestelling afronden
-    flash('Bedankt voor je aankoop!', 'success')
-    return redirect(url_for('main.book_detail', book_id=book_id,just_paid=1))
-
-from flask import request, current_app
-from mollie.api.client import Client
-from app import db  # Pas dit eventueel aan naar je echte app-import
-from app.models import Book  # Pas dit aan naar je projectstructuur
-
-@main.route('/payment/webhook', methods=['POST'])
-def payment_webhook():
-    mollie_client = Client()
-    mollie_client.set_api_key(current_app.config['MOLLIE_API_KEY'])
-
-    payment_id = request.form.get('id')
-    if not payment_id:
-        return 'No payment ID provided', 400
-
-    try:
-        payment = mollie_client.payments.get(payment_id)
-    except Exception:
-        return 'Payment not found or API error', 400
-
-    if payment.is_paid():
-        metadata = payment.metadata
-        book_id = metadata.get('book_id')
-        buyer_id = metadata.get('user_id')
-
-        if not book_id or not buyer_id:
-            return 'Missing metadata', 400
-
-        book = Book.query.get(book_id)
-        if not book:
-            return 'Book not found', 404
-
-        if not book.buyer_id:
-            book.sold = True
-            book.buyer_id = buyer_id
-            try:
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-                return 'Database error', 500
-
-    return '', 200
-
-
 
 
 
@@ -728,6 +651,7 @@ def search():
     users = []
     books = []
     postkaarten = []
+    posters = []
 
     if query:
         # Zoek gebruikers
@@ -766,7 +690,18 @@ def search():
             )
         ).paginate(page=page, per_page=12)
 
-    return render_template('search_results.html', query=query, users=users, books=books, postcards=postkaarten)
+
+
+        posters = Poster.query.filter(
+            or_(
+                Poster.title.ilike(f'%{query}%'),
+                Poster.description.ilike(f'%{query}%'),
+                Poster.publisher.ilike(f'%{query}%'),
+                # voeg velden toe waar je op wil zoeken in posters
+            )
+        ).paginate(page=page, per_page=12)
+
+    return render_template('search_results.html', query=query, users=users, books=books, postcards=postkaarten, posters=posters)
 
 
 
@@ -1063,51 +998,9 @@ def oauth2callback():
     return redirect(url_for('main.dashboard'))
 
 
-def get_mollie_client():
-    client = mollie.api.client.Client()
-    client.set_api_key(current_app.config["MOLLIE_API_KEY"])
-    return client
 
-@main.route('/checkout/<string:item_type>/<int:item_id>', methods=['GET', 'POST'])
-@login_required
-def checkout(item_type, item_id):
-    mollie_client = get_mollie_client()
 
-    if item_type == 'book':
-        item = Book.query.get_or_404(item_id)
-        description = f"Aankoop van boek: {item.title}"
-    elif item_type == 'postcard':
-        item = Postcard.query.get_or_404(item_id)
-        description = f"Aankoop van postkaart: {item.title}"
-    else:
-        abort(404)
 
-    seller = item.user
-
-    if request.method == 'POST':
-        selected_method = request.form.get("method")
-        comment = request.form.get("comment")
-
-        payment = mollie_client.payments.create({
-            "amount": {
-                "currency": "EUR",
-                "value": f"{item.price:.2f}"
-            },
-            "description": description,
-            "redirectUrl": url_for("main.payment_done", item_type=item_type, item_id=item.id, _external=True),
-            "webhookUrl": "https://e8dc1f0c0d05.ngrok-free.app/payment/webhook",
-            "metadata": {
-                "item_type": item_type,
-                "item_id": item.id,
-                "user_id": current_user.id,
-                "comment": comment
-            },
-            "method": selected_method or None
-        })
-
-        return redirect(payment.checkout_url)
-
-    return render_template("checkout.html", item=item, seller=seller, item_type=item_type)
 
 
 @main.route('/verzendgegevens', methods=['GET', 'POST'])
@@ -1409,3 +1302,72 @@ def filter_items(category):
         selected_location=location,
         pagination=pagination
     )
+
+#-----------------------winkelwagen------------------------------------
+
+
+from flask import session, render_template
+def add_to_cart(item_type, item_id):
+    cart = session.get('cart', [])
+    # Probeer een bestaand item te vinden
+    for item in cart:
+        if item['type'] == item_type and item['id'] == item_id:
+            item['quantity'] += 1  # verhoog het aantal
+            break
+    else:
+        # Niet gevonden: nieuw item toevoegen
+        cart.append({'type': item_type, 'id': item_id, 'quantity': 1})
+    session['cart'] = cart
+
+
+def get_items_in_cart():
+    cart_data = session.get('cart', [])
+    items_in_cart = []
+
+    for entry in cart_data:
+        item_type = entry['type']
+        item_id = entry['id']
+
+        if item_type == 'book':
+            item = Book.query.get(item_id)
+        elif item_type == 'postcard':
+            item = Postcard.query.get(item_id)
+        elif item_type == 'poster':
+            item = Poster.query.get(item_id)
+        else:
+            item = None
+
+        if item:
+            items_in_cart.append({
+                'item': item,
+                'type': item_type,
+                'quantity': entry['quantity']
+            })
+
+    return items_in_cart
+
+
+
+@main.route('/cart/<item_type>/<int:item_id>')
+def add_item_to_cart(item_type, item_id):
+    add_to_cart(item_type, item_id)
+    items_in_cart = get_items_in_cart()
+    return render_template('cart.html', items_in_cart=items_in_cart, cart_item_count=len(items_in_cart))
+
+@main.route('/cart')
+def cart():
+    items_in_cart = get_items_in_cart()
+    return render_template('cart.html', items_in_cart=items_in_cart, cart_item_count=len(items_in_cart))
+
+
+
+@main.route('/api/add_to_cart/<item_type>/<int:item_id>', methods=['POST'])
+def api_add_to_cart(item_type, item_id):
+    add_to_cart(item_type, item_id)
+    return jsonify({'success': True, 'cart_count': len(session.get('cart', []))})
+
+
+#--------------------------mollie---------------------------------------
+
+
+

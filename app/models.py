@@ -75,10 +75,10 @@ class User(db.Model, UserMixin):
     
     #postcard relation
 
-    postcards = db.relationship('Postcard', backref='owner', lazy=True, cascade="all, delete")
+    postcards = db.relationship('Postcard', backref='user', lazy=True, cascade="all, delete")
 
     #posters
-    posters = db.relationship('Poster', backref='owner', lazy=True, cascade="all, delete")
+    posters = db.relationship('Poster', backref='user', lazy=True, cascade="all, delete")
 
 class Book(db.Model):
     id = db.Column(db.Integer, primary_key=True)

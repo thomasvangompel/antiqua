@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Betaling afgerond{% endblock %}
+
+{% block content %}
+  <h2>Bedankt voor je aankoop!</h2>
+  
+  {% if items %}
+    <p>Je hebt de volgende producten gekocht:</p>
+    <ul>
+      {% for item in items %}
+        <li>{{ item.quantity }} x {{ item.title }} ({{ item.type }}) - €{{ "%.2f"|format(item.price) }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Geen items gevonden in je bestelling.</p>
+  {% endif %}
+
+  <a href="{{ url_for('main.cart') }}" class="btn btn-primary">Terug naar winkelwagen</a>
+  <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Terug naar startpagina</a>
+{% endblock %}

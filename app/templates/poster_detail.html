@@ -53,13 +53,13 @@
            style="width: 100%; max-width: 800px; height: auto; cursor: zoom-in;" />
     </div>
     <div class="d-flex justify-content-center mt-3 gap-3">
-      {% if postcard.front_image_url %}
+      {% if poster.front_image_url %}
         <img src="{{ url_for('static', filename=poster.front_image_url) }}" alt="Voorkant"
              class="img-thumbnail thumb active-thumb"
              style="width: 80px; cursor: pointer;"
              data-img="{{ url_for('static', filename=poster.front_image_url) }}">
       {% endif %}
-      {% if postcard.back_image_url %}
+      {% if poster.back_image_url %}
         <img src="{{ url_for('static', filename=poster.back_image_url) }}" alt="Achterkant"
              class="img-thumbnail thumb"
              style="width: 80px; cursor: pointer;"
@@ -142,7 +142,7 @@
       </div>
 
       {% if poster.price %}
-        <a href="{{ url_for('main.checkout', item_type='poster', item_id=poster.id) }}" class="btn btn-success btn-lg mt-3">Checkout</a>
+        <button class="add-to-cart-btn btn btn-success" data-type="poster" data-id="{{ poster.id }}">Toevoegen Winkelwagen</button>
       {% endif %}
 
       <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary mt-3 ms-2">Terug naar dashboard</a>
