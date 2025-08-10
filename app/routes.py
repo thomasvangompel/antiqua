@@ -13,7 +13,9 @@ from geopy.geocoders import Nominatim
 
 from . import db
 from .forms import RegisterForm, LoginForm, BookForm, UpdateProfileForm,MessageForm,PosterForm
-from .models import User, Book, Tag, Message,BookView,Postcard,Poster
+from .models import User, Book, Tag, Message, BookView, Postcard, Poster, CartItem
+
+
 from datetime import datetime
 
 from flask_wtf import FlaskForm
@@ -68,9 +70,14 @@ def inject_new_message_count():
 
 @main.context_processor
 def inject_cart_count():
-    cart = session.get('cart', [])
-    total_quantity = sum(item['quantity'] for item in cart)
-    return {'cart_count': total_quantity}
+    if current_user.is_authenticated:
+        total_quantity = db.session.query(db.func.sum(CartItem.quantity))\
+            .filter_by(user_id=current_user.id).scalar()
+        return {'cart_count': total_quantity or 0}
+    else:
+        cart = session.get('cart', [])
+        return {'cart_count': sum(item['quantity'] for item in cart)}
+
 
 
 
@@ -1307,44 +1314,77 @@ def filter_items(category):
 
 
 from flask import session, render_template
+from flask_login import current_user
+
 def add_to_cart(item_type, item_id):
-    cart = session.get('cart', [])
-    # Probeer een bestaand item te vinden
-    for item in cart:
-        if item['type'] == item_type and item['id'] == item_id:
-            item['quantity'] += 1  # verhoog het aantal
-            break
+    if current_user.is_authenticated:
+        # In database opslaan
+        cart_item = CartItem.query.filter_by(
+            user_id=current_user.id,
+            item_type=item_type,
+            item_id=item_id
+        ).first()
+        if cart_item:
+            cart_item.quantity += 1
+        else:
+            cart_item = CartItem(
+                user_id=current_user.id,
+                item_type=item_type,
+                item_id=item_id,
+                quantity=1
+            )
+            db.session.add(cart_item)
+        db.session.commit()
     else:
-        # Niet gevonden: nieuw item toevoegen
-        cart.append({'type': item_type, 'id': item_id, 'quantity': 1})
-    session['cart'] = cart
+        # In session opslaan
+        cart = session.get('cart', [])
+        for item in cart:
+            if item['type'] == item_type and item['id'] == item_id:
+                item['quantity'] += 1
+                break
+        else:
+            cart.append({'type': item_type, 'id': item_id, 'quantity': 1})
+        session['cart'] = cart
 
 
 def get_items_in_cart():
-    cart_data = session.get('cart', [])
     items_in_cart = []
-
-    for entry in cart_data:
-        item_type = entry['type']
-        item_id = entry['id']
-
-        if item_type == 'book':
-            item = Book.query.get(item_id)
-        elif item_type == 'postcard':
-            item = Postcard.query.get(item_id)
-        elif item_type == 'poster':
-            item = Poster.query.get(item_id)
-        else:
-            item = None
-
-        if item:
-            items_in_cart.append({
-                'item': item,
-                'type': item_type,
-                'quantity': entry['quantity']
-            })
-
+    if current_user.is_authenticated:
+        cart_items = CartItem.query.filter_by(user_id=current_user.id).all()
+        for entry in cart_items:
+            if entry.item_type == 'book':
+                item = Book.query.get(entry.item_id)
+            elif entry.item_type == 'postcard':
+                item = Postcard.query.get(entry.item_id)
+            elif entry.item_type == 'poster':
+                item = Poster.query.get(entry.item_id)
+            else:
+                item = None
+            if item:
+                items_in_cart.append({
+                    'item': item,
+                    'type': entry.item_type,
+                    'quantity': entry.quantity
+                })
+    else:
+        cart_data = session.get('cart', [])
+        for entry in cart_data:
+            if entry['type'] == 'book':
+                item = Book.query.get(entry['id'])
+            elif entry['type'] == 'postcard':
+                item = Postcard.query.get(entry['id'])
+            elif entry['type'] == 'poster':
+                item = Poster.query.get(entry['id'])
+            else:
+                item = None
+            if item:
+                items_in_cart.append({
+                    'item': item,
+                    'type': entry['type'],
+                    'quantity': entry['quantity']
+                })
     return items_in_cart
+
 
 
 
@@ -1352,19 +1392,30 @@ def get_items_in_cart():
 def add_item_to_cart(item_type, item_id):
     add_to_cart(item_type, item_id)
     items_in_cart = get_items_in_cart()
-    return render_template('cart.html', items_in_cart=items_in_cart, cart_item_count=len(items_in_cart))
+    return render_template(
+        'cart.html',
+        items_in_cart=items_in_cart,
+        cart_item_count=sum(i['quantity'] for i in items_in_cart)
+    )
 
 @main.route('/cart')
 def cart():
     items_in_cart = get_items_in_cart()
-    return render_template('cart.html', items_in_cart=items_in_cart, cart_item_count=len(items_in_cart))
-
-
+    return render_template(
+        'cart.html',
+        items_in_cart=items_in_cart,
+        cart_item_count=sum(i['quantity'] for i in items_in_cart)
+    )
 
 @main.route('/api/add_to_cart/<item_type>/<int:item_id>', methods=['POST'])
 def api_add_to_cart(item_type, item_id):
     add_to_cart(item_type, item_id)
-    return jsonify({'success': True, 'cart_count': len(session.get('cart', []))})
+    items_in_cart = get_items_in_cart()
+    return jsonify({
+        'success': True,
+        'cart_count': sum(i['quantity'] for i in items_in_cart)
+    })
+
 
 
 #--------------------------mollie---------------------------------------

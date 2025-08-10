@@ -150,6 +150,18 @@ body {
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('main.register') }}">Registreer</a>
           </li>
+          <li class="nav-item d-none d-lg-block ms-3 position-relative">
+            <a class="nav-link" href="{{ url_for('main.cart') }}" title="Winkelwagen">
+              <i class="fas fa-shopping-cart fa-lg"></i>
+              <span id="cart-badge" class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle"
+                style="display: {{ 'inline-block' if cart_count > 0 else 'none' }};">
+                {{ cart_count }}
+                <span class="visually-hidden">items in winkelwagen</span>
+              </span>
+            </a>
+          </li>
+
+
         {% endif %}
       </ul>
     </div>

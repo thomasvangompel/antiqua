@@ -231,3 +231,22 @@ class Bid(db.Model):
 
     bidder = db.relationship('User', back_populates='bids', foreign_keys=[bidder_id])
     book = db.relationship('Book', back_populates='bids')
+
+
+
+    #--------------------------winkelwagen-------------------------
+
+
+class CartItem(db.Model):
+        id = db.Column(db.Integer, primary_key=True)
+        user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE', name='fk_cartitem_user_id'), nullable=False)
+
+        item_type = db.Column(db.String(50), nullable=False)
+        item_id = db.Column(db.Integer, nullable=False)
+        quantity = db.Column(db.Integer, default=1)
+
+        user = db.relationship(
+            'User',
+            backref=db.backref('cart_items', cascade="all, delete-orphan")
+        )
+
