@@ -27,6 +27,12 @@
       ✔️ Postcode en stad gevalideerd
     </div>
 
+    <div class="mb-3">
+    <label for="radius" class="form-label">Maximale afstand (km)</label>
+    <input type="number" name="radius" id="radius" class="form-control" min="1" max="100" step="1"
+          value="{{ selected_radius|default(20) }}">
+  </div>
+
     <button type="submit" class="btn btn-primary">Filter</button>
   </form>
 

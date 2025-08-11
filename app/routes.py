@@ -1307,6 +1307,8 @@ def filter_items(category):
     page = request.args.get('page', 1, type=int)
     per_page = 9
 
+    radius = request.args.get('radius', 20, type=int)  # default 20 km
+
     sort_by = request.args.get('sort_by', 'relevant')
     postcode = request.args.get('postcode', '').strip()
     stad = request.args.get('stad', '').strip()
@@ -1343,8 +1345,9 @@ def filter_items(category):
             for item in all_items:
                 if item.user and item.user.latitude and item.user.longitude:
                     dist = haversine(user_lat, user_lon, item.user.latitude, item.user.longitude)
-                    if dist <= 20:  # 20 km radius
+                    if dist <= radius:
                         filtered_items.append(item)
+            # paginatie etc. hier verder
 
             total = len(filtered_items)
             start = (page - 1) * per_page
