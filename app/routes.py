@@ -1257,15 +1257,60 @@ def poster_detail(poster_id):
 from flask import request, render_template, flash, redirect, url_for
 from .models import Postcard, Poster, Book
 
+
+import requests
+
+def geocode(postcode, stad):
+    query = f"{postcode} {stad}, België"
+    url = "https://nominatim.openstreetmap.org/search"
+    params = {
+        "q": query,
+        "format": "json",
+        "limit": 1,
+        "countrycodes": "be",
+        "accept-language": "nl"
+    }
+    headers = {
+        "User-Agent": "AntiquaApp/1.0 (email@example.com)"  # Vul eigen appnaam en contact in
+    }
+    try:
+        resp = requests.get(url, params=params, headers=headers, timeout=5)
+        if resp.status_code == 200:
+            data = resp.json()
+            if data:
+                return float(data[0]["lat"]), float(data[0]["lon"])
+            else:
+                print(f"Geen geocode resultaat voor: {query}")
+        else:
+            print(f"Nominatim error status: {resp.status_code}")
+    except Exception as e:
+        print(f"Fout bij geocoding: {e}")
+    return None, None
+
+
+
+
+from math import radians, cos, sin, asin, sqrt
+
+def haversine(lat1, lon1, lat2, lon2):
+    # afstand in km
+    R = 6371
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a))
+    return R * c
+
+
 @main.route('/filter/<category>')
 def filter_items(category):
     page = request.args.get('page', 1, type=int)
     per_page = 9
 
     sort_by = request.args.get('sort_by', 'relevant')
-    location = request.args.get('location', '').strip()
+    postcode = request.args.get('postcode', '').strip()
+    stad = request.args.get('stad', '').strip()
 
-    # Bepaal basismodel en query
     model = None
     if category == 'postcards':
         model = Postcard
@@ -1277,14 +1322,7 @@ def filter_items(category):
         flash("Categorie bestaat niet.", "warning")
         return redirect(url_for('main.home'))
 
-    query = model.query.filter_by(sold=False)
-
-    # Filter op locatie (indien beschikbaar)
-    if location:
-        if hasattr(model, 'location'):
-            query = query.filter(model.location.ilike(f'%{location}%'))
-        else:
-            flash("Locatiefilter wordt niet ondersteund voor deze categorie.", "info")
+    query = model.query.filter_by(sold=False).join(model.user)
 
     # Sorteeropties
     if sort_by == 'cheap':
@@ -1292,23 +1330,60 @@ def filter_items(category):
     elif sort_by == 'expensive':
         query = query.order_by(model.price.desc())
     else:
-        # Standaard sortering: nieuwste eerst (bijv. op ID of created_at)
         if hasattr(model, 'created_at'):
             query = query.order_by(model.created_at.desc())
         else:
             query = query.order_by(model.id.desc())
 
-    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-    items = pagination.items
+    if postcode and stad:
+        user_lat, user_lon = geocode(postcode, stad)
+        if user_lat and user_lon:
+            all_items = query.all()
+            filtered_items = []
+            for item in all_items:
+                if item.user and item.user.latitude and item.user.longitude:
+                    dist = haversine(user_lat, user_lon, item.user.latitude, item.user.longitude)
+                    if dist <= 20:  # 20 km radius
+                        filtered_items.append(item)
+
+            total = len(filtered_items)
+            start = (page - 1) * per_page
+            end = start + per_page
+            items = filtered_items[start:end]
+
+            class SimplePagination:
+                def __init__(self, items, page, per_page, total):
+                    self.items = items
+                    self.page = page
+                    self.per_page = per_page
+                    self.total = total
+                    self.pages = (total + per_page - 1) // per_page
+                    self.has_prev = page > 1
+                    self.has_next = page < self.pages
+                    self.prev_num = page - 1
+                    self.next_num = page + 1
+
+            pagination = SimplePagination(items, page, per_page, total)
+
+        else:
+            flash("Locatie niet gevonden, geen filtering op afstand toegepast.", "warning")
+            pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+            items = pagination.items
+    else:
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+        items = pagination.items
 
     return render_template(
         'filter.html',
         items=items,
         category=category,
-        selected_sort=sort_by,
-        selected_location=location,
-        pagination=pagination
+        selected_postcode=postcode,
+        selected_stad=stad,
+        pagination=pagination,
+        selected_sort=sort_by
     )
+
+
 
 #-----------------------winkelwagen------------------------------------
 
