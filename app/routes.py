@@ -1417,6 +1417,43 @@ def api_add_to_cart(item_type, item_id):
     })
 
 
+#---------------------------verwijderen cart---------------------------
+
+
+from flask import Flask, render_template, request, redirect, url_for, session
+
+@main.route("/remove_from_cart", methods=["POST"])
+def remove_from_cart():
+    item_type = request.form.get("item_type")
+    item_id = int(request.form.get("item_id"))
+
+    if current_user.is_authenticated:
+        cart_item = CartItem.query.filter_by(
+            user_id=current_user.id,
+            item_type=item_type,
+            item_id=item_id
+        ).first()
+
+        if cart_item:
+            if cart_item.quantity > 1:
+                cart_item.quantity -= 1
+            else:
+                db.session.delete(cart_item)
+            db.session.commit()
+
+    else:
+        cart = session.get("cart", [])
+        for entry in cart:
+            if entry["type"] == item_type and entry["id"] == item_id:
+                if entry["quantity"] > 1:
+                    entry["quantity"] -= 1
+                else:
+                    cart.remove(entry)
+                break
+        session["cart"] = cart
+
+    return redirect(url_for("main.cart"))
+
 
 #--------------------------mollie---------------------------------------
 

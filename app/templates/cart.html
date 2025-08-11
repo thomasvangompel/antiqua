@@ -1,19 +1,27 @@
 {% extends "base.html" %}
 {% block title %}Winkelwagen{% endblock %}
 {% block content %}
-<h2>Winkelwagen ({{ cart_item_count }} items)</h2>
+
 <h2>Winkelwagen ({{ cart_item_count }} items)</h2>
 
 {% if items_in_cart %}
   <ul>
     {% for entry in items_in_cart %}
-      {% if entry.type == 'book' %}
-        <li>Boek: {{ entry.item.title }} - Aantal: {{ entry.quantity }}</li>
-      {% elif entry.type == 'postcard' %}
-        <li>Ansichtkaart: {{ entry.item.title }} - Aantal: {{ entry.quantity }}</li>
-      {% elif entry.type == 'poster' %}
-        <li>Poster: {{ entry.item.title }} - Aantal: {{ entry.quantity }}</li>
-      {% endif %}
+      <li>
+        {% if entry.type == 'book' %}
+          Boek: {{ entry.item.title }} - Aantal: {{ entry.quantity }}
+        {% elif entry.type == 'postcard' %}
+          Ansichtkaart: {{ entry.item.title }} - Aantal: {{ entry.quantity }}
+        {% elif entry.type == 'poster' %}
+          Poster: {{ entry.item.title }} - Aantal: {{ entry.quantity }}
+        {% endif %}
+
+        <form action="{{ url_for('main.remove_from_cart') }}" method="post" style="display:inline;">
+          <input type="hidden" name="item_type" value="{{ entry.type }}">
+          <input type="hidden" name="item_id" value="{{ entry.item.id }}">
+          <button type="submit">Verwijderen</button>
+        </form>
+      </li>
     {% endfor %}
   </ul>
 {% else %}
@@ -21,14 +29,6 @@
 {% endif %}
 
 {% endblock %}
-
-
-
-
-
-
-
-
 
 
 
