@@ -11,30 +11,31 @@
 
   <!-- Filterformulier -->
   <form method="GET" class="mb-5">
-    <input type="hidden" name="category" value="{{ category }}">
+  <input type="hidden" name="category" value="{{ category }}">
 
-    <div class="mb-3">
-      <label for="postcode" class="form-label">Postcode</label>
-      <input type="text" name="postcode" id="postcode" class="form-control" value="{{ selected_postcode|default('') }}">
-    </div>
-
-    <div class="mb-3">
-      <label for="stad" class="form-label">Stad</label>
-      <input type="text" name="stad" id="stad" class="form-control" value="{{ selected_stad|default('') }}">
-    </div>
-
-    <div class="mb-3" id="validationMessage" style="display:none; color:green; font-weight:bold;">
-      ✔️ Postcode en stad gevalideerd
-    </div>
-
-    <div class="mb-3">
-    <label for="radius" class="form-label">Maximale afstand (km)</label>
-    <input type="number" name="radius" id="radius" class="form-control" min="1" max="100" step="1"
-          value="{{ selected_radius|default(20) }}">
+  <div class="mb-3">
+    <label for="search_term" class="form-label">Zoek op naam of auteur</label>
+    <input type="text" name="search_term" id="search_term" class="form-control" value="{{ selected_search_term|default('') }}">
   </div>
 
-    <button type="submit" class="btn btn-primary">Filter</button>
-  </form>
+  <div class="mb-3">
+    <label for="postcode" class="form-label">Postcode</label>
+    <input type="text" name="postcode" id="postcode" class="form-control" value="{{ selected_postcode|default('') }}">
+  </div>
+
+  <div class="mb-3">
+    <label for="stad" class="form-label">Stad</label>
+    <input type="text" name="stad" id="stad" class="form-control" value="{{ selected_stad|default('') }}">
+  </div>
+
+  <div class="mb-3">
+    <label for="radius" class="form-label">Maximale afstand (km)</label>
+    <input type="number" name="radius" id="radius" class="form-control" min="1" max="100" step="1" value="{{ selected_radius|default(20) }}">
+  </div>
+
+  <button type="submit" class="btn btn-primary">Filter</button>
+</form>
+
 
   <!-- Resultaten -->
   <div id="itemsContainer" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">

@@ -1253,12 +1253,12 @@ def poster_detail(poster_id):
 
 #-------------------filter--------------------------------
 
-
 from flask import request, render_template, flash, redirect, url_for
-from .models import Postcard, Poster, Book
-
+from .models import Postcard, Poster, Book, User
+from . import db
 
 import requests
+from math import radians, cos, sin, asin, sqrt
 
 def geocode(postcode, stad):
     query = f"{postcode} {stad}, België"
@@ -1271,7 +1271,7 @@ def geocode(postcode, stad):
         "accept-language": "nl"
     }
     headers = {
-        "User-Agent": "AntiquaApp/1.0 (email@example.com)"  # Vul eigen appnaam en contact in
+        "User-Agent": "AntiquaApp/1.0 (email@example.com)"
     }
     try:
         resp = requests.get(url, params=params, headers=headers, timeout=5)
@@ -1287,44 +1287,51 @@ def geocode(postcode, stad):
         print(f"Fout bij geocoding: {e}")
     return None, None
 
-
-
-
-from math import radians, cos, sin, asin, sqrt
-
 def haversine(lat1, lon1, lat2, lon2):
-    # afstand in km
-    R = 6371
+    R = 6371  # km
     dlat = radians(lat2 - lat1)
     dlon = radians(lon2 - lon1)
     a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
     c = 2 * asin(sqrt(a))
     return R * c
 
-
 @main.route('/filter/<category>')
 def filter_items(category):
     page = request.args.get('page', 1, type=int)
     per_page = 9
 
-    radius = request.args.get('radius', 20, type=int)  # default 20 km
-
     sort_by = request.args.get('sort_by', 'relevant')
     postcode = request.args.get('postcode', '').strip()
     stad = request.args.get('stad', '').strip()
+    radius = request.args.get('radius', 20, type=int)
+    search_term = request.args.get('search_term', '').strip()
 
-    model = None
     if category == 'postcards':
         model = Postcard
+        query = model.query.filter_by(sold=False).join(User)
     elif category == 'posters':
         model = Poster
+        query = model.query.filter_by(sold=False).join(User)
     elif category == 'books':
         model = Book
+        # Hier expliciete join op user_id (verkoper) om ambiguïteit te voorkomen
+        query = model.query.filter_by(sold=False).join(User, Book.user_id == User.id)
     else:
         flash("Categorie bestaat niet.", "warning")
         return redirect(url_for('main.home'))
 
-    query = model.query.filter_by(sold=False).join(model.user)
+    # Filter op naam / auteur (voor boeken)
+    if search_term:
+        like_pattern = f"%{search_term}%"
+        if category == 'books':
+            query = query.filter(
+                db.or_(
+                    Book.title.ilike(like_pattern),
+                    Book.author.ilike(like_pattern)
+                )
+            )
+        else:
+            query = query.filter(model.title.ilike(like_pattern))
 
     # Sorteeropties
     if sort_by == 'cheap':
@@ -1337,6 +1344,7 @@ def filter_items(category):
         else:
             query = query.order_by(model.id.desc())
 
+    # Filter op afstand
     if postcode and stad:
         user_lat, user_lon = geocode(postcode, stad)
         if user_lat and user_lon:
@@ -1347,8 +1355,6 @@ def filter_items(category):
                     dist = haversine(user_lat, user_lon, item.user.latitude, item.user.longitude)
                     if dist <= radius:
                         filtered_items.append(item)
-            # paginatie etc. hier verder
-
             total = len(filtered_items)
             start = (page - 1) * per_page
             end = start + per_page
@@ -1363,8 +1369,12 @@ def filter_items(category):
                     self.pages = (total + per_page - 1) // per_page
                     self.has_prev = page > 1
                     self.has_next = page < self.pages
-                    self.prev_num = page - 1
-                    self.next_num = page + 1
+
+                def prev_num(self):
+                    return self.page - 1
+
+                def next_num(self):
+                    return self.page + 1
 
             pagination = SimplePagination(items, page, per_page, total)
 
@@ -1382,6 +1392,8 @@ def filter_items(category):
         category=category,
         selected_postcode=postcode,
         selected_stad=stad,
+        selected_radius=radius,
+        selected_search_term=search_term,
         pagination=pagination,
         selected_sort=sort_by
     )
