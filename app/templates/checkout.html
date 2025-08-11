@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+
+<div class="container py-4">
+  <h2 class="mb-4">Checkout</h2>
+
+  <div class="card shadow-sm mb-4" style="max-width: 540px; margin: auto;">
+    {% if item.front_image_url %}
+      <img src="{{ item.front_image_url }}" alt="{{ item.title }}" class="card-img-top" style="object-fit: cover; max-height: 300px; width: 100%;">
+    {% endif %}
+    <div class="card-body">
+      <h5 class="card-title">{{ item.title }}</h5>
+      {% if item.description %}
+        <p class="card-text">{{ item.description }}</p>
+      {% endif %}
+      <p class="card-text"><strong>Prijs:</strong> €{{ "%.2f"|format(item.price) }}</p>
+
+      <form action="" method="post">
+        <button type="submit" class="btn btn-success me-2">Bevestig aankoop</button>
+        <a href="{{ url_for('main.cart') }}" class="btn btn-secondary">Annuleren</a>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

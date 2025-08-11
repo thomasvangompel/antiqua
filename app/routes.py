@@ -1457,5 +1457,18 @@ def remove_from_cart():
 
 #--------------------------mollie---------------------------------------
 
+@main.route("/checkout/<item_type>/<int:item_id>")
+def checkout_item(item_type, item_id):
+    if item_type == 'book':
+        item = Book.query.get_or_404(item_id)
+    elif item_type == 'postcard':
+        item = Postcard.query.get_or_404(item_id)
+    elif item_type == 'poster':
+        item = Poster.query.get_or_404(item_id)
+    else:
+        abort(404)
+
+    # Hier kan je checkoutlogica doen, zoals betaalpagina of reservering
+    return render_template("checkout.html", item=item)
 
 
