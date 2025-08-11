@@ -46,8 +46,8 @@
             {% if category in ['postcards', 'posters'] %}
               {% if item.front_image_url %}
                 <img src="{{ url_for('static', filename=item.front_image_url) }}" alt="Voorkant"
-                     class="img-thumbnail thumb active-thumb"
-                     style="width: 80px; cursor: pointer;"
+                     class="card-img-top img-fluid"
+                     style=""
                      data-img="{{ url_for('static', filename=item.front_image_url) }}">
               {% else %}
                 <img src="{{ url_for('static', filename='images/placeholder.jpg') }}" class="card-img-top" alt="Geen afbeelding">
@@ -55,8 +55,8 @@
             {% elif category == 'books' %}
               {% if item.front_image_url %}
                 <img src="{{ item.front_image_url }}" alt="Voorkant"
-                     class="img-thumbnail thumb active-thumb"
-                     style="width: 80px; cursor: pointer;"
+                     class="card-img-top img-fluid"
+                     style=""
                      data-img="{{ item.front_image_url }}">
               {% else %}
                 <img src="{{ url_for('static', filename='images/placeholder.jpg') }}" class="card-img-top" alt="Geen afbeelding">
