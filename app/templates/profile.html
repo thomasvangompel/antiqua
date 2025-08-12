@@ -5,9 +5,7 @@
   {% if messages %}
     <div class="mt-3 container">
       {% for category, message in messages %}
-        
         <div id="flash-messages" class="alert alert-{{category}}">{{ message }}</div>
-        
       {% endfor %}
     </div>
   {% endif %}
@@ -61,17 +59,19 @@
             {{ form.business_name.label }} {{ form.business_name(class="form-control", id="business_name") }}
             <span id="business-name-status" class="position-absolute" style="right: 10px; top: 38px; display: none;"></span>
         </div>
+
         <div class="form-check form-switch mb-3">
-        <input class="form-check-input" type="checkbox" id="show_on_map" name="show_on_map"
-                {% if form.show_on_map.data %}checked{% endif %}>
-        <label class="form-check-label" for="show_on_map">Toon mijn winkel op de kaart voor meer zichtbaarheid</label>
+            <input class="form-check-input" type="checkbox" id="show_on_map" name="show_on_map"
+                   {% if form.show_on_map.data %}checked{% endif %}>
+            <label class="form-check-label" for="show_on_map">Toon mijn winkel op de kaart voor meer zichtbaarheid</label>
         </div>
-
-
 
         {{ form.submit(class="btn btn-primary") }}
     </form>
 </div>
+
+<!-- EXIF.js voor oriëntatieherstel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
 
 <script>
 // Klik op profielfoto opent verborgen file input
@@ -79,13 +79,67 @@ document.getElementById('profile-picture').addEventListener('click', function ()
     document.getElementById('image-upload').click();
 });
 
-// Preview direct tonen na selecteren nieuwe foto
+// Preview met oriëntatiecorrectie
 document.getElementById('image-upload').addEventListener('change', function (event) {
     const file = event.target.files[0];
     if (file && file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = function (e) {
-            document.getElementById('profile-picture').src = e.target.result;
+            const img = new Image();
+            img.onload = function () {
+                EXIF.getData(img, function () {
+                    const orientation = EXIF.getTag(this, 'Orientation');
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (orientation === 6 || orientation === 8) {
+                        canvas.width = height;
+                        canvas.height = width;
+                    } else {
+                        canvas.width = width;
+                        canvas.height = height;
+                    }
+
+                    switch (orientation) {
+                        case 2: // horizontal flip
+                            ctx.translate(width, 0);
+                            ctx.scale(-1, 1);
+                            break;
+                        case 3: // 180° rotate
+                            ctx.translate(width, height);
+                            ctx.rotate(Math.PI);
+                            break;
+                        case 4: // vertical flip
+                            ctx.translate(0, height);
+                            ctx.scale(1, -1);
+                            break;
+                        case 5: // vertical flip + 90 rotate
+                            ctx.rotate(0.5 * Math.PI);
+                            ctx.scale(1, -1);
+                            break;
+                        case 6: // 90° rotate
+                            ctx.rotate(0.5 * Math.PI);
+                            ctx.translate(0, -height);
+                            break;
+                        case 7: // horizontal flip + 90 rotate
+                            ctx.rotate(0.5 * Math.PI);
+                            ctx.translate(width, -height);
+                            ctx.scale(-1, 1);
+                            break;
+                        case 8: // 270° rotate
+                            ctx.rotate(-0.5 * Math.PI);
+                            ctx.translate(-width, 0);
+                            break;
+                    }
+
+                    ctx.drawImage(img, 0, 0);
+                    document.getElementById('profile-picture').src = canvas.toDataURL('image/jpeg');
+                });
+            };
+            img.src = e.target.result;
         };
         reader.readAsDataURL(file);
     }

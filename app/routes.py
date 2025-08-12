@@ -223,6 +223,12 @@ def dashboard():
 
 
 
+from flask import render_template, url_for, flash, redirect, request, current_app
+from flask_login import login_required, current_user
+from PIL import Image, ExifTags
+import os
+import secrets
+
 @main.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
@@ -237,12 +243,14 @@ def profile():
                 return redirect(url_for('main.profile'))
 
         if form.image.data:
+            # Verwijder oude afbeelding als die niet default is
             old_image = current_user.image_file
             if old_image != 'default.jpg':
                 old_path = os.path.join(current_app.root_path, 'static/profile_pics', old_image)
                 if os.path.exists(old_path):
                     os.remove(old_path)
 
+            # Sla nieuwe profielfoto op met oriëntatie-fix
             picture_file = save_picture(form.image.data)
             current_user.image_file = picture_file
 
@@ -285,28 +293,40 @@ def profile():
     return render_template('profile.html', title='Profiel', image_file=image_file, form=form)
 
 
+def save_picture(form_picture):
+    """Slaat een profielfoto op en corrigeert EXIF oriëntatie."""
+    random_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(form_picture.filename)
+    picture_fn = random_hex + f_ext
+    picture_path = os.path.join(current_app.root_path, 'static/profile_pics', picture_fn)
 
+    img = Image.open(form_picture)
 
+    # Fix EXIF oriëntatie
+    try:
+        for orientation in ExifTags.TAGS.keys():
+            if ExifTags.TAGS[orientation] == 'Orientation':
+                break
 
+        exif = img._getexif()
+        if exif is not None:
+            orientation_value = exif.get(orientation, None)
 
-# Eventueel blijven staan:
-def parse_tags(tag_string):
-    tags_raw = [tag.strip().lower() for tag in tag_string.split(',') if tag.strip()]
-    return list(set(tags_raw[:5]))  # max 5 unieke tags
+            if orientation_value == 3:
+                img = img.rotate(180, expand=True)
+            elif orientation_value == 6:
+                img = img.rotate(270, expand=True)
+            elif orientation_value == 8:
+                img = img.rotate(90, expand=True)
+    except (AttributeError, KeyError, IndexError):
+        pass  # Geen EXIF-oriëntatie aanwezig
 
+    # Optioneel: resize naar max breedte/hoogte
+    output_size = (400, 400)
+    img.thumbnail(output_size)
 
-from genereer_beschrijving import generate_description
-from genereer_auteur_beschrijving import generate_author_description
-
-
-def parse_tags(tag_string):
-    tags_raw = [tag.strip().lower() for tag in tag_string.split(',') if tag.strip()]
-    return list(set(tags_raw[:5]))  # max 5 unieke tags
-
-from genereer_beschrijving import generate_description
-from genereer_genre_en_tags import generate_genre_and_tags
-from genereer_auteur_beschrijving import generate_author_description
-
+    img.save(picture_path)
+    return picture_fn
 
 
 @main.route('/admin_dashboard')

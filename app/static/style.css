@@ -238,3 +238,9 @@ max-width: 1400px;
 .active-thumb {
   border: 2px solid #007bff;
 }
+
+
+
+img {
+  image-orientation: from-image;
+}
