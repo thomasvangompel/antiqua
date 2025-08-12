@@ -123,7 +123,7 @@
                 <td>{{ boek.user.username if boek.user else 'Onbekend' }}</td>
                 <td>
                   <a href="{{ url_for('main.book_detail', book_id=boek.id) }}" class="btn btn-sm btn-info">Details</a>
-                  <form action="{{ url_for('main.delete_book_admin', book_id=boek.id) }}" method="POST" style="display:inline;">
+                  <form action="{{ url_for('main.delete_book', book_id=boek.id) }}" method="POST" style="display:inline;">
                     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Boek verwijderen?');">Verwijder</button>
                   </form>
                 </td>
@@ -184,7 +184,7 @@
                 <td>{{ poster.user.username if poster.user else 'Onbekend' }}</td>
                 <td>
                   <a href="{{ url_for('main.poster_detail', poster_id=poster.id) }}" class="btn btn-sm btn-info">Details</a>
-                  <form action="{{ url_for('main.delete_poster_admin', poster_id=poster.id) }}" method="POST" style="display:inline;">
+                  <form action="{{ url_for('main.delete_poster', poster_id=poster.id) }}" method="POST" style="display:inline;">
                     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Poster verwijderen?');">Verwijder</button>
                   </form>
                 </td>
@@ -245,7 +245,7 @@
                 <td>{{ postcard.user.username if postcard.user else 'Onbekend' }}</td>
                 <td>
                   <a href="{{ url_for('main.postcard_detail', postcard_id=postcard.id) }}" class="btn btn-sm btn-info">Details</a>
-                  <form action="{{ url_for('main.delete_postcard_admin', postcard_id=postcard.id) }}" method="POST" style="display:inline;">
+                  <form action="{{ url_for('main.delete_postcard', postcard_id=postcard.id) }}" method="POST" style="display:inline;">
                     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Postcard verwijderen?');">Verwijder</button>
                   </form>
                 </td>

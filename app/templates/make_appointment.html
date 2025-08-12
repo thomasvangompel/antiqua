@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Afspraak maken{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h2>Afspraak maken voor ophalen</h2>
+
+  <div class="card p-4 shadow-sm" style="max-width: 500px; margin: auto;">
+    <h5>{{ item.title }}</h5>
+
+    <form method="post">
+      <div class="mb-3">
+        <label for="date" class="form-label">Datum</label>
+        <input type="date" name="date" id="date" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="time" class="form-label">Tijdstip</label>
+        <input type="time" name="time" id="time" class="form-control" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Bevestig afspraak</button>
+      <a href="{{ url_for('main.cart') }}" class="btn btn-secondary">Annuleren</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

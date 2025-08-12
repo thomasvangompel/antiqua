@@ -388,6 +388,10 @@ def delete_user(user_id):
     flash(f'Gebruiker "{user.username}" is verwijderd.', 'success')
     return redirect(url_for('main.admin_dashboard'))
 
+from genereer_beschrijving import generate_description
+from genereer_genre_en_tags import generate_genre_and_tags
+from genereer_auteur_beschrijving import generate_author_description
+
 
 @main.route('/books/new', methods=['GET', 'POST'])
 @login_required
@@ -431,7 +435,7 @@ def new_book():
             else None
         )
 
-        # Boekobject aanmaken
+        # Boekobject aanmaken met verzend- en betalingsopties
         book = Book(
             title=form.title.data,
             author=form.author.data,
@@ -445,7 +449,12 @@ def new_book():
             front_image=front_filename,
             side_image=side_filename,
             back_image=back_filename,
-            author_description=author_description
+            author_description=author_description,
+            allow_shipping=form.allow_shipping.data,
+            shipping_cost=form.shipping_cost.data if form.allow_shipping.data else None,
+            pickup_only=form.pickup_only.data,
+            platform_payment_only=form.platform_payment_only.data,
+            cash_payment_only=form.cash_payment_only.data
         )
 
         # Tags verwerken op basis van AI-output
@@ -465,6 +474,7 @@ def new_book():
         return redirect(url_for('main.dashboard'))
 
     return render_template('new_book.html', form=form)
+
 
 
 
@@ -1134,8 +1144,12 @@ def add_poster():
             price=form.price.data,
             is_auction=form.is_auction.data,
             auction_min_price=form.auction_min_price.data,
-            sold=form.sold.data,
-            user_id=current_user.id
+            user_id=current_user.id,
+            allow_shipping = form.allow_shipping.data,  
+            shipping_cost = form.shipping_cost.data,       
+            pickup_only = form.pickup_only.data,         
+            platform_payment_only = form.platform_payment_only.data, 
+            cash_payment_only = form.cash_payment_only.data,   
         )
         
         # Afbeelding uploaden en opslaan
@@ -1610,4 +1624,20 @@ def checkout_item(item_type, item_id):
     # Hier kan je checkoutlogica doen, zoals betaalpagina of reservering
     return render_template("checkout.html", item=item)
 
+#---------------appointment------------------------
+
+
+@main.route('/make_appointment/<int:item_id>', methods=['GET', 'POST'])
+@login_required
+def make_appointment(item_id):
+    item = Book.query.get_or_404(item_id)  # of Poster/Postcard afhankelijk van je model
+    if request.method == 'POST':
+        date = request.form.get('date')
+        time = request.form.get('time')
+
+        # Hier kun je opslaan in de database of een melding sturen naar de verkoper
+        flash(f'Afspraak bevestigd voor {date} om {time}', 'success')
+        return redirect(url_for('main.dashboard'))
+
+    return render_template('make_appointment.html', item=item)
 

@@ -37,16 +37,24 @@
         <p>💳 Betaling alleen via platform</p>
       {% endif %}
       {% if item.cash_payment_only %}
-        <p>💵 Alleen contante betaling</p>
+        <p>💵  Ter plaatse betalen</p>
       {% endif %}
       {% if not item.platform_payment_only and not item.cash_payment_only %}
         <p>Alle betalingsmethoden toegestaan</p>
       {% endif %}
 
-      <form action="" method="post" class="mt-4">
-        <button type="submit" class="btn btn-success me-2">Bevestig aankoop</button>
-        <a href="{{ url_for('main.cart') }}" class="btn btn-secondary">Annuleren</a>
-      </form>
+    <form action="" method="post" class="mt-4">
+  {% if item.pickup_only and item.cash_payment_only %}
+    <a href="{{ url_for('main.make_appointment', item_id=item.id) }}" class="btn btn-success me-2">
+      Bevestig aankoop afspraak
+    </a>
+  {% else %}
+    <button type="submit" class="btn btn-success me-2">Bevestig aankoop</button>
+  {% endif %}
+  <a href="{{ url_for('main.cart') }}" class="btn btn-secondary">Annuleren</a>
+</form>
+
+
     </div>
   </div>
 </div>
