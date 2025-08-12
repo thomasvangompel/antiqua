@@ -16,7 +16,34 @@
       {% endif %}
       <p class="card-text"><strong>Prijs:</strong> €{{ "%.2f"|format(item.price) }}</p>
 
-      <form action="" method="post">
+      <hr>
+
+      <h6>Verzendinformatie</h6>
+      {% if item.pickup_only %}
+        <p>📍 Alleen afhalen</p>
+      {% elif item.allow_shipping %}
+        <p>🚚 Verzenden toegestaan</p>
+        {% if item.shipping_cost %}
+          <p>Verzendkosten: €{{ "%.2f"|format(item.shipping_cost) }}</p>
+        {% else %}
+          <p>Verzendkosten: Niet gespecificeerd</p>
+        {% endif %}
+      {% else %}
+        <p>Geen verzendopties beschikbaar</p>
+      {% endif %}
+
+      <h6>Betalingsmogelijkheden</h6>
+      {% if item.platform_payment_only %}
+        <p>💳 Betaling alleen via platform</p>
+      {% endif %}
+      {% if item.cash_payment_only %}
+        <p>💵 Alleen contante betaling</p>
+      {% endif %}
+      {% if not item.platform_payment_only and not item.cash_payment_only %}
+        <p>Alle betalingsmethoden toegestaan</p>
+      {% endif %}
+
+      <form action="" method="post" class="mt-4">
         <button type="submit" class="btn btn-success me-2">Bevestig aankoop</button>
         <a href="{{ url_for('main.cart') }}" class="btn btn-secondary">Annuleren</a>
       </form>

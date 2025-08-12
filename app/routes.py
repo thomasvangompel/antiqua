@@ -336,15 +336,27 @@ def admin_dashboard():
         flash('Toegang geweigerd.', 'danger')
         return redirect(url_for('main.dashboard'))
 
+    # Pagina parameters met fallback naar 1
     page_users = request.args.get('page_users', 1, type=int)
     page_books = request.args.get('page_books', 1, type=int)
+    page_posters = request.args.get('page_posters', 1, type=int)
+    page_postcards = request.args.get('page_postcards', 1, type=int)
 
-    users = User.query.filter_by(is_admin=False).order_by(User.id).paginate(page=page_users, per_page=10)
-    books = Book.query.order_by(Book.id).paginate(page=page_books, per_page=10)
+    # Query's met filter en paginatie
+    users = User.query.filter_by(is_admin=False).order_by(User.id.asc()).paginate(page=page_users, per_page=10, error_out=False)
+    books = Book.query.order_by(Book.id.asc()).paginate(page=page_books, per_page=10, error_out=False)
 
-    return render_template('admin_dashboard.html', users=users, books=books)
+    # Voor posters en postcards (vergeet niet de modellen te importeren!)
+    posters = Poster.query.order_by(Poster.id.asc()).paginate(page=page_posters, per_page=10, error_out=False)
+    postcards = Postcard.query.order_by(Postcard.id.asc()).paginate(page=page_postcards, per_page=10, error_out=False)
 
-
+    return render_template(
+        'admin_dashboard.html',
+        users=users,
+        books=books,
+        posters=posters,
+        postcards=postcards
+    )
 
 
 @main.route('/admin/delete_book/<int:book_id>', methods=['POST'])
@@ -1077,8 +1089,13 @@ def add_postcard():
             price=form.price.data,
             is_auction=form.is_auction.data,
             auction_min_price=form.auction_min_price.data,
-            sold=form.sold.data,
-            user_id=current_user.id
+            user_id=current_user.id,
+            allow_shipping = form.allow_shipping.data,  
+            shipping_cost = form.shipping_cost.data,       
+            pickup_only = form.pickup_only.data,         
+            platform_payment_only = form.platform_payment_only.data, 
+            cash_payment_only = form.cash_payment_only.data,   
+             
         )
         
         # Afbeelding uploaden en opslaan
@@ -1323,7 +1340,12 @@ def filter_items(category):
     sort_by = request.args.get('sort_by', 'relevant')
     postcode = request.args.get('postcode', '').strip()
     stad = request.args.get('stad', '').strip()
-    radius = request.args.get('radius', 20, type=int)
+
+    try:
+        radius = int(request.args.get('radius', 20))
+    except (TypeError, ValueError):
+        radius = 20
+
     search_term = request.args.get('search_term', '').strip()
 
     if category == 'postcards':
@@ -1334,13 +1356,11 @@ def filter_items(category):
         query = model.query.filter_by(sold=False).join(User)
     elif category == 'books':
         model = Book
-        # Hier expliciete join op user_id (verkoper) om ambiguïteit te voorkomen
         query = model.query.filter_by(sold=False).join(User, Book.user_id == User.id)
     else:
         flash("Categorie bestaat niet.", "warning")
         return redirect(url_for('main.home'))
 
-    # Filter op naam / auteur (voor boeken)
     if search_term:
         like_pattern = f"%{search_term}%"
         if category == 'books':
@@ -1353,7 +1373,6 @@ def filter_items(category):
         else:
             query = query.filter(model.title.ilike(like_pattern))
 
-    # Sorteeropties
     if sort_by == 'cheap':
         query = query.order_by(model.price.asc())
     elif sort_by == 'expensive':
@@ -1367,14 +1386,24 @@ def filter_items(category):
     # Filter op afstand
     if postcode and stad:
         user_lat, user_lon = geocode(postcode, stad)
-        if user_lat and user_lon:
-            all_items = query.all()
+        if user_lat is not None and user_lon is not None:
             filtered_items = []
+            all_items = query.all()
             for item in all_items:
-                if item.user and item.user.latitude and item.user.longitude:
-                    dist = haversine(user_lat, user_lon, item.user.latitude, item.user.longitude)
+                if (
+                    item.user and
+                    item.user.latitude is not None and
+                    item.user.longitude is not None
+                ):
+                    try:
+                        lat = float(item.user.latitude)
+                        lon = float(item.user.longitude)
+                        dist = haversine(user_lat, user_lon, lat, lon)
+                    except (TypeError, ValueError):
+                        continue
                     if dist <= radius:
                         filtered_items.append(item)
+
             total = len(filtered_items)
             start = (page - 1) * per_page
             end = start + per_page

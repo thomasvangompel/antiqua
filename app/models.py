@@ -81,6 +81,15 @@ class User(db.Model, UserMixin):
     posters = db.relationship('Poster', backref='user', lazy=True, cascade="all, delete")
 
 class Book(db.Model):
+
+
+    allow_shipping = db.Column(db.Boolean, default=False)
+    shipping_cost = db.Column(db.Numeric(6, 2), nullable=True)
+    pickup_only = db.Column(db.Boolean, default=False)
+    platform_payment_only = db.Column(db.Boolean, default=False)
+    cash_payment_only = db.Column(db.Boolean, default=False)
+
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
     author = db.Column(db.String(150), nullable=False)
@@ -140,6 +149,15 @@ class BookView(db.Model):
     book = db.relationship('Book', back_populates='views')
 
 class Postcard(db.Model):
+
+
+    allow_shipping = db.Column(db.Boolean, default=False)
+    shipping_cost = db.Column(db.Numeric(6, 2), nullable=True)
+    pickup_only = db.Column(db.Boolean, default=False)
+    platform_payment_only = db.Column(db.Boolean, default=False)
+    cash_payment_only = db.Column(db.Boolean, default=False)
+
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(140), nullable=False)
     description = db.Column(db.Text, nullable=True)
@@ -166,6 +184,13 @@ class Postcard(db.Model):
     
     
 class Poster(db.Model):
+
+    allow_shipping = db.Column(db.Boolean, default=False)
+    shipping_cost = db.Column(db.Numeric(6, 2), nullable=True)
+    pickup_only = db.Column(db.Boolean, default=False)
+    platform_payment_only = db.Column(db.Boolean, default=False)
+    cash_payment_only = db.Column(db.Boolean, default=False)
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(140), nullable=False)
     description = db.Column(db.Text, nullable=True)

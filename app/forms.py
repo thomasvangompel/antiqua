@@ -63,6 +63,15 @@ class BookForm(FlaskForm):
         Optional(), NumberRange(min=1, max=30, message="Aantal dagen moet tussen 1 en 30 liggen.")
     ])
 
+
+    allow_shipping       = BooleanField('Verzenden toegestaan')
+    shipping_cost        = DecimalField('Verzendkosten (€)', places=2, validators=[Optional(), NumberRange(min=0)])
+    pickup_only          = BooleanField('Alleen afhalen')
+    platform_payment_only = BooleanField('Alleen platformbetaling')
+    cash_payment_only    = BooleanField('Alleen contante betaling')
+    is_admin             = BooleanField('Admin status')
+
+
     submit       = SubmitField('Opslaan')
 
     def validate(self, extra_validators=None):
@@ -212,6 +221,11 @@ from wtforms import StringField, TextAreaField, DecimalField, BooleanField, Date
 from wtforms.validators import DataRequired, Optional, NumberRange
 from flask_wtf.file import FileAllowed
 
+from flask_wtf import FlaskForm
+from wtforms import StringField, TextAreaField, SelectField, FileField, DecimalField, BooleanField, SubmitField, DateTimeField
+from wtforms.validators import DataRequired, Optional, NumberRange
+from flask_wtf.file import FileAllowed
+
 class PostcardForm(FlaskForm):
     title = StringField('Titel', validators=[DataRequired()])
     description = TextAreaField('Beschrijving', validators=[Optional()])
@@ -233,9 +247,18 @@ class PostcardForm(FlaskForm):
     auction_min_price = DecimalField('Minimum veilingprijs (€)', places=2, validators=[Optional(), NumberRange(min=0)])
     auction_end = DateTimeField('Veiling einddatum', format='%Y-%m-%d %H:%M', validators=[Optional()])
     
-    sold = BooleanField('Verkocht')
+    allow_shipping       = BooleanField('Verzenden toegestaan')
+    shipping_cost        = DecimalField('Verzendkosten (€)', places=2, validators=[Optional(), NumberRange(min=0)])
+    pickup_only          = BooleanField('Alleen afhalen')
+    platform_payment_only = BooleanField('Alleen platformbetaling')
+    cash_payment_only    = BooleanField('Alleen contante betaling')
+    is_admin             = BooleanField('Admin status')
     
     submit = SubmitField('Opslaan')
+
+   
+
+    
     
 class PosterForm(FlaskForm):
     title = StringField('Titel', validators=[DataRequired()])
@@ -258,6 +281,15 @@ class PosterForm(FlaskForm):
     auction_min_price = DecimalField('Minimum veilingprijs (€)', places=2, validators=[Optional(), NumberRange(min=0)])
     auction_end = DateTimeField('Veiling einddatum', format='%Y-%m-%d %H:%M', validators=[Optional()])
     
-    sold = BooleanField('Verkocht')
+    
+    allow_shipping       = BooleanField('Verzenden toegestaan')
+    shipping_cost        = DecimalField('Verzendkosten (€)', places=2, validators=[Optional(), NumberRange(min=0)])
+    pickup_only          = BooleanField('Alleen afhalen')
+    platform_payment_only = BooleanField('Alleen platformbetaling')
+    cash_payment_only    = BooleanField('Alleen contante betaling')
+    is_admin             = BooleanField('Admin status')
     
     submit = SubmitField('Opslaan')
+
+
+                

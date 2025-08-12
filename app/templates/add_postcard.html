@@ -106,11 +106,46 @@
       </div>
     </div>
 
-    <!-- Verkocht checkbox -->
+    <!-- Verzenden toestaan checkbox -->
     <div class="form-check mb-3">
-      {{ form.sold(class="form-check-input") }}
-      {{ form.sold.label(class="form-check-label") }}
-      {% for error in form.sold.errors %}
+      {{ form.allow_shipping(class="form-check-input", id="allowShippingCheck") }}
+      <label class="form-check-label" for="allowShippingCheck">Verzenden toegestaan</label>
+      {% for error in form.allow_shipping.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Verzendkosten, standaard verborgen -->
+    <div class="mb-3" id="shippingCostField" style="display:none;">
+      {{ form.shipping_cost.label(class="form-label") }}
+      {{ form.shipping_cost(class="form-control", placeholder="Verzendkosten (€) (optioneel)") }}
+      {% for error in form.shipping_cost.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Afhalen -->
+    <div class="form-check mb-3">
+      {{ form.pickup_only(class="form-check-input", id="pickupOnlyCheck") }}
+      <label class="form-check-label" for="pickupOnlyCheck">Alleen afhalen</label>
+      {% for error in form.pickup_only.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Betalingsopties -->
+    <div class="form-check mb-3">
+      {{ form.platform_payment_only(class="form-check-input", id="platformPaymentOnlyCheck") }}
+      <label class="form-check-label" for="platformPaymentOnlyCheck">Betaling alleen via platform</label>
+      {% for error in form.platform_payment_only.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="form-check mb-3">
+      {{ form.cash_payment_only(class="form-check-input", id="cashPaymentOnlyCheck") }}
+      <label class="form-check-label" for="cashPaymentOnlyCheck">Alleen contante betaling</label>
+      {% for error in form.cash_payment_only.errors %}
         <div class="text-danger">{{ error }}</div>
       {% endfor %}
     </div>
@@ -144,6 +179,7 @@
     previewImage(this, 'previewBack');
   });
 
+  // Veiling toggle
   const isAuctionCheckbox = document.getElementById('isAuctionCheck');
   const fixedPriceFields = document.getElementById('fixedPriceFields');
   const auctionFields = document.getElementById('auctionFields');
@@ -160,6 +196,37 @@
 
   isAuctionCheckbox.addEventListener('change', toggleFields);
   window.addEventListener('load', toggleFields);
+
+  // Verzenden toestaan toggle
+  const allowShippingCheckbox = document.getElementById('allowShippingCheck');
+  const shippingCostField = document.getElementById('shippingCostField');
+
+  function toggleShippingCost() {
+    if (allowShippingCheckbox.checked) {
+      shippingCostField.style.display = 'block';
+    } else {
+      shippingCostField.style.display = 'none';
+      const input = shippingCostField.querySelector('input');
+      if(input) input.value = '';
+    }
+  }
+
+  allowShippingCheckbox.addEventListener('change', toggleShippingCost);
+  window.addEventListener('load', toggleShippingCost);
+
+  // Voorkom dat allow_shipping en cash_payment_only samen aan staan
+  const cashPaymentOnlyCheckbox = document.getElementById('cashPaymentOnlyCheck');
+
+  function checkShippingAndCash(e) {
+    if (allowShippingCheckbox.checked && cashPaymentOnlyCheckbox.checked) {
+      alert('Verzenden toegestaan en alleen contante betaling kan niet samen.');
+      // Zet de laatst aangeklikte checkbox uit
+      e.target.checked = false;
+    }
+  }
+
+  allowShippingCheckbox.addEventListener('change', checkShippingAndCash);
+  cashPaymentOnlyCheckbox.addEventListener('change', checkShippingAndCash);
 
   // Spinner bij submit
   const form = document.querySelector('form');
