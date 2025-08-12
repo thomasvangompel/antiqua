@@ -95,51 +95,7 @@
         </a>
       </p>
 
-      {# Verzend- en betaalopties #}
-      <div class="d-md-flex gap-4 align-items-start mt-4 shipping-payment-container">
-        <div class="shipping-options p-3 border rounded shadow-sm flex-fill">
-          <h4 class="mb-3">Verzendopties</h4>
-          <ul class="list-unstyled mb-0">
-            {% if postcard.user.pickup_only and not postcard.user.allow_shipping %}
-              <li class="mb-2">
-                <i class="bi bi-box-arrow-in-down text-success me-2"></i> Enkel via afhaling
-              </li>
-            {% endif %}
-            {% if postcard.user.allow_shipping and not postcard.user.pickup_only %}
-              <li class="mb-2">
-                <i class="bi bi-truck text-success me-2"></i> Verzending via post
-              </li>
-            {% endif %}
-            {% if not postcard.user.pickup_only and not postcard.user.allow_shipping %}
-              <li class="text-muted">Geen verzendopties beschikbaar</li>
-            {% endif %}
-          </ul>
-        </div>
-
-        <div class="payment-options p-3 border rounded shadow-sm flex-fill">
-          <h4 class="mb-3">Betaalopties</h4>
-          <ul class="list-unstyled mb-3">
-            {% if postcard.user.cash_payment_only and not postcard.user.platform_payment_only %}
-              <li>
-                <i class="bi bi-cash-coin text-primary me-2"></i> Enkel betaling bij afhalen
-              </li>
-            {% elif postcard.user.platform_payment_only and not postcard.user.cash_payment_only %}
-              <li>
-                <i class="bi bi-credit-card-2-back text-primary me-2"></i> Enkel online betaling via platform
-              </li>
-            {% elif postcard.user.platform_payment_only and postcard.user.cash_payment_only %}
-              <li>
-                <i class="bi bi-cash-coin text-primary me-2"></i> Betaling bij afhalen
-              </li>
-              <li>
-                <i class="bi bi-credit-card-2-back text-primary me-2"></i> Online betaling via platform
-              </li>
-            {% else %}
-              <li class="text-muted">Geen betaalopties beschikbaar</li>
-            {% endif %}
-          </ul>
-        </div>
-      </div>
+      
 
       {% if postcard.price %}
         <button class="add-to-cart-btn btn btn-success" data-type="postcard" data-id="{{ postcard.id }}">

@@ -95,57 +95,15 @@
         </a>
       </p>
 
-      {# Verzend- en betaalopties #}
-      <div class="d-md-flex gap-4 align-items-start mt-4 shipping-payment-container">
-        <div class="shipping-options p-3 border rounded shadow-sm flex-fill">
-          <h4 class="mb-3">Verzendopties</h4>
-          <ul class="list-unstyled mb-0">
-            {% if poster.user.pickup_only and not poster.user.allow_shipping %}
-              <li class="mb-2">
-                <i class="bi bi-box-arrow-in-down text-success me-2"></i> Enkel via afhaling
-              </li>
-            {% endif %}
-            {% if poster.user.allow_shipping and not poster.user.pickup_only %}
-              <li class="mb-2">
-                <i class="bi bi-truck text-success me-2"></i> Verzending via post
-              </li>
-            {% endif %}
-            {% if not poster.user.pickup_only and not poster.user.allow_shipping %}
-              <li class="text-muted">Geen verzendopties beschikbaar</li>
-            {% endif %}
-          </ul>
-        </div>
+      
 
-        <div class="payment-options p-3 border rounded shadow-sm flex-fill">
-          <h4 class="mb-3">Betaalopties</h4>
-          <ul class="list-unstyled mb-3">
-            {% if poster.user.cash_payment_only and not poster.user.platform_payment_only %}
-              <li>
-                <i class="bi bi-cash-coin text-primary me-2"></i> Enkel betaling bij afhalen
-              </li>
-            {% elif poster.user.platform_payment_only and not poster.user.cash_payment_only %}
-              <li>
-                <i class="bi bi-credit-card-2-back text-primary me-2"></i> Enkel online betaling via platform
-              </li>
-            {% elif poster.user.platform_payment_only and poster.user.cash_payment_only %}
-              <li>
-                <i class="bi bi-cash-coin text-primary me-2"></i> Betaling bij afhalen
-              </li>
-              <li>
-                <i class="bi bi-credit-card-2-back text-primary me-2"></i> Online betaling via platform
-              </li>
-            {% else %}
-              <li class="text-muted">Geen betaalopties beschikbaar</li>
-            {% endif %}
-          </ul>
-        </div>
-      </div>
+        
 
       {% if poster.price %}
         <button class="add-to-cart-btn btn btn-success" data-type="poster" data-id="{{ poster.id }}">Toevoegen Winkelwagen</button>
       {% endif %}
 
-      <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary mt-3 ms-2">Terug naar dashboard</a>
+      
     </div>
   </div>
 </div>
