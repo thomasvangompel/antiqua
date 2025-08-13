@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Bedankt voor je betaling{% endblock %}
+
+{% block content %}
+<div class="text-center my-5">
+    <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+    <h2 class="mt-3">Bedankt voor je betaling!</h2>
+    <p class="lead">We hebben je betaling succesvol ontvangen en verwerken nu je bestelling.</p>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary mt-3">
+        Naar mijn dashboard
+    </a>
+</div>
+{% endblock %}

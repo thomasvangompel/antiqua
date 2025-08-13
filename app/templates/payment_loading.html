@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Betaling wordt verwerkt{% endblock %}
+
+{% block content %}
+<div class="text-center my-5">
+    <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+        <span class="visually-hidden">Laden...</span>
+    </div>
+    <h2 class="mt-4">Je betaling wordt verwerkt...</h2>
+    <p>Even geduld, we controleren de status.</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    const paymentId = "{{ payment_id }}";
+
+    function checkStatus() {
+        fetch(`/check-payment-status/${paymentId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "paid") {
+                    window.location.href = "{{ url_for('main.bedankt') }}";
+                } else if (data.status === "canceled" || data.status === "failed") {
+                    window.location.href = "{{ url_for('main.payment_failed') }}";
+                }
+            })
+            .catch(err => console.error(err));
+    }
+
+    setInterval(checkStatus, 2000);
+</script>
+{% endblock %}

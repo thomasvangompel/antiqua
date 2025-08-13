@@ -1641,3 +1641,112 @@ def make_appointment(item_id):
 
     return render_template('make_appointment.html', item=item)
 
+
+from mollie.api.client import Client
+
+
+
+
+
+
+
+from mollie.api.client import Client
+
+import os
+
+# Mollie client
+mollie_client = Client()
+mollie_client.set_api_key(os.environ.get("MOLLIE_API_KEY", "test_test"))
+
+@main.route("/start-mollie-payment/<int:item_id>", methods=["POST"])
+@login_required
+def start_mollie_payment(item_id):
+    item = Book.query.get_or_404(item_id)
+
+    # Eerst betaling aanmaken met een tijdelijke redirect URL
+    payment = mollie_client.payments.create({
+        "amount": {
+            "currency": "EUR",
+            "value": f"{item.price:.2f}"
+        },
+        "description": f"Betaling voor {item.title}",
+        # hier nog geen payment_id
+        "redirectUrl": url_for("main.payment_return", _external=True),
+        "webhookUrl": url_for("main.payment_webhook", _external=True),
+        "metadata": {
+            "item_id": item.id,
+            "user_id": current_user.id
+        }
+    })
+
+    # Nu redirectUrl bijwerken met payment_id en updaten
+    payment_update_url = url_for("main.payment_return", payment_id=payment.id, _external=True)
+    mollie_client.payments.update(payment.id, {
+        "redirectUrl": payment_update_url
+    })
+
+    return redirect(payment.checkout_url)
+
+
+
+@main.route("/payment-return")
+@login_required
+def payment_return():
+    payment_id = request.args.get("payment_id")
+    if not payment_id:
+        return "Geen payment ID ontvangen."
+    return render_template("payment_loading.html", payment_id=payment_id)
+
+
+
+@main.route("/check-payment-status/<payment_id>")
+@login_required
+def check_payment_status(payment_id):
+    try:
+        payment = mollie_client.payments.get(payment_id)
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+    if payment.is_paid():
+        return {"status": "paid"}
+    elif payment.is_canceled():
+        return {"status": "canceled"}
+    else:
+        return {"status": payment.status}
+
+
+
+@main.route("/payment-webhook", methods=["POST"])
+def payment_webhook():
+    """Wordt aangeroepen door Mollie server-to-server"""
+    payment_id = request.form.get("id")
+    if not payment_id:
+        return "Geen payment ID ontvangen", 400
+
+    payment = mollie_client.payments.get(payment_id)
+
+    # Update database afhankelijk van status
+    if payment.is_paid():
+        print(f"Order {payment.metadata['item_id']} betaald.")
+        # markeer order als betaald in DB
+    elif payment.is_canceled():
+        print(f"Order {payment.metadata['item_id']} geannuleerd.")
+        # markeer order als geannuleerd
+    else:
+        print(f"Order {payment.metadata['item_id']} status: {payment.status}")
+
+    return "OK"
+
+
+
+@main.route("/bedankt")
+@login_required
+def bedankt():
+    return render_template("bedankt.html")
+
+
+
+@main.route("/betaling-mislukt")
+@login_required
+def payment_failed():
+    return render_template("betaling_mislukt.html")
