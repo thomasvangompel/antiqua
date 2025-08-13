@@ -1651,7 +1651,7 @@ from mollie.api.client import Client
 
 
 from mollie.api.client import Client
-
+from mollie.api.error import RequestError
 import os
 
 # Mollie client
@@ -1662,30 +1662,38 @@ mollie_client.set_api_key(os.environ.get("MOLLIE_API_KEY", "test_test"))
 @login_required
 def start_mollie_payment(item_id):
     item = Book.query.get_or_404(item_id)
+    try:
+        # Eerst betaling aanmaken met een tijdelijke redirect URL
+        payment = mollie_client.payments.create({
+            "amount": {
+                "currency": "EUR",
+                "value": f"{item.price:.2f}"
+            },
+            "description": f"Betaling voor {item.title}",
+            # hier nog geen payment_id
+            "redirectUrl": url_for("main.payment_return", _external=True),
+            "webhookUrl": url_for("main.payment_webhook", _external=True),
+            "metadata": {
+                "item_id": item.id,
+                "user_id": current_user.id
+            }
+        })
 
-    # Eerst betaling aanmaken met een tijdelijke redirect URL
-    payment = mollie_client.payments.create({
-        "amount": {
-            "currency": "EUR",
-            "value": f"{item.price:.2f}"
-        },
-        "description": f"Betaling voor {item.title}",
-        # hier nog geen payment_id
-        "redirectUrl": url_for("main.payment_return", _external=True),
-        "webhookUrl": url_for("main.payment_webhook", _external=True),
-        "metadata": {
-            "item_id": item.id,
-            "user_id": current_user.id
-        }
-    })
+        # Nu redirectUrl bijwerken met payment_id en updaten
+        payment_update_url = url_for("main.payment_return", payment_id=payment.id, _external=True)
+        mollie_client.payments.update(payment.id, {
+            "redirectUrl": payment_update_url
+        })
 
-    # Nu redirectUrl bijwerken met payment_id en updaten
-    payment_update_url = url_for("main.payment_return", payment_id=payment.id, _external=True)
-    mollie_client.payments.update(payment.id, {
-        "redirectUrl": payment_update_url
-    })
+        return redirect(payment.checkout_url)
+    except RequestError:
+        flash("We konden geen verbinding maken met de betaalprovider. Probeer het later opnieuw.", "danger")
+        return redirect(url_for("main.cart"))  # of een andere veilige pagina
+    except Exception:
+        flash("Er is een onverwachte fout opgetreden tijdens het starten van de betaling.", "danger")
+        return redirect(url_for("main.cart"))
 
-    return redirect(payment.checkout_url)
+
 
 
 
