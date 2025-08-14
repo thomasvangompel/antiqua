@@ -15,14 +15,13 @@
 
   <div class="container py-4">
     <div class="d-flex flex-column flex-md-row align-items-center mb-4">
-      <!-- Profielfoto -->
-      <img src="{{ url_for('static', filename='profile_pics/' + user.image_file) }}" 
-           alt="Profielfoto" class="profile-pic me-md-4 mb-3 mb-md-0" />
+     
+      
 
       <!-- Welkomsttekst en knoppen -->
       <div class="flex-grow-1">
         <h2>Hallo, {{ user.username or "Nieuweling"}}!</h2>
-        <h2>{{user.account_type}}</h2>
+        
 
         <div class="d-flex flex-wrap mt-2 align-items-center">
   <!-- Bewerk profiel knop -->

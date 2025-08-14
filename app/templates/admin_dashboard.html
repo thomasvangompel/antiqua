@@ -123,9 +123,10 @@
                 <td>{{ boek.user.username if boek.user else 'Onbekend' }}</td>
                 <td>
                   <a href="{{ url_for('main.book_detail', book_id=boek.id) }}" class="btn btn-sm btn-info">Details</a>
-                  <form action="{{ url_for('main.delete_book', book_id=boek.id) }}" method="POST" style="display:inline;">
+                  <form action="{{ url_for('main.delete_book_admin', book_id=boek.id) }}" method="POST" style="display:inline;">
                     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Boek verwijderen?');">Verwijder</button>
-                  </form>
+                </form>
+
                 </td>
               </tr>
               {% endfor %}
