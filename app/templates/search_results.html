@@ -27,9 +27,9 @@
                          alt="Voorkant van {{ book.title }}"
                          class="card-img-top">
                     {% if book.sold %}
-                    <span class="badge bg-danger position-absolute top-0 end-0 m-2" style="z-index: 10;">
-                        Verkocht
-                    </span>
+                        <span class="badge bg-danger position-absolute top-0 end-0 m-2" style="z-index: 10;">
+                            Verkocht
+                        </span>
                     {% endif %}
                 {% endif %}
                 <div class="card-body">
@@ -72,6 +72,11 @@
                     <img src="{{ url_for('static', filename=kaart.front_image_url) }}"
                          alt="Voorkant van {{ kaart.title }}"
                          class="card-img-top">
+                    {% if kaart.sold %}
+                        <span class="badge bg-danger position-absolute top-0 end-0 m-2" style="z-index: 10;">
+                            Verkocht
+                        </span>
+                    {% endif %}
                 {% endif %}
                 <div class="card-body">
                     <h5 class="card-title">{{ kaart.title }}</h5>
@@ -89,10 +94,7 @@
     </div>
     {% endif %}
 
-
-
-
-       {% if posters.items %}
+    {% if posters.items %}
     <h4>Posters</h4>
     <div class="row">
         {% for poster in posters.items %}
@@ -100,9 +102,17 @@
             <div class="card h-100 card-verkoper position-relative">
                 {% if poster.front_image_url %}
                     <img src="{{ url_for('static', filename=poster.front_image_url) }}"
-                         alt="Voorkant van {{ poster.title }}"
-                         class="card-img-top">
+                        alt="Voorkant van {{ poster.title }}"
+                        class="card-img-top">
+                    <p>
+                        {% if poster.sold %}
+                            <strong>Verkocht</strong>
+                        {% else %}
+                            <em>Niet verkocht (debug: {{ poster.sold }})</em>
+                        {% endif %}
+                    </p>
                 {% endif %}
+
                 <div class="card-body">
                     <h5 class="card-title">{{ poster.title }}</h5>
                     <p class="card-text">{{ poster.description or '' }}</p>

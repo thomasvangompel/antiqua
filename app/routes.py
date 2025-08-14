@@ -1622,7 +1622,7 @@ def checkout_item(item_type, item_id):
         abort(404)
 
     # Hier kan je checkoutlogica doen, zoals betaalpagina of reservering
-    return render_template("checkout.html", item=item)
+    return render_template("checkout.html", item=item, item_type=item_type)
 
 #---------------appointment------------------------
 
@@ -1658,37 +1658,40 @@ import os
 mollie_client = Client()
 mollie_client.set_api_key(os.environ.get("MOLLIE_API_KEY", "test_test"))
 
-@main.route("/start-mollie-payment/<int:item_id>", methods=["POST"])
+@main.route("/start-mollie-payment/<string:item_type>/<int:item_id>", methods=["POST"])
 @login_required
-def start_mollie_payment(item_id):
-    item = Book.query.get_or_404(item_id)
+def start_mollie_payment(item_type, item_id):
+    # Haal het item op afhankelijk van type
+    if item_type == "book":
+        item = Book.query.get_or_404(item_id)
+    elif item_type == "poster":
+        item = Poster.query.get_or_404(item_id)
+    elif item_type == "postcard":
+        item = Postcard.query.get_or_404(item_id)
+    else:
+        flash("Ongeldig item type.", "danger")
+        return redirect(url_for("main.cart"))
+
     try:
-        # Eerst betaling aanmaken met een tijdelijke redirect URL
         payment = mollie_client.payments.create({
-            "amount": {
-                "currency": "EUR",
-                "value": f"{item.price:.2f}"
-            },
+            "amount": {"currency": "EUR", "value": f"{item.price:.2f}"},
             "description": f"Betaling voor {item.title}",
-            # hier nog geen payment_id
             "redirectUrl": url_for("main.payment_return", _external=True),
             "webhookUrl": url_for("main.payment_webhook", _external=True),
             "metadata": {
                 "item_id": item.id,
-                "user_id": current_user.id
+                "user_id": current_user.id,
+                "item_type": item_type  # belangrijk voor webhook
             }
         })
 
-        # Nu redirectUrl bijwerken met payment_id en updaten
         payment_update_url = url_for("main.payment_return", payment_id=payment.id, _external=True)
-        mollie_client.payments.update(payment.id, {
-            "redirectUrl": payment_update_url
-        })
+        mollie_client.payments.update(payment.id, {"redirectUrl": payment_update_url})
 
         return redirect(payment.checkout_url)
     except RequestError:
         flash("We konden geen verbinding maken met de betaalprovider. Probeer het later opnieuw.", "danger")
-        return redirect(url_for("main.cart"))  # of een andere veilige pagina
+        return redirect(url_for("main.cart"))
     except Exception:
         flash("Er is een onverwachte fout opgetreden tijdens het starten van de betaling.", "danger")
         return redirect(url_for("main.cart"))
@@ -1733,15 +1736,34 @@ def payment_webhook():
 
     payment = mollie_client.payments.get(payment_id)
 
+    # Haal metadata op
+    item_id = payment.metadata.get("item_id")
+    item_type = payment.metadata.get("item_type")  # we voegen dit toe
+
+    if not item_id or not item_type:
+        return "Geen item metadata ontvangen", 400
+
     # Update database afhankelijk van status
     if payment.is_paid():
-        print(f"Order {payment.metadata['item_id']} betaald.")
-        # markeer order als betaald in DB
+        print(f"Order {item_id} betaald.")
+        if item_type == "book":
+            item = Book.query.get(item_id)
+        elif item_type == "postcard":
+            item = Postcard.query.get(item_id)
+        elif item_type == "poster":
+            item = Poster.query.get(item_id)
+        else:
+            item = None
+
+        if item:
+            item.sold = True
+            db.session.commit()
+
     elif payment.is_canceled():
-        print(f"Order {payment.metadata['item_id']} geannuleerd.")
-        # markeer order als geannuleerd
+        print(f"Order {item_id} geannuleerd.")
+        # hier kun je eventueel status opslaan als geannuleerd
     else:
-        print(f"Order {payment.metadata['item_id']} status: {payment.status}")
+        print(f"Order {item_id} status: {payment.status}")
 
     return "OK"
 
