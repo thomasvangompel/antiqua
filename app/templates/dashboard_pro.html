@@ -26,11 +26,16 @@
         <a href="{{ url_for('main.verzendgegevens') }}" class="btn btn-primary mt-2 me-2">Verkoop gegevens</a>
 
         {% if user.business_name %}
-          <a href="{{ url_for('main.public_seller_profile', business_name=user.business_name) }}" 
-             class="btn btn-secondary mt-2">
-             Mijn Antiquariaat
-          </a>
-        {% endif %}
+  <a href="{{ url_for('main.public_seller_profile', business_name=user.business_name) }}" 
+     class="btn btn-secondary mt-2 me-2">
+     Mijn Antiquariaat
+  </a>
+  <a href="{{ url_for('main.beheer_antiquariaat') }}" 
+     class="btn btn-outline-dark mt-2">
+     Beheer Antiquariaat
+  </a>
+{% endif %}
+
       </div>
     </div>
 
@@ -90,17 +95,7 @@
       <p>Je hebt nog geen boeken toegevoegd. <a href="{{ url_for('main.new_book') }}">Voeg er nu één toe!</a></p>
     {% endif %}
 
-    {% if verkochte_boeken %}
-    <h4 class="mt-5">🏷️ Verkochte Boeken</h4>
-    <div class="list-group">
-      {% for boek in verkochte_boeken %}
-        <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 rounded shadow-sm p-3 bg-light">
-          <h5 class="mb-1">{{ boek.title }} <span class="badge bg-danger">Verkocht</span></h5>
-          <small class="text-muted mb-2 d-block">door {{ boek.author }}</small>
-        </div>
-      {% endfor %}
-    </div>
-    {% endif %}
+    
 
     {# ------------------- POSTKAARTEN ------------------- #}
     {% set beschikbare_postkaarten = postkaarten | selectattr('sold', 'equalto', False) | list %}
@@ -136,17 +131,7 @@
       <p>Je hebt nog geen postkaarten toegevoegd. <a href="{{ url_for('main.add_postcard') }}">Voeg er nu één toe!</a></p>
     {% endif %}
 
-    {% if verkochte_postkaarten %}
-    <h4 class="mt-5">🏷️ Verkochte Postkaarten</h4>
-    <div class="list-group">
-      {% for kaart in verkochte_postkaarten %}
-        <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 rounded shadow-sm p-3 bg-light">
-          <h5 class="mb-1">{{ kaart.title or 'Geen titel' }} <span class="badge bg-danger">Verkocht</span></h5>
-          <small class="text-muted mb-2 d-block">{{ kaart.publisher}}</small>
-        </div>
-      {% endfor %}
-    </div>
-    {% endif %}
+    
 
     {# ------------------- POSTERS ------------------- #}
     {% set beschikbare_posters = posters | selectattr('sold', 'equalto', False) | list %}
@@ -182,17 +167,7 @@
       <p>Je hebt nog geen posters toegevoegd. <a href="{{ url_for('main.add_poster') }}">Voeg er nu één toe!</a></p>
     {% endif %}
 
-    {% if verkochte_posters %}
-    <h4 class="mt-5">🏷️ Verkochte Posters</h4>
-    <div class="list-group">
-      {% for poster in verkochte_posters %}
-        <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 rounded shadow-sm p-3 bg-light">
-          <h5 class="mb-1">{{ poster.title or 'Geen titel' }} <span class="badge bg-danger">Verkocht</span></h5>
-          <small class="text-muted mb-2 d-block">{{ poster.publisher}}</small>
-        </div>
-      {% endfor %}
-    </div>
-    {% endif %}
+    
 
   </div>
 {% endblock %}

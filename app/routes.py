@@ -190,6 +190,10 @@ def logout():
 
 
 
+from flask import redirect, url_for, render_template
+from flask_login import login_required, current_user
+from .models import Book, Postcard, Poster, Message
+
 @main.route('/dashboard')
 @login_required
 def dashboard():
@@ -197,19 +201,25 @@ def dashboard():
         # Redirect admin naar admin_dashboard
         return redirect(url_for('main.admin_dashboard'))
     
-    # Voor gewone gebruikers: toon hun boeken, postkaarten en ongelezen berichten
+    # Voor gewone gebruikers: haal hun boeken, postkaarten en posters op
     boeken = Book.query.filter_by(user_id=current_user.id).all()
     postkaarten = Postcard.query.filter_by(user_id=current_user.id).all()
-    poster = Poster.query.filter_by(user_id=current_user.id).all()
+    posters = Poster.query.filter_by(user_id=current_user.id).all()
    
     new_message_count = Message.query.filter_by(receiver_id=current_user.id, read=False).count()
     
+    # Kies template op basis van account_type
+    if current_user.account_type == 'pro':
+        template = 'dashboard_pro.html'
+    else:
+        template = 'dashboard_basic.html'
+    
     return render_template(
-        'dashboard.html', 
+        template, 
         user=current_user, 
         boeken=boeken, 
         postkaarten=postkaarten,
-        posters=poster,
+        posters=posters,
         new_message_count=new_message_count
     )
 
@@ -1790,3 +1800,51 @@ def bedankt():
 @login_required
 def payment_failed():
     return render_template("betaling_mislukt.html")
+
+
+#---------------beheer antiquariaat-----------------------
+
+
+@main.route('/beheer-antiquariaat')
+@login_required
+def beheer_antiquariaat():
+    # Alle verkochte goederen ophalen
+    verkochte_boeken = Book.query.filter_by(user_id=current_user.id, sold=True).all()
+    verkochte_postkaarten = Postcard.query.filter_by(user_id=current_user.id, sold=True).all()
+    verkochte_posters = Poster.query.filter_by(user_id=current_user.id, sold=True).all()
+
+    return render_template(
+        'beheer_antiquariaat.html',
+        verkochte_boeken=verkochte_boeken,
+        verkochte_postkaarten=verkochte_postkaarten,
+        verkochte_posters=verkochte_posters
+    )
+
+
+
+
+
+#---------------upgrade account------------------------------------
+
+
+from flask import flash, redirect, url_for, render_template
+from flask_login import login_required, current_user
+from app import db
+
+@main.route('/upgrade_account', methods=['GET', 'POST'])
+@login_required
+def upgrade_account():
+    if current_user.pro_tier:  # Als al Pro
+        flash('Je hebt al een Pro-account!', 'info')
+        return redirect(url_for('main.dashboard'))
+
+    if request.method == 'POST':
+        current_user.pro_tier = True
+        current_user.account_type = "pro"  # belangrijk
+        db.session.commit()
+        flash('Je account is succesvol geüpgraded naar Pro!', 'success')
+        return redirect(url_for('main.dashboard'))
+
+    # GET request toont eerst de upgrade pagina
+    return render_template('upgrade_account.html', user=current_user)
+

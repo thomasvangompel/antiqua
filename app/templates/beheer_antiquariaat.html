@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <!-- Aside menu -->
+    <aside class="col-md-3 mb-4">
+      <div class="list-group">
+        <a href="#verkocht" class="list-group-item list-group-item-action">Verkocht</a>
+        <!-- Hier kun je later nog meer beheerknoppen toevoegen -->
+      </div>
+    </aside>
+
+    <!-- Content -->
+    <main class="col-md-9">
+      <h3 id="verkocht">🏷️ Verkochte Goederen</h3>
+
+      {% if verkochte_boeken or verkochte_postkaarten or verkochte_posters %}
+        {% if verkochte_boeken %}
+          <h5 class="mt-4">📚 Boeken</h5>
+          <ul class="list-group mb-4">
+            {% for boek in verkochte_boeken %}
+              <li class="list-group-item">
+                {{ boek.title }} <small class="text-muted">door {{ boek.author }}</small>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if verkochte_postkaarten %}
+          <h5 class="mt-4">📬 Postkaarten</h5>
+          <ul class="list-group mb-4">
+            {% for kaart in verkochte_postkaarten %}
+              <li class="list-group-item">
+                {{ kaart.title or 'Geen titel' }}
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if verkochte_posters %}
+          <h5 class="mt-4">🖼️ Posters</h5>
+          <ul class="list-group">
+            {% for poster in verkochte_posters %}
+              <li class="list-group-item">
+                {{ poster.title or 'Geen titel' }}
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% else %}
+        <p>Geen verkochte goederen gevonden.</p>
+      {% endif %}
+    </main>
+  </div>
+</div>
+{% endblock %}

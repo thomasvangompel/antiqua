@@ -16,6 +16,11 @@ book_tags = db.Table(
     db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
 )
 
+
+
+ACCOUNT_TYPES = ('basic', 'pro')
+PRO_TIERS = ('free', 'basic', 'medium', 'full')
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=False, nullable=True)
@@ -55,6 +60,12 @@ class User(db.Model, UserMixin):
 
     is_verified = db.Column(db.Boolean, default=False)
     is_active = db.Column('is_active', db.Boolean, default=True, nullable=False)
+
+    #account flavour
+
+    account_type = db.Column(db.String(10), nullable=False, default='basic')  # 'basic' of 'pro'
+    pro_tier     = db.Column(db.String(10), nullable=True)                    # None bij basic; anders 'free'|'basic'|'medium'|'full'
+    vat_number   = db.Column(db.String(32), nullable=True)
 
     # Verzendinstellingen
     allow_shipping = db.Column(db.Boolean, default=False)
