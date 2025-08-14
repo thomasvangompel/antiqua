@@ -68,15 +68,7 @@ def inject_new_message_count():
     return dict(new_message_count=new_message_count)
 
 
-@main.context_processor
-def inject_cart_count():
-    if current_user.is_authenticated:
-        total_quantity = db.session.query(db.func.sum(CartItem.quantity))\
-            .filter_by(user_id=current_user.id).scalar()
-        return {'cart_count': total_quantity or 0}
-    else:
-        cart = session.get('cart', [])
-        return {'cart_count': sum(item['quantity'] for item in cart)}
+
 
 
 
@@ -1500,20 +1492,26 @@ def add_to_cart(item_type, item_id):
         session['cart'] = cart
 
 
-def get_items_in_cart():
+
+def get_items_in_cart(only_available=False):
+    """
+    Haalt alle items op uit de cart. 
+    only_available=True => filtert items die verkocht zijn.
+    """
     items_in_cart = []
+
     if current_user.is_authenticated:
         cart_items = CartItem.query.filter_by(user_id=current_user.id).all()
         for entry in cart_items:
+            item = None
             if entry.item_type == 'book':
                 item = Book.query.get(entry.item_id)
             elif entry.item_type == 'postcard':
                 item = Postcard.query.get(entry.item_id)
             elif entry.item_type == 'poster':
                 item = Poster.query.get(entry.item_id)
-            else:
-                item = None
-            if item:
+
+            if item and (not only_available or not item.sold):
                 items_in_cart.append({
                     'item': item,
                     'type': entry.item_type,
@@ -1522,51 +1520,63 @@ def get_items_in_cart():
     else:
         cart_data = session.get('cart', [])
         for entry in cart_data:
+            item = None
             if entry['type'] == 'book':
                 item = Book.query.get(entry['id'])
             elif entry['type'] == 'postcard':
                 item = Postcard.query.get(entry['id'])
             elif entry['type'] == 'poster':
                 item = Poster.query.get(entry['id'])
-            else:
-                item = None
-            if item:
+
+            if item and (not only_available or not item.sold):
                 items_in_cart.append({
                     'item': item,
                     'type': entry['type'],
                     'quantity': entry['quantity']
                 })
+
     return items_in_cart
-
-
-
-
-@main.route('/cart/<item_type>/<int:item_id>')
-def add_item_to_cart(item_type, item_id):
-    add_to_cart(item_type, item_id)
-    items_in_cart = get_items_in_cart()
-    return render_template(
-        'cart.html',
-        items_in_cart=items_in_cart,
-        cart_item_count=sum(i['quantity'] for i in items_in_cart)
-    )
 
 @main.route('/cart')
 def cart():
-    items_in_cart = get_items_in_cart()
+    """
+    Route voor de winkelwagenpagina.
+    Toont alleen beschikbare items.
+    """
+    available_items = get_items_in_cart(only_available=True)
+    total_items_in_cart = sum(item['quantity'] for item in get_items_in_cart(only_available=False))  # totaal ongeacht sold
+
     return render_template(
         'cart.html',
-        items_in_cart=items_in_cart,
-        cart_item_count=sum(i['quantity'] for i in items_in_cart)
+        items_in_cart=available_items,
+        cart_item_count=total_items_in_cart  # gebruik dit als badge of voor info
     )
+
+
+@main.context_processor
+def inject_cart_count():
+    """
+    Context processor voor de badge in de navbar.
+    Telt totaal items minus de verkochte items.
+    """
+    all_items = get_items_in_cart(only_available=False)
+    cart_count = sum(item['quantity'] for item in all_items)  # totaal items
+    sold_count = sum(item['quantity'] for item in all_items if item['item'].sold)  # verkochte items
+
+    return {'cart_count': cart_count - sold_count}
+
 
 @main.route('/api/add_to_cart/<item_type>/<int:item_id>', methods=['POST'])
 def api_add_to_cart(item_type, item_id):
     add_to_cart(item_type, item_id)
-    items_in_cart = get_items_in_cart()
+    
+    # Haal alle items op, maar filter sold items voor de badge
+    items_in_cart = get_items_in_cart(only_available=False)
+    cart_count = sum(i['quantity'] for i in items_in_cart if not i['item'].sold)
+    
     return jsonify({
         'success': True,
-        'cart_count': sum(i['quantity'] for i in items_in_cart)
+        'cart_count': cart_count
     })
 
 
