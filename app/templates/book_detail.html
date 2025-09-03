@@ -6,6 +6,7 @@
 
 {% set just_paid = request.args.get('just_paid') %}
 
+
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     <div class="container mt-3">
@@ -18,27 +19,6 @@
     </div>
   {% endif %}
 {% endwith %}
-
-<div id="loader" style="display:none; text-align:center; margin: 20px 0;">
-  <div class="spinner-border text-primary" role="status">
-    <span class="visually-hidden">Laden...</span>
-  </div>
-  <p>Even geduld, we verwerken je betaling...</p>
-</div>
-
-{% if just_paid and not book.sold %}
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelector('.container').style.display = 'none';
-    document.getElementById('loader').style.display = 'block';
-    setTimeout(() => {
-      const url = new URL(window.location);
-      url.searchParams.delete('just_paid');
-      window.location.href = url.toString();
-    }, 5000);
-  });
-</script>
-{% endif %}
 
 <div class="container">
   <div class="row">
@@ -69,11 +49,16 @@
     <div class="col-md-6">
       <h2>{{ book.title }}</h2>
 
-      {% if book.sold %}
-        <p class="alert alert-danger"><strong>Dit boek is verkocht!</strong></p>
-      {% endif %}
 
-      <p><strong>Auteur:</strong> {{ book.author }}</p>
+      {% if book.sold %}
+        <!-- Boek is verkocht, geen winkelwagen knop -->
+      {% else %}
+        {% if not current_user.is_authenticated or book.user_id != current_user.id %}
+          <button class="add-to-cart-btn btn btn-success" data-type="book" data-id="{{ book.id }}">
+            Voeg toe aan winkelwagen
+          </button>
+        {% endif %}
+      {% endif %}
 
       {% if book.author_description %}
         <p><strong>Over de auteur:</strong><br>

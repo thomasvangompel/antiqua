@@ -98,9 +98,11 @@
       
 
       {% if postcard.price %}
-        <button class="add-to-cart-btn btn btn-success" data-type="postcard" data-id="{{ postcard.id }}">
-  Voeg toe aan winkelwagen
-</button>
+    {% if not current_user.is_authenticated or postcard.user_id != current_user.id %}
+    <button class="add-to-cart-btn btn btn-success" data-type="postcard" data-id="{{ postcard.id }}">
+    Voeg toe aan winkelwagen
+  </button>
+    {% endif %}
       {% endif %}
 
       

@@ -1534,7 +1534,25 @@ from flask import session, render_template
 from flask_login import current_user
 
 def add_to_cart(item_type, item_id):
+    # Check: mag niet eigen item kopen
+    owner_id = None
+    if item_type == 'book':
+        item = Book.query.get(item_id)
+        if item:
+            owner_id = item.user_id
+    elif item_type == 'postcard':
+        item = Postcard.query.get(item_id)
+        if item:
+            owner_id = item.user_id
+    elif item_type == 'poster':
+        item = Poster.query.get(item_id)
+        if item:
+            owner_id = item.user_id
+
     if current_user.is_authenticated:
+        if owner_id == current_user.id:
+            flash('Je kunt je eigen item niet kopen!', 'warning')
+            return
         # In database opslaan
         cart_item = CartItem.query.filter_by(
             user_id=current_user.id,
@@ -1554,6 +1572,9 @@ def add_to_cart(item_type, item_id):
         db.session.commit()
     else:
         # In session opslaan
+        if owner_id is not None and 'user_id' in session and owner_id == session['user_id']:
+            flash('Je kunt je eigen item niet kopen!', 'warning')
+            return
         cart = session.get('cart', [])
         for item in cart:
             if item['type'] == item_type and item['id'] == item_id:
@@ -1732,10 +1753,35 @@ def make_appointment(item_id):
             f'- Tijd: {time}\n'
             f'- Koper: {current_user.username} ({current_user.email})\n'
         )
+
+        # Bericht naar verkoper
         msg = Message(sender_id=current_user.id, receiver_id=verkoper.id, content=content)
+        # Bericht naar koper (bevestiging)
+        bevestiging_content = (
+            f'Je hebt een afspraak gemaakt voor het boek: {item.title}\n'
+            f'- Datum: {date}\n'
+            f'- Tijd: {time}\n'
+            f'- Verkoper: {verkoper.username} ({verkoper.email})\n'
+        )
+        msg_koper = Message(sender_id=verkoper.id, receiver_id=current_user.id, content=bevestiging_content)
+
         from app import db
         db.session.add(msg)
+        db.session.add(msg_koper)
         db.session.commit()
+
+        # Verwijder het item uit de winkelmand van de koper
+        # Database-cart
+        if current_user.is_authenticated:
+            from app.models import CartItem
+            cart_item = CartItem.query.filter_by(user_id=current_user.id, item_type='book', item_id=item.id).first()
+            if cart_item:
+                db.session.delete(cart_item)
+                db.session.commit()
+        # Session-cart
+        cart = session.get('cart', [])
+        cart = [ci for ci in cart if not (ci['type'] == 'book' and ci['id'] == item.id)]
+        session['cart'] = cart
 
         # Stuur een mail naar de verkoper
         from app.utils import send_appointment_email

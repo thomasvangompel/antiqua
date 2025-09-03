@@ -100,7 +100,9 @@
         
 
       {% if poster.price %}
-        <button class="add-to-cart-btn btn btn-success" data-type="poster" data-id="{{ poster.id }}">Toevoegen Winkelwagen</button>
+    {% if not current_user.is_authenticated or poster.user_id != current_user.id %}
+    <button class="add-to-cart-btn btn btn-success" data-type="poster" data-id="{{ poster.id }}">Toevoegen Winkelwagen</button>
+    {% endif %}
       {% endif %}
 
       
