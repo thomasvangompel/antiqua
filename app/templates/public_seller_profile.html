@@ -13,10 +13,12 @@
     </div>
     <div class="col-md-9">
       <p><strong>Locatie:</strong> {{ seller.city or 'Onbekend' }}</p>
-       <a href="{{ url_for('main.contact_seller', business_name=seller.business_name) }}" 
-       class="btn btn-success mt-3 mt-md-0">
-      Stuur bericht naar verkoper
-    </a>
+      {% if not (current_user.is_authenticated and current_user.id == seller.id) %}
+        <a href="{{ url_for('main.contact_seller', business_name=seller.business_name) }}" 
+           class="btn btn-success mt-3 mt-md-0">
+          Stuur bericht naar verkoper
+        </a>
+      {% endif %}
       
     </div>
   </div>
@@ -31,11 +33,10 @@
       {% for book in books %}
         <div class="col-md-4 mb-4">
           <div class="card h-100 card-verkoper">
-            {% if book.front_image_url %}
-              <img src="{{ url_for('static', filename='uploads/' + book.front_image) }}"
-                   class="card-img-top"
-                   alt="Boekcover van {{ book.title }}"
-                   style="max-height: 250px; object-fit: contain;">
+            {% if book.front_image %}
+              <img src="{{ url_for('static', filename='uploads/' ~ book.front_image) }}"
+                   alt="Voorkant van {{ book.title }}"
+                   class="card-img-top">
             {% endif %}
             <div class="card-body">
               <h5 class="card-title">{{ book.title }}</h5>

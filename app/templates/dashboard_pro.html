@@ -21,6 +21,8 @@
       <!-- Welkom & knoppen -->
       <div class="ms-md-4 mt-3 mt-md-0">
         <h2>Hallo, {{ user.username or "Nieuweling"}}!</h2>
+  <!-- Start met zoeken knop -->
+  <a href="{{ url_for('main.start_search') }}" class="btn btn-lg btn-success me-2 mb-2" style="font-size:1.5rem; padding:1rem 2rem;">Start met zoeken</a>
 
         <a href="{{ url_for('main.profile') }}" class="btn btn-primary mt-2 me-2">Bewerk profiel</a>
         <a href="{{ url_for('main.verzendgegevens') }}" class="btn btn-primary mt-2 me-2">Verkoop gegevens</a>

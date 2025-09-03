@@ -36,6 +36,41 @@
 
     <!-- Hoofdinhoud -->
     <div class="col-md-9">
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Pro-gebruikers &amp; BTW-nummers</h5>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Gebruikersnaam</th>
+                <th>Email</th>
+                <th>Business Name</th>
+                <th>BTW-nummer</th>
+                <th>VIES-check</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in pro_users %}
+              <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.business_name }}</td>
+                <td>{{ user.vat_number }}</td>
+                <td>
+                  {% if user.vat_number %}
+                  <a href="https://ec.europa.eu/taxation_customs/vies/vatResponse.html?memberStateCode={{ user.vat_number[:2] }}&number={{ user.vat_number[2:] }}" target="_blank" class="btn btn-sm btn-outline-info">Controleer bij VIES</a>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <h2 class="mb-4">Admin Dashboard</h2>
 

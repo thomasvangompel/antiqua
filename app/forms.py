@@ -3,6 +3,58 @@ from wtforms import (
     StringField, PasswordField, SubmitField, TextAreaField,SelectField,DateField,
     DecimalField, BooleanField, DateTimeField, RadioField, IntegerField
 )
+from flask_wtf.file import FileField, FileAllowed
+from wtforms.validators import (
+    DataRequired, Email, EqualTo, InputRequired, Length,
+    Optional, NumberRange, Regexp, ValidationError
+)
+from datetime import datetime, timedelta
+from flask_login import current_user
+from app.models import User  # pas 'app' aan naar jouw projectnaam indien nodig
+
+# ─────────── UPGRADE ACCOUNT ───────────
+class UpgradeAccountForm(FlaskForm):
+    username = StringField('Naam', validators=[DataRequired(), Length(max=150)])
+    email = StringField('E-mailadres', validators=[DataRequired(), Email()])
+    street = StringField('Straat', validators=[DataRequired(), Length(max=100)])
+    house_number = StringField('Huisnummer', validators=[DataRequired(), Length(max=10)])
+    postal_code = StringField('Postcode', validators=[DataRequired(), Regexp(r'^\d{4}$', message="Postcode moet uit 4 cijfers bestaan.")])
+    city = StringField('Stad', validators=[DataRequired(), Length(max=100)])
+    business_name = StringField('Winkelnaam', validators=[DataRequired(), Length(max=150)])
+    vat_number = StringField('BTW-nummer', validators=[DataRequired(), Length(max=32)])
+    image = FileField('Profielfoto', validators=[FileAllowed(['jpg', 'jpeg', 'png'], 'Alleen JPG of PNG toegestaan.')])
+    show_on_map = BooleanField("Zichtbaar op de kaart")
+    submit = SubmitField('Upgrade naar Pro')
+
+    def validate_business_name(self, business_name):
+        user = User.query.filter_by(business_name=business_name.data).first()
+        if user:
+            raise ValidationError('Deze winkelnaam is al in gebruik. Kies een andere.')
+
+    def validate_vat_number(self, vat_number):
+        import re
+        value = vat_number.data.replace(' ', '').replace('-', '').upper()
+        if not re.match(r'^BE0?\d{9}$', value):
+            raise ValidationError('Ongeldig Belgisch BTW-nummer. Formaat: BE0123456789')
+        # VIES check
+        try:
+            from zeep import Client
+            country_code = value[:2]
+            number = value[2:]
+            client = Client('https://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl')
+            result = client.service.checkVat(countryCode=country_code, vatNumber=number)
+            if not result['valid']:
+                raise ValidationError('Dit BTW-nummer is niet geldig volgens VIES.')
+        except Exception:
+            # Fallback: laat het formulier doorgaan, maar log het probleem
+            import logging
+            logging.warning(f'VIES-controle kon niet worden uitgevoerd voor {value}.')
+            pass
+from flask_wtf import FlaskForm
+from wtforms import (
+    StringField, PasswordField, SubmitField, TextAreaField,SelectField,DateField,
+    DecimalField, BooleanField, DateTimeField, RadioField, IntegerField
+)
 
 from flask_wtf.file import FileField, FileAllowed
 from wtforms.validators import (

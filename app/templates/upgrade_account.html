@@ -5,7 +5,59 @@
     <h2>Upgrade naar Pro-account</h2>
     <p>Met een Pro-account kun je posters toevoegen, analytics bekijken en meer functies gebruiken!</p>
 
-    <form method="POST" action="{{ url_for('main.upgrade_account') }}">
+
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('main.upgrade_account') }}" class="text-start mx-auto" style="max-width:500px;">
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+            {{ form.username.label }}
+            {{ form.username(class="form-control") }}
+            {% for error in form.username.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            {{ form.email.label }}
+            {{ form.email(class="form-control") }}
+            {% for error in form.email.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            {{ form.street.label }}
+            {{ form.street(class="form-control") }}
+            {% for error in form.street.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            {{ form.house_number.label }}
+            {{ form.house_number(class="form-control") }}
+            {% for error in form.house_number.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            {{ form.postal_code.label }}
+            {{ form.postal_code(class="form-control") }}
+            {% for error in form.postal_code.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            {{ form.city.label }}
+            {{ form.city(class="form-control") }}
+            {% for error in form.city.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            {{ form.business_name.label }}
+            {{ form.business_name(class="form-control") }}
+            {% for error in form.business_name.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            {{ form.vat_number.label }}
+            {{ form.vat_number(class="form-control") }}
+            {% for error in form.vat_number.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            {{ form.image.label }}
+            {{ form.image(class="form-control") }}
+            {% for error in form.image.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3 form-check">
+            {{ form.show_on_map(class="form-check-input") }}
+            {{ form.show_on_map.label(class="form-check-label") }}
+        </div>
         <button type="submit" class="btn btn-success btn-lg mt-3">Upgrade naar Pro</button>
     </form>
 

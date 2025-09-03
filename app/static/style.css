@@ -244,3 +244,79 @@ max-width: 1400px;
 img {
   image-orientation: from-image;
 }
+
+/* Custom button style: vierkantig, border, logo-style */
+.btn, .btn:focus, .btn:active, .btn:visited {
+  border-radius: 0 !important;
+  border: 2px solid #222 !important;
+  box-shadow: none !important;
+  font-family: Arial, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.btn-primary {
+  background-color: #fff !important;
+  color: #222 !important;
+  border-color: #222 !important;
+}
+.btn-primary:hover, .btn-primary:focus {
+  background-color: #222 !important;
+  color: #fff !important;
+  border-color: #222 !important;
+}
+
+.btn-success {
+  background-color: #fff !important;
+  color: #007b3a !important;
+  border-color: #007b3a !important;
+}
+.btn-success:hover, .btn-success:focus {
+  background-color: #007b3a !important;
+  color: #fff !important;
+  border-color: #007b3a !important;
+}
+
+.btn-danger {
+  background-color: #fff !important;
+  color: #b30000 !important;
+  border-color: #b30000 !important;
+}
+.btn-danger:hover, .btn-danger:focus {
+  background-color: #b30000 !important;
+  color: #fff !important;
+  border-color: #b30000 !important;
+}
+
+.btn-warning {
+  background-color: #fff !important;
+  color: #e6a700 !important;
+  border-color: #e6a700 !important;
+}
+.btn-warning:hover, .btn-warning:focus {
+  background-color: #e6a700 !important;
+  color: #fff !important;
+  border-color: #e6a700 !important;
+}
+
+.btn-info {
+  background-color: #fff !important;
+  color: #007bff !important;
+  border-color: #007bff !important;
+}
+.btn-info:hover, .btn-info:focus {
+  background-color: #007bff !important;
+  color: #fff !important;
+  border-color: #007bff !important;
+}
+
+.btn-outline-dark, .btn-outline-primary, .btn-outline-success, .btn-outline-warning, .btn-outline-info, .btn-outline-danger {
+  border-radius: 0 !important;
+  border-width: 2px !important;
+  font-weight: 600;
+}
+
+.btn-lg, .btn-sm {
+  border-radius: 0 !important;
+}

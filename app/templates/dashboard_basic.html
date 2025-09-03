@@ -44,7 +44,10 @@
 
     <hr>
 
-    <h3>Mijn Aangekochte Collectie</h3>
+    <div class="d-flex align-items-center mb-3">
+      <h3 class="mb-0 me-3">Mijn Aangekochte Collectie</h3>
+      <a href="{{ url_for('main.start_search') }}" class="btn btn-lg btn-success" style="font-size:1.2rem; padding:0.75rem 1.5rem;">Start met zoeken</a>
+    </div>
     {# Hier kun je later je boeken, postkaarten, posters toevoegen #}
 
   </div>

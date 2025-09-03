@@ -34,7 +34,6 @@ from app.forms import PostcardForm
 
 
 
-
 client_secrets = os.getenv("GOOGLE_OAUTH_SECRETS")
 
 
@@ -181,6 +180,67 @@ def login():
 
 
 
+# Functie om te checken of profiel compleet is
+def profiel_is_ingevuld(user):
+    def is_filled(val):
+        if isinstance(val, str):
+            return val is not None and val.strip() != ''
+        if isinstance(val, (float, int)):
+            return val is not None and val != 0
+        return val is not None
+
+    required_fields = [
+        user.street,
+        user.house_number,
+        user.postal_code,
+        user.city,
+        user.latitude,
+        user.longitude
+    ]
+    if user.account_type == 'pro':
+        required_fields.append(user.business_name)
+    return all(is_filled(f) for f in required_fields)
+
+# Route voor de start met zoeken knop
+@main.route('/start_search')
+@login_required
+def start_search():
+    if profiel_is_ingevuld(current_user):
+        return redirect(url_for('main.home'))
+    else:
+        # Debug: toon welke velden niet gevuld zijn
+        missing = []
+        def is_filled(val):
+            if isinstance(val, str):
+                return val is not None and val.strip() != ''
+            if isinstance(val, (float, int)):
+                return val is not None and val != 0
+            return val is not None
+        fields = {
+            'street': current_user.street,
+            'house_number': current_user.house_number,
+            'postal_code': current_user.postal_code,
+            'city': current_user.city,
+            'latitude': current_user.latitude,
+            'longitude': current_user.longitude
+        }
+        if current_user.account_type == 'pro':
+            fields['business_name'] = current_user.business_name
+        for k, v in fields.items():
+            if not is_filled(v):
+                missing.append(k)
+        flash(f'Vul eerst je profiel volledig in voordat je kunt zoeken! Ontbrekende velden: {", ".join(missing)}', 'warning')
+        return redirect(url_for('main.profile'))
+
+
+
+
+
+
+
+
+
+
 @main.route('/logout')
 @login_required
 def logout():
@@ -279,7 +339,7 @@ def profile():
 
         db.session.commit()
         flash('Je profiel is bijgewerkt!', 'success')
-        return redirect(url_for('main.profile'))
+        return redirect(url_for('main.dashboard'))
 
     elif request.method == 'GET':
         form.username.data = current_user.username
@@ -352,12 +412,14 @@ def admin_dashboard():
     posters = Poster.query.order_by(Poster.id.asc()).paginate(page=page_posters, per_page=10, error_out=False)
     postcards = Postcard.query.order_by(Postcard.id.asc()).paginate(page=page_postcards, per_page=10, error_out=False)
 
+    pro_users = User.query.filter_by(account_type='pro').order_by(User.id.asc()).all()
     return render_template(
         'admin_dashboard.html',
         users=users,
         books=books,
         posters=posters,
-        postcards=postcards
+        postcards=postcards,
+        pro_users=pro_users
     )
 
 
@@ -1647,6 +1709,7 @@ def checkout_item(item_type, item_id):
 #---------------appointment------------------------
 
 
+
 @main.route('/make_appointment/<int:item_id>', methods=['GET', 'POST'])
 @login_required
 def make_appointment(item_id):
@@ -1655,8 +1718,40 @@ def make_appointment(item_id):
         date = request.form.get('date')
         time = request.form.get('time')
 
-        # Hier kun je opslaan in de database of een melding sturen naar de verkoper
-        flash(f'Afspraak bevestigd voor {date} om {time}', 'success')
+        if not date or not time:
+            flash('Vul een geldige datum en tijd in voor de afspraak.', 'danger')
+            return render_template('make_appointment.html', item=item)
+
+        # Stuur een bericht naar de verkoper
+        from app.models import Message
+        verkoper = item.user
+        content = (
+            f'Nieuwe afspraakverzoek:\n'
+            f'- Boek: {item.title}\n'
+            f'- Datum: {date}\n'
+            f'- Tijd: {time}\n'
+            f'- Koper: {current_user.username} ({current_user.email})\n'
+        )
+        msg = Message(sender_id=current_user.id, receiver_id=verkoper.id, content=content)
+        from app import db
+        db.session.add(msg)
+        db.session.commit()
+
+        # Stuur een mail naar de verkoper
+        from app.utils import send_appointment_email
+        base_url = request.host_url.rstrip('/')
+        message_url = f"{base_url}/messages"
+        send_appointment_email(
+            recipient=verkoper.email,
+            buyer_name=current_user.username,
+            buyer_email=current_user.email,
+            book_title=item.title,
+            date=date,
+            time=time,
+            message_url=message_url
+        )
+
+        flash(f'Afspraak bevestigd voor {date} om {time}. De verkoper is geïnformeerd via een bericht en e-mail.', 'success')
         return redirect(url_for('main.dashboard'))
 
     return render_template('make_appointment.html', item=item)
@@ -1827,9 +1922,11 @@ def beheer_antiquariaat():
 #---------------upgrade account------------------------------------
 
 
+
 from flask import flash, redirect, url_for, render_template
 from flask_login import login_required, current_user
 from app import db
+from app.forms import UpgradeAccountForm
 
 @main.route('/upgrade_account', methods=['GET', 'POST'])
 @login_required
@@ -1838,13 +1935,26 @@ def upgrade_account():
         flash('Je hebt al een Pro-account!', 'info')
         return redirect(url_for('main.dashboard'))
 
-    if request.method == 'POST':
-        current_user.pro_tier = True
-        current_user.account_type = "pro"  # belangrijk
+    form = UpgradeAccountForm(obj=current_user)
+    if form.validate_on_submit():
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        current_user.street = form.street.data
+        current_user.house_number = form.house_number.data
+        current_user.postal_code = form.postal_code.data
+        current_user.city = form.city.data
+        current_user.business_name = form.business_name.data
+        current_user.vat_number = form.vat_number.data
+        current_user.show_on_map = form.show_on_map.data
+        # Profielfoto opslaan
+        if form.image.data:
+            picture_file = save_picture(form.image.data)
+            current_user.image_file = picture_file
+        current_user.account_type = "pro"
+        current_user.pro_tier = "basic"
         db.session.commit()
         flash('Je account is succesvol geüpgraded naar Pro!', 'success')
         return redirect(url_for('main.dashboard'))
 
-    # GET request toont eerst de upgrade pagina
-    return render_template('upgrade_account.html', user=current_user)
+    return render_template('upgrade_account.html', user=current_user, form=form)
 
