@@ -46,7 +46,15 @@
 
     <div class="d-flex align-items-center mb-3">
       <h3 class="mb-0 me-3">Mijn Aangekochte Collectie</h3>
-      <a href="{{ url_for('main.start_search') }}" class="btn btn-lg btn-success" style="font-size:1.2rem; padding:0.75rem 1.5rem;">Start met zoeken</a>
+    </div>
+
+    <!-- Knoppenrij: Bewerk profiel, Upgrade, Start met zoeken -->
+    <div class="d-flex flex-wrap mt-2 align-items-center">
+      <a href="{{ url_for('main.profile') }}" class="btn btn-primary me-2 mb-2">Bewerk profiel</a>
+      {% if user.account_type == "basic" %}
+        <a href="{{ url_for('main.upgrade_account') }}" class="btn btn-success me-2 mb-2">Upgrade naar Pro</a>
+      {% endif %}
+      <a href="{{ url_for('main.start_search') }}" class="btn btn-lg btn-success me-2 mb-2" style="font-size:1.2rem; padding:0.4rem 1rem;">Start met zoeken</a>
     </div>
     {# Hier kun je later je boeken, postkaarten, posters toevoegen #}
 

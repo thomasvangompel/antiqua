@@ -248,7 +248,7 @@ img {
 /* Custom button style: vierkantig, border, logo-style */
 .btn, .btn:focus, .btn:active, .btn:visited {
   border-radius: 0 !important;
-  border: 2px solid #222 !important;
+  border: 2px solid #bbb !important;
   box-shadow: none !important;
   font-family: Arial, sans-serif;
   font-weight: 600;
@@ -259,23 +259,23 @@ img {
 .btn-primary {
   background-color: #fff !important;
   color: #222 !important;
-  border-color: #222 !important;
+  border-color: #bbb !important;
 }
 .btn-primary:hover, .btn-primary:focus {
   background-color: #222 !important;
   color: #fff !important;
-  border-color: #222 !important;
+  border-color: #bbb !important;
 }
 
 .btn-success {
   background-color: #fff !important;
   color: #007b3a !important;
-  border-color: #007b3a !important;
+  border-color: #bbb !important;
 }
 .btn-success:hover, .btn-success:focus {
   background-color: #007b3a !important;
   color: #fff !important;
-  border-color: #007b3a !important;
+  border-color: #bbb !important;
 }
 
 .btn-danger {
