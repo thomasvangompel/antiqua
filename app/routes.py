@@ -575,6 +575,9 @@ def edit_book(book_id):
     if form.rek.data:
         verdiepingen = RekVerdieping.query.filter_by(rek_id=form.rek.data).all()
         form.verdieping.choices = [(v.id, f"{v.nummer} ({v.rek.naam})") for v in verdiepingen]
+    elif request.method == 'GET' and book.rek_id:
+        verdiepingen = RekVerdieping.query.filter_by(rek_id=book.rek_id).all()
+        form.verdieping.choices = [(v.id, f"Verdieping {v.nummer}") for v in verdiepingen]
 
     if form.validate_on_submit():
         book.title = form.title.data

@@ -72,11 +72,11 @@
     </div>
     <div class="mb-3">
       {{ form.rek.label(class="form-label") }}
-      {{ form.rek(class="form-select") }}
+      {{ form.rek(class="form-select", id="rekSelect") }}
     </div>
     <div class="mb-3">
       {{ form.verdieping.label(class="form-label") }}
-      {{ form.verdieping(class="form-select") }}
+      {{ form.verdieping(class="form-select", id="verdiepingSelect") }}
     </div>
     <div class="mb-3">
       {{ form.positie.label(class="form-label") }}
@@ -86,4 +86,28 @@
     {{ form.submit(class="btn btn-primary") }}
   </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rekSelect = document.getElementById('rekSelect');
+    const verdiepingSelect = document.getElementById('verdiepingSelect');
+    rekSelect.addEventListener('change', function() {
+        const rekId = this.value;
+        fetch(`/api/verdiepingen?rek_id=${rekId}`)
+            .then(response => response.json())
+            .then(data => {
+                verdiepingSelect.innerHTML = '';
+                data.forEach(function(v) {
+                    const option = document.createElement('option');
+                    option.value = v.id;
+                    option.textContent = `Verdieping ${v.nummer}`;
+                    verdiepingSelect.appendChild(option);
+                });
+            });
+    });
+});
+</script>
 {% endblock %}
