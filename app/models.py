@@ -1,4 +1,27 @@
 from . import db
+
+class Rek(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    naam = db.Column(db.String(100), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    verdiepingen = db.relationship('RekVerdieping', backref='rek', cascade='all, delete-orphan', lazy=True)
+    verdieping = db.Column(db.Integer, nullable=True)
+    letter = db.Column(db.String(5), nullable=True)
+
+    def __repr__(self):
+        return f"<Rek {self.naam}>"
+
+class RekVerdieping(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    rek_id = db.Column(db.Integer, db.ForeignKey('rek.id'), nullable=False)
+    nummer = db.Column(db.Integer, nullable=False)  # Verdiepingsnummer
+    links = db.Column(db.String(1), nullable=True)  # Letter links
+    midden = db.Column(db.String(1), nullable=True) # Letter midden
+    rechts = db.Column(db.String(1), nullable=True) # Letter rechts
+
+    def __repr__(self):
+        return f"<RekVerdieping {self.nummer} van rek {self.rek_id}>"
+from . import db
 from flask_login import UserMixin
 from . import login_manager
 from datetime import datetime
@@ -121,6 +144,9 @@ class Book(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE',name='fk_book_user_id'), nullable=False)
     user = db.relationship('User', back_populates='books', foreign_keys=[user_id], passive_deletes=True)
+    rek_id = db.Column(db.Integer, db.ForeignKey('rek.id'), nullable=True)
+    verdieping_id = db.Column(db.Integer, db.ForeignKey('rek_verdieping.id'), nullable=True)
+    positie = db.Column(db.String(10), nullable=True)  # links, midden, rechts
 
     buyer_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL',name='fk_book_buyer_id'), nullable=True)
     buyer = db.relationship('User', back_populates='bought_books', foreign_keys=[buyer_id], passive_deletes=True)
@@ -188,6 +214,9 @@ class Postcard(db.Model):
     updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    rek_id = db.Column(db.Integer, db.ForeignKey('rek.id'), nullable=True)
+    verdieping_id = db.Column(db.Integer, db.ForeignKey('rek_verdieping.id'), nullable=True)
+    positie = db.Column(db.String(10), nullable=True)  # links, midden, rechts
    
 
     def __repr__(self):
@@ -221,6 +250,9 @@ class Poster(db.Model):
     updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    rek_id = db.Column(db.Integer, db.ForeignKey('rek.id'), nullable=True)
+    verdieping_id = db.Column(db.Integer, db.ForeignKey('rek_verdieping.id'), nullable=True)
+    positie = db.Column(db.String(10), nullable=True)  # links, midden, rechts
    
 
     def __repr__(self):

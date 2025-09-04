@@ -48,6 +48,29 @@
         {% endfor %}
     </div>
 
+    <!-- Rek, verdieping en positie -->
+    <div class="mb-3">
+        {{ form.rek.label(class="form-label") }}
+        {{ form.rek(class="form-select", id="rekSelect") }}
+        {% for error in form.rek.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+    <div class="mb-3">
+        {{ form.verdieping.label(class="form-label") }}
+        {{ form.verdieping(class="form-select", id="verdiepingSelect") }}
+        {% for error in form.verdieping.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+    <div class="mb-3">
+        {{ form.positie.label(class="form-label") }}
+        {{ form.positie(class="form-select") }}
+        {% for error in form.positie.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
     <hr>
 
     <!-- Veiling checkbox -->
@@ -230,5 +253,23 @@ window.addEventListener('load', () => {
     toggleShippingCost();
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    const rekSelect = document.getElementById('rekSelect');
+    const verdiepingSelect = document.getElementById('verdiepingSelect');
+    rekSelect.addEventListener('change', function() {
+        const rekId = this.value;
+        fetch(`/api/verdiepingen?rek_id=${rekId}`)
+            .then(response => response.json())
+            .then(data => {
+                verdiepingSelect.innerHTML = '';
+                data.forEach(function(v) {
+                    const option = document.createElement('option');
+                    option.value = v.id;
+                    option.textContent = `Verdieping ${v.nummer}`;
+                    verdiepingSelect.appendChild(option);
+                });
+            });
+    });
+});
 </script>
 {% endblock %}

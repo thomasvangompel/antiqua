@@ -45,6 +45,44 @@
       <small class="form-text text-muted">Gebruik max. 5 tags, gescheiden door komma's</small>
     </div>
 
+    <div class="mb-3">
+      <div class="d-flex gap-4 align-items-start">
+        <div>
+          <label class="form-label">Voorkant afbeelding</label>
+          {{ form.front_image(class="form-control") }}
+          {% if book.front_image %}
+            <img src="{{ url_for('static', filename='uploads/' ~ book.front_image) }}" alt="Voorkant" style="max-width:120px; margin-top:10px;">
+          {% endif %}
+        </div>
+        <div>
+          <label class="form-label">Zijkant afbeelding</label>
+          {{ form.side_image(class="form-control") }}
+          {% if book.side_image %}
+            <img src="{{ url_for('static', filename='uploads/' ~ book.side_image) }}" alt="Zijkant" style="max-width:120px; margin-top:10px;">
+          {% endif %}
+        </div>
+        <div>
+          <label class="form-label">Achterkant afbeelding</label>
+          {{ form.back_image(class="form-control") }}
+          {% if book.back_image %}
+            <img src="{{ url_for('static', filename='uploads/' ~ book.back_image) }}" alt="Achterkant" style="max-width:120px; margin-top:10px;">
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="mb-3">
+      {{ form.rek.label(class="form-label") }}
+      {{ form.rek(class="form-select") }}
+    </div>
+    <div class="mb-3">
+      {{ form.verdieping.label(class="form-label") }}
+      {{ form.verdieping(class="form-select") }}
+    </div>
+    <div class="mb-3">
+      {{ form.positie.label(class="form-label") }}
+      {{ form.positie(class="form-select") }}
+    </div>
+
     {{ form.submit(class="btn btn-primary") }}
   </form>
 </div>

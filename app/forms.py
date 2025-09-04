@@ -1,7 +1,8 @@
+
 from flask_wtf import FlaskForm
 from wtforms import (
     StringField, PasswordField, SubmitField, TextAreaField,SelectField,DateField,
-    DecimalField, BooleanField, DateTimeField, RadioField, IntegerField
+    DecimalField, BooleanField, DateTimeField, RadioField, IntegerField, FieldList, FormField
 )
 from flask_wtf.file import FileField, FileAllowed
 from wtforms.validators import (
@@ -11,6 +12,24 @@ from wtforms.validators import (
 from datetime import datetime, timedelta
 from flask_login import current_user
 from app.models import User  # pas 'app' aan naar jouw projectnaam indien nodig
+
+
+class VerdiepingForm(FlaskForm):
+    links = StringField('Links', validators=[Length(max=1)])
+    midden = StringField('Midden', validators=[Length(max=1)])
+    rechts = StringField('Rechts', validators=[Length(max=1)])
+
+class RekForm(FlaskForm):
+    naam = StringField('Naam van het rek', validators=[DataRequired(), Length(max=100)])
+    aantal_verdiepingen = IntegerField('Aantal verdiepingen', validators=[DataRequired(), NumberRange(min=1, max=20)])
+    verdiepingen = FieldList(FormField(VerdiepingForm), min_entries=1, max_entries=20)
+    submit = SubmitField('Rek toevoegen')
+
+class VerdiepingForm(FlaskForm):
+    links = StringField('Links', validators=[Length(max=1)])
+    midden = StringField('Midden', validators=[Length(max=1)])
+    rechts = StringField('Rechts', validators=[Length(max=1)])
+
 
 # ─────────── UPGRADE ACCOUNT ───────────
 class UpgradeAccountForm(FlaskForm):
@@ -124,6 +143,9 @@ class BookForm(FlaskForm):
     is_admin             = BooleanField('Admin status')
 
 
+    rek = SelectField('Rek', coerce=int, validators=[Optional()])
+    verdieping = SelectField('Verdieping', coerce=int, validators=[Optional()])
+    positie = SelectField('Positie', choices=[('links','Links'),('midden','Midden'),('rechts','Rechts')], validators=[Optional()])
     submit       = SubmitField('Opslaan')
 
     def validate(self, extra_validators=None):
@@ -306,6 +328,9 @@ class PostcardForm(FlaskForm):
     cash_payment_only    = BooleanField('Alleen contante betaling')
     is_admin             = BooleanField('Admin status')
     
+    rek = SelectField('Rek', coerce=int, validators=[Optional()])
+    verdieping = SelectField('Verdieping', coerce=int, validators=[Optional()])
+    positie = SelectField('Positie', choices=[('links','Links'),('midden','Midden'),('rechts','Rechts')], validators=[Optional()])
     submit = SubmitField('Opslaan')
 
    
@@ -341,6 +366,9 @@ class PosterForm(FlaskForm):
     cash_payment_only    = BooleanField('Alleen contante betaling')
     is_admin             = BooleanField('Admin status')
     
+    rek = SelectField('Rek', coerce=int, validators=[Optional()])
+    verdieping = SelectField('Verdieping', coerce=int, validators=[Optional()])
+    positie = SelectField('Positie', choices=[('links','Links'),('midden','Midden'),('rechts','Rechts')], validators=[Optional()])
     submit = SubmitField('Opslaan')
 
 

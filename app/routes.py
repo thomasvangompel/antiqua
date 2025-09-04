@@ -15,6 +15,9 @@ from . import db
 from .forms import RegisterForm, LoginForm, BookForm, UpdateProfileForm,MessageForm,PosterForm
 from .models import User, Book, Tag, Message, BookView, Postcard, Poster, CartItem
 
+from .forms import RekForm
+from .models import Rek, RekVerdieping
+
 
 from datetime import datetime
 
@@ -466,6 +469,19 @@ def new_book():
         return redirect(url_for('main.profile'))  # Pas aan naar jouw profiel bewerken route
 
     form = BookForm()
+    # Vul rek dropdown
+    reks = Rek.query.all()
+    form.rek.choices = [(rek.id, rek.naam) for rek in reks]
+    # Vul verdieping dropdown
+    form.verdieping.choices = []
+    if form.rek.data:
+        verdiepingen = RekVerdieping.query.filter_by(rek_id=form.rek.data).all()
+        form.verdieping.choices = [(v.id, f"{v.nummer} ({v.rek.naam})") for v in verdiepingen]
+    elif reks:
+        # Bij GET: kies eerste rek als default
+        eerste_rek_id = reks[0].id
+        verdiepingen = RekVerdieping.query.filter_by(rek_id=eerste_rek_id).all()
+        form.verdieping.choices = [(v.id, f"Verdieping {v.nummer}") for v in verdiepingen]
 
     if form.validate_on_submit():
         # Upload-map aanmaken als die nog niet bestaat
@@ -518,7 +534,10 @@ def new_book():
             shipping_cost=form.shipping_cost.data if form.allow_shipping.data else None,
             pickup_only=form.pickup_only.data,
             platform_payment_only=form.platform_payment_only.data,
-            cash_payment_only=form.cash_payment_only.data
+            cash_payment_only=form.cash_payment_only.data,
+            rek_id=form.rek.data if form.rek.data else None,
+            verdieping_id=form.verdieping.data if form.verdieping.data else None,
+            positie=form.positie.data if form.positie.data else None
         )
 
         # Tags verwerken op basis van AI-output
@@ -551,6 +570,11 @@ def edit_book(book_id):
         return redirect(url_for('main.dashboard'))
 
     form = BookForm(obj=book)
+    form.rek.choices = [(rek.id, rek.naam) for rek in Rek.query.all()]
+    form.verdieping.choices = []
+    if form.rek.data:
+        verdiepingen = RekVerdieping.query.filter_by(rek_id=form.rek.data).all()
+        form.verdieping.choices = [(v.id, f"{v.nummer} ({v.rek.naam})") for v in verdiepingen]
 
     if form.validate_on_submit():
         book.title = form.title.data
@@ -558,17 +582,39 @@ def edit_book(book_id):
         book.description = form.description.data
         book.genre = form.genre.data
         book.price = form.price.data
-        book.author_description = form.author_description.data   # <--- toevoegen
-
+        book.author_description = form.author_description.data
+        # Afbeeldingen verwerken
+        upload_folder = os.path.join(current_app.root_path, 'static/uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+        def save_image(image_field):
+            if image_field.data:
+                filename = secure_filename(image_field.data.filename)
+                image_path = os.path.join(upload_folder, filename)
+                image_field.data.save(image_path)
+                return filename
+            return None
+        if form.front_image.data:
+            book.front_image = save_image(form.front_image)
+        if form.side_image.data:
+            book.side_image = save_image(form.side_image)
+        if form.back_image.data:
+            book.back_image = save_image(form.back_image)
+        # Locatie verwerken
+        book.rek_id = form.rek.data if form.rek.data else None
+        book.verdieping_id = form.verdieping.data if form.verdieping.data else None
+        book.positie = form.positie.data if form.positie.data else None
+        # Tags
         book.tags.clear()
-        tag_names = parse_tags(form.tags.data)
+        tag_names = form.tags.data.split(',') if form.tags.data else []
         for name in tag_names:
+            name = name.strip()
+            if not name:
+                continue
             tag = Tag.query.filter_by(name=name).first()
             if not tag:
                 tag = Tag(name=name)
                 db.session.add(tag)
             book.tags.append(tag)
-
         db.session.commit()
         flash('Boek succesvol bijgewerkt!', 'success')
         return redirect(url_for('main.dashboard'))
@@ -1153,6 +1199,16 @@ from datetime import datetime
 @login_required
 def add_postcard():
     form = PostcardForm()
+    reks = Rek.query.all()
+    form.rek.choices = [(rek.id, rek.naam) for rek in reks]
+    form.verdieping.choices = []
+    if form.rek.data:
+        verdiepingen = RekVerdieping.query.filter_by(rek_id=form.rek.data).all()
+        form.verdieping.choices = [(v.id, f"Verdieping {v.nummer}") for v in verdiepingen]
+    elif reks:
+        eerste_rek_id = reks[0].id
+        verdiepingen = RekVerdieping.query.filter_by(rek_id=eerste_rek_id).all()
+        form.verdieping.choices = [(v.id, f"Verdieping {v.nummer}") for v in verdiepingen]
     if form.validate_on_submit():
         postcard = Postcard(
             title=form.title.data,
@@ -1169,7 +1225,9 @@ def add_postcard():
             pickup_only = form.pickup_only.data,         
             platform_payment_only = form.platform_payment_only.data, 
             cash_payment_only = form.cash_payment_only.data,   
-             
+            rek_id=form.rek.data if form.rek.data else None,
+            verdieping_id=form.verdieping.data if form.verdieping.data else None,
+            positie=form.positie.data if form.positie.data else None
         )
         
         # Afbeelding uploaden en opslaan
@@ -1198,6 +1256,16 @@ def add_postcard():
 @login_required
 def add_poster():
     form = PosterForm()
+    reks = Rek.query.all()
+    form.rek.choices = [(rek.id, rek.naam) for rek in reks]
+    form.verdieping.choices = []
+    if form.rek.data:
+        verdiepingen = RekVerdieping.query.filter_by(rek_id=form.rek.data).all()
+        form.verdieping.choices = [(v.id, f"Verdieping {v.nummer}") for v in verdiepingen]
+    elif reks:
+        eerste_rek_id = reks[0].id
+        verdiepingen = RekVerdieping.query.filter_by(rek_id=eerste_rek_id).all()
+        form.verdieping.choices = [(v.id, f"Verdieping {v.nummer}") for v in verdiepingen]
     if form.validate_on_submit():
         poster = Poster(
             title=form.title.data,
@@ -1214,6 +1282,9 @@ def add_poster():
             pickup_only = form.pickup_only.data,         
             platform_payment_only = form.platform_payment_only.data, 
             cash_payment_only = form.cash_payment_only.data,   
+            rek_id=form.rek.data if form.rek.data else None,
+            verdieping_id=form.verdieping.data if form.verdieping.data else None,
+            positie=form.positie.data if form.positie.data else None
         )
         
         # Afbeelding uploaden en opslaan
@@ -1245,7 +1316,11 @@ def add_poster():
 def edit_postcard(postcard_id):
     postcard = Postcard.query.get_or_404(postcard_id)
     form = PostcardForm(obj=postcard)
-
+    form.rek.choices = [(rek.id, rek.naam) for rek in Rek.query.all()]
+    form.verdieping.choices = []
+    if form.rek.data:
+        verdiepingen = RekVerdieping.query.filter_by(rek_id=form.rek.data).all()
+        form.verdieping.choices = [(v.id, f"Verdieping {v.nummer}") for v in verdiepingen]
     if form.validate_on_submit():
         postcard.title = form.title.data
         postcard.description = form.description.data
@@ -1300,7 +1375,15 @@ def postcard_detail(postcard_id):
 def edit_poster(poster_id):
     poster = Poster.query.get_or_404(poster_id)
     form = PosterForm(obj=poster)
-
+    form.rek.choices = [(rek.id, rek.naam) for rek in Rek.query.all()]
+    form.verdieping.choices = []
+    if form.rek.data:
+        verdiepingen = RekVerdieping.query.filter_by(rek_id=form.rek.data).all()
+        form.verdieping.choices = [(v.id, f"Verdieping {v.nummer}") for v in verdiepingen]
+    elif reks:
+        eerste_rek_id = reks[0].id
+        verdiepingen = RekVerdieping.query.filter_by(rek_id=eerste_rek_id).all()
+        form.verdieping.choices = [(v.id, f"Verdieping {v.nummer}") for v in verdiepingen]
     if form.validate_on_submit():
         poster.title = form.title.data
         poster.description = form.description.data
@@ -1954,15 +2037,56 @@ def beheer_antiquariaat():
     verkochte_postkaarten = Postcard.query.filter_by(user_id=current_user.id, sold=True).all()
     verkochte_posters = Poster.query.filter_by(user_id=current_user.id, sold=True).all()
 
+    rek_form = RekForm()
+    rekken = Rek.query.all()
+    
+   
+    
     return render_template(
         'beheer_antiquariaat.html',
         verkochte_boeken=verkochte_boeken,
         verkochte_postkaarten=verkochte_postkaarten,
-        verkochte_posters=verkochte_posters
+        verkochte_posters=verkochte_posters,
+        rek_form=rek_form,
+        rekken=rekken
     )
 
 
-
+# Route voor toevoegen van een rek
+@main.route('/add_rek', methods=['POST'])
+@login_required
+def add_rek():
+    from flask import request
+    form = RekForm()
+    if request.method == 'POST':
+        naam = request.form.get('naam')
+        aantal_verdiepingen = int(request.form.get('aantal_verdiepingen', 1))
+        if not naam or aantal_verdiepingen < 1:
+            flash('Fout bij toevoegen rek. Vul alle velden correct in.', 'danger')
+            return redirect(url_for('main.beheer_antiquariaat', sectie='goederenplaats'))
+        nieuw_rek = Rek(
+            naam=naam,
+            user_id=current_user.id
+        )
+        db.session.add(nieuw_rek)
+        db.session.flush()
+        for nummer in range(aantal_verdiepingen):
+            links = request.form.get(f'verdiepingen-{nummer}-links')
+            midden = request.form.get(f'verdiepingen-{nummer}-midden')
+            rechts = request.form.get(f'verdiepingen-{nummer}-rechts')
+            verdieping = RekVerdieping(
+                rek_id=nieuw_rek.id,
+                nummer=nummer+1,
+                links=links,
+                midden=midden,
+                rechts=rechts
+            )
+            db.session.add(verdieping)
+        db.session.commit()
+        totaal_rekken = Rek.query.count()
+    
+    return redirect(url_for('main.beheer_antiquariaat', sectie='bestaande-rekken'))
+    
 
 
 #---------------upgrade account------------------------------------
@@ -2004,3 +2128,23 @@ def upgrade_account():
 
     return render_template('upgrade_account.html', user=current_user, form=form)
 
+
+
+
+# Route voor verwijderen van een rek
+@main.route('/delete_rek/<int:rek_id>', methods=['POST'])
+@login_required
+def delete_rek(rek_id):
+    rek = Rek.query.get_or_404(rek_id)
+    db.session.delete(rek)
+    db.session.commit()
+    flash('Rek succesvol verwijderd!', 'success')
+    return redirect(url_for('main.beheer_antiquariaat'))
+
+
+@main.route('/api/verdiepingen', methods=['GET'])
+def api_verdiepingen():
+    rek_id = request.args.get('rek_id', type=int)
+    verdiepingen = RekVerdieping.query.filter_by(rek_id=rek_id).all()
+    data = [{'id': v.id, 'nummer': v.nummer} for v in verdiepingen]
+    return jsonify(data)
