@@ -51,5 +51,9 @@ def create_app():
     # Blueprint registeren
     from .routes import main
     app.register_blueprint(main)
+    from .routes_appointments import bp_appointments
+    app.register_blueprint(bp_appointments)
+    from .routes_pickup import bp_pickup
+    app.register_blueprint(bp_pickup)
 
     return app

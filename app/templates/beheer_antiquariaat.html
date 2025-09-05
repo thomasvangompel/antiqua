@@ -19,6 +19,8 @@
         <a href="#" id="btn-verkocht" class="list-group-item list-group-item-action">Verkocht</a>
         <a href="#" id="btn-rekken-toevoegen" class="list-group-item list-group-item-action">Rekken toevoegen</a>
         <a href="#" id="btn-bestaande-rekken" class="list-group-item list-group-item-action">Bestaande rekken</a>
+        <a href="#" id="btn-afspraken" class="list-group-item list-group-item-action">Beschikbaarheid afspraken</a>
+        <a href="{{ url_for('main.afspraken_overzicht') }}" class="list-group-item list-group-item-action">Afspraken overzicht</a>
       </div>
     </aside>
 
@@ -132,11 +134,40 @@
           <p>Geen rekken gevonden.</p>
         {% endif %}
       </div>
+
+      <!-- Beschikbaarheid afspraken -->
+      <div id="content-afspraken" style="display:none;">
+        <h3 class="mt-5">📅 Beschikbaarheid afspraken</h3>
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title">Kies een moment voor je afhaalafspraak</h5>
+            <div class="mb-3">
+              <label for="boekSelect" class="form-label">Kies boek voor tijdslotbeheer:</label>
+              <select id="boekSelect" class="form-select" onchange="window.location='?boek_id='+this.value;">
+                <option value="all" {% if not boek %}selected{% endif %}>Alle boeken</option>
+                {% for b in boeken %}
+                  <option value="{{ b.id }}" {% if boek and boek.id == b.id %}selected{% endif %}>{{ b.title }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div id="calendar" data-book-id="{{ boek.id if boek else '' }}"></div>
+            <div id="time-slots" class="mt-3"></div>
+            <div id="afspraak-feedback" class="mt-3"></div>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="beheer-book-id" value="{{ boek.id if boek else '' }}">
     </main>
   </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
 <script>
+window.bookId = document.getElementById('beheer-book-id') ? document.getElementById('beheer-book-id').value : null;
+
 document.addEventListener('DOMContentLoaded', function() {
   const sections = {
     'verkocht': {
@@ -150,6 +181,10 @@ document.addEventListener('DOMContentLoaded', function() {
     'bestaande-rekken': {
       btn: document.getElementById('btn-bestaande-rekken'),
       content: document.getElementById('content-bestaande-rekken')
+    },
+    'afspraken': {
+      btn: document.getElementById('btn-afspraken'),
+      content: document.getElementById('content-afspraken')
     }
   };
 
@@ -176,11 +211,12 @@ document.addEventListener('DOMContentLoaded', function() {
   if (params.get('sectie')) {
     showSectie(params.get('sectie'));
   } else {
-    {% if rekken %}
-    showSectie('bestaande-rekken');
-    {% else %}
-    showSectie('verkocht');
-    {% endif %}
+    // Vervang Jinja door JS: standaard naar bestaande-rekken als die sectie bestaat, anders naar verkocht
+    if (document.getElementById('content-bestaande-rekken')) {
+      showSectie('bestaande-rekken');
+    } else {
+      showSectie('verkocht');
+    }
   }
 
   // Dynamische verdiepingen velden
@@ -212,6 +248,20 @@ document.addEventListener('DOMContentLoaded', function() {
       verdiepingenFields.innerHTML = html;
     });
   }
+
+  document.getElementById('btn-afspraken').addEventListener('click', function() {
+    document.querySelectorAll('[id^="content-"]').forEach(function(el) { el.style.display = 'none'; });
+    document.getElementById('content-afspraken').style.display = 'block';
+  });
+  document.getElementById('afspraak-bevestigen').addEventListener('click', function() {
+    const datum = document.getElementById('afspraak-datum').value;
+    const tijd = document.getElementById('afspraak-tijd').value;
+    if (datum && tijd) {
+      document.getElementById('afspraak-feedback').innerHTML = `<div class='alert alert-success'>Afspraak vastgelegd op <strong>${datum}</strong> om <strong>${tijd}</strong>.</div>`;
+    } else {
+      document.getElementById('afspraak-feedback').innerHTML = `<div class='alert alert-danger'>Kies een datum en tijd.</div>`;
+    }
+  });
 });
 </script>
 {% endblock %}

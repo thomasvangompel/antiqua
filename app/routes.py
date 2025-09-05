@@ -277,13 +277,18 @@ def dashboard():
     else:
         template = 'dashboard_basic.html'
     
+    from app.models import AppointmentSlot
+    afspraken = AppointmentSlot.query.filter_by(reserved_by_id=current_user.id).order_by(
+        AppointmentSlot.year, AppointmentSlot.month, AppointmentSlot.day, AppointmentSlot.time.asc()
+    ).all()
     return render_template(
         template, 
         user=current_user, 
         boeken=boeken, 
         postkaarten=postkaarten,
         posters=posters,
-        new_message_count=new_message_count
+        new_message_count=new_message_count,
+        afspraken=afspraken
     )
 
 
@@ -865,8 +870,6 @@ def search():
 
     return render_template('search_results.html', query=query, users=users, books=books, postcards=postkaarten, posters=posters)
 
-
-
 @main.route('/<business_name>')
 def books_by_business_name(business_name):
     user = User.query.filter_by(business_name=business_name).first_or_404()
@@ -1333,7 +1336,7 @@ def edit_postcard(postcard_id):
 
         # Upload nieuwe afbeelding als er een is geüpload
         if form.front_image.data:
-            # Oude afbeelding verwijderen als die bestaat
+            # Oude afbeelding verwijderen als die er is
             if postcard.front_image_url:
                 old_image_path = os.path.join(current_app.root_path, 'static', postcard.front_image_url)
                 if os.path.exists(old_image_path):
@@ -1820,23 +1823,40 @@ def checkout_item(item_type, item_id):
 @main.route('/make_appointment/<int:item_id>', methods=['GET', 'POST'])
 @login_required
 def make_appointment(item_id):
-    item = Book.query.get_or_404(item_id)  # of Poster/Postcard afhankelijk van je model
+    item = Book.query.get_or_404(item_id)
+    from app.models import AppointmentSlot
+    verkoper = item.user
+    tijdsloten = AppointmentSlot.query.filter_by(user_id=verkoper.id, book_id=None, reserved_by_id=None).order_by(
+        AppointmentSlot.year, AppointmentSlot.month, AppointmentSlot.day, AppointmentSlot.time.asc()
+    ).all()
     if request.method == 'POST':
-        date = request.form.get('date')
-        time = request.form.get('time')
-
-        if not date or not time:
-            flash('Vul een geldige datum en tijd in voor de afspraak.', 'danger')
-            return render_template('make_appointment.html', item=item)
-
+        tijdslot_str = request.form.get('tijdslot')
+        gekozen_datum = gekozen_tijd = None
+        if tijdslot_str:
+            import re
+            m = re.match(r"(\d+)-(\d+)-(\d+) (\d{2}:\d{2})", tijdslot_str)
+            if m:
+                year, month, day, time = int(m.group(1)), int(m.group(2)), int(m.group(3)), m.group(4)
+                slot = AppointmentSlot.query.filter_by(user_id=verkoper.id, book_id=None, year=year, month=month, day=day, time=time, reserved_by_id=None).first()
+                if slot:
+                    slot.reserved_by_id = current_user.id
+                    from app import db
+                    import datetime
+                    slot.reserved_at = datetime.datetime.now()
+                    db.session.commit()
+                gekozen_datum = f"{day}-{month}-{year}"
+                gekozen_tijd = time
+        if not gekozen_datum or not gekozen_tijd:
+            flash('Geen geldig tijdslot gekozen.', 'danger')
+            return render_template('make_appointment.html', item=item, tijdsloten=tijdsloten)
         # Stuur een bericht naar de verkoper
         from app.models import Message
         verkoper = item.user
         content = (
             f'Nieuwe afspraakverzoek:\n'
             f'- Boek: {item.title}\n'
-            f'- Datum: {date}\n'
-            f'- Tijd: {time}\n'
+            f'- Datum: {gekozen_datum}\n'
+            f'- Tijd: {gekozen_tijd}\n'
             f'- Koper: {current_user.username} ({current_user.email})\n'
         )
 
@@ -1845,8 +1865,8 @@ def make_appointment(item_id):
         # Bericht naar koper (bevestiging)
         bevestiging_content = (
             f'Je hebt een afspraak gemaakt voor het boek: {item.title}\n'
-            f'- Datum: {date}\n'
-            f'- Tijd: {time}\n'
+            f'- Datum: {gekozen_datum}\n'
+            f'- Tijd: {gekozen_tijd}\n'
             f'- Verkoper: {verkoper.username} ({verkoper.email})\n'
         )
         msg_koper = Message(sender_id=verkoper.id, receiver_id=current_user.id, content=bevestiging_content)
@@ -1878,15 +1898,15 @@ def make_appointment(item_id):
             buyer_name=current_user.username,
             buyer_email=current_user.email,
             book_title=item.title,
-            date=date,
-            time=time,
+            date=gekozen_datum,
+            time=gekozen_tijd,
             message_url=message_url
         )
 
-        flash(f'Afspraak bevestigd voor {date} om {time}. De verkoper is geïnformeerd via een bericht en e-mail.', 'success')
+        flash(f'Afspraak bevestigd voor {gekozen_datum} om {gekozen_tijd}. De verkoper is geïnformeerd via een bericht en e-mail.', 'success')
         return redirect(url_for('main.dashboard'))
 
-    return render_template('make_appointment.html', item=item)
+    return render_template('make_appointment.html', item=item, tijdsloten=tijdsloten)
 
 
 from mollie.api.client import Client
@@ -1942,8 +1962,6 @@ def start_mollie_payment(item_type, item_id):
     except Exception:
         flash("Er is een onverwachte fout opgetreden tijdens het starten van de betaling.", "danger")
         return redirect(url_for("main.cart"))
-
-
 
 
 
@@ -2035,23 +2053,26 @@ def payment_failed():
 @main.route('/beheer-antiquariaat')
 @login_required
 def beheer_antiquariaat():
-    # Alle verkochte goederen ophalen
     verkochte_boeken = Book.query.filter_by(user_id=current_user.id, sold=True).all()
     verkochte_postkaarten = Postcard.query.filter_by(user_id=current_user.id, sold=True).all()
     verkochte_posters = Poster.query.filter_by(user_id=current_user.id, sold=True).all()
-
     rek_form = RekForm()
     rekken = Rek.query.all()
-    
-   
-    
+    boeken = Book.query.filter_by(user_id=current_user.id, sold=False).all()
+    boek_id = request.args.get('boek_id')
+    if boek_id == 'all':
+        boek = None
+    else:
+        boek = Book.query.get(int(boek_id)) if boek_id else (boeken[0] if boeken else None)
     return render_template(
         'beheer_antiquariaat.html',
         verkochte_boeken=verkochte_boeken,
         verkochte_postkaarten=verkochte_postkaarten,
         verkochte_posters=verkochte_posters,
         rek_form=rek_form,
-        rekken=rekken
+        rekken=rekken,
+        boeken=boeken,
+        boek=boek
     )
 
 
@@ -2132,6 +2153,9 @@ def upgrade_account():
     return render_template('upgrade_account.html', user=current_user, form=form)
 
 
+@main.route('/upgrade_pro')
+def upgrade_pro():
+    return render_template('upgrade_pro.html')
 
 
 # Route voor verwijderen van een rek
@@ -2151,3 +2175,47 @@ def api_verdiepingen():
     verdiepingen = RekVerdieping.query.filter_by(rek_id=rek_id).all()
     data = [{'id': v.id, 'nummer': v.nummer} for v in verdiepingen]
     return jsonify(data)
+
+@main.route('/books/<int:book_id>/pickup')
+@login_required
+def book_pickup_timeslot(book_id):
+    return render_template('pickup_timeslot.html', book_id=book_id)
+
+@main.route('/afspraken-overzicht')
+@login_required
+def afspraken_overzicht():
+    from app.models import AppointmentSlot
+    page = int(request.args.get('page', 1))
+    per_page = 10
+    pagination = AppointmentSlot.query.filter(AppointmentSlot.reserved_by_id.isnot(None)).order_by(
+        AppointmentSlot.year, AppointmentSlot.month, AppointmentSlot.day, AppointmentSlot.time
+    ).paginate(page=page, per_page=per_page, error_out=False)
+    slots = pagination.items
+    return render_template('afspraken_overzicht.html', slots=slots, pagination=pagination)
+
+
+@main.route('/api/appointments/save', methods=['POST'])
+@login_required
+def save_appointment_slots():
+    from app.models import AppointmentSlot
+    data = request.get_json()
+    slots = data.get('slots', [])
+    book_id = data.get('book_id')
+    if book_id == 'all' or not book_id:
+        book_id = None
+    else:
+        book_id = int(book_id)
+    # Verwijder bestaande slots van deze gebruiker en boek (of algemeen)
+    AppointmentSlot.query.filter_by(user_id=current_user.id, book_id=book_id).delete()
+    for slot in slots:
+        new_slot = AppointmentSlot(
+            user_id=current_user.id,
+            book_id=book_id,
+            year=slot['year'],
+            month=slot['month'],
+            day=slot['day'],
+            time=slot['time']
+        )
+        db.session.add(new_slot)
+    db.session.commit()
+    return jsonify({'message': 'Tijdsloten succesvol opgeslagen.'})

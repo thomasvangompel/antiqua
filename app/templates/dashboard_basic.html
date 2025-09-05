@@ -56,5 +56,20 @@
     </div>
     {# Hier kun je later je boeken, postkaarten, posters toevoegen #}
 
+    <h3 class="mt-5">Mijn afspraken</h3>
+{% if afspraken and afspraken|length > 0 %}
+  <ul class="list-group mb-4">
+    {% for afspraak in afspraken %}
+      <li class="list-group-item">
+        Boek: {{ afspraak.book.title if afspraak.book else '-' }}<br>
+        Datum: {{ '%02d-%02d-%04d'|format(afspraak.day, afspraak.month+1, afspraak.year) }}<br>
+        Tijd: {{ afspraak.time }}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <div class="alert alert-info">Je hebt nog geen afspraken gemaakt.</div>
+{% endif %}
+
   </div>
 {% endblock %}

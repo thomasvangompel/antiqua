@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Kies een afhaaltijdslot</h2>
+<div id="available-slots"></div>
+<div id="reserve-feedback" class="mt-3"></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const bookId = {{ book_id }};
+fetch(`/api/appointments/available/${bookId}`)
+  .then(res => res.json())
+  .then(data => {
+    const div = document.getElementById('available-slots');
+    if (data.length === 0) {
+      div.innerHTML = '<div class="alert alert-warning">Geen beschikbare tijdsloten.</div>';
+      return;
+    }
+    let html = '<div class="d-flex flex-wrap gap-2">';
+    data.forEach(slot => {
+      html += `<button class='btn btn-outline-primary slot-btn' data-id='${slot.id}'>${slot.day}-${slot.month+1}-${slot.year} ${slot.time}</button>`;
+    });
+    html += '</div>';
+    div.innerHTML = html;
+    document.querySelectorAll('.slot-btn').forEach(btn => {
+      btn.onclick = function() {
+        fetch('/api/appointments/reserve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slot_id: this.dataset.id })
+        })
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('reserve-feedback').innerHTML = `<div class='alert alert-success'>${data.message}</div>`;
+        });
+      };
+    });
+  });
+</script>
+{% endblock %}

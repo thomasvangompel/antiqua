@@ -114,6 +114,9 @@ class User(db.Model, UserMixin):
     #posters
     posters = db.relationship('Poster', backref='user', lazy=True, cascade="all, delete")
 
+    # appointment slots
+    appointment_slots = db.relationship('AppointmentSlot', backref='verkoper', lazy=True, cascade='all, delete', foreign_keys='AppointmentSlot.user_id')
+
 class Book(db.Model):
 
 
@@ -159,8 +162,8 @@ class Book(db.Model):
     side_image = db.Column(db.String(150), nullable=True)
     back_image = db.Column(db.String(150), nullable=True)
 
+    appointment_slots = db.relationship('AppointmentSlot', backref='boek', lazy=True, cascade='all, delete', foreign_keys='AppointmentSlot.book_id')
 
-    
 
 
     @property
@@ -317,4 +320,19 @@ class CartItem(db.Model):
             'User',
             backref=db.backref('cart_items', cascade="all, delete-orphan")
         )
+
+class AppointmentSlot(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    book_id = db.Column(db.Integer, db.ForeignKey('book.id'), nullable=True)
+    year = db.Column(db.Integer, nullable=False)
+    month = db.Column(db.Integer, nullable=False)
+    day = db.Column(db.Integer, nullable=False)
+    time = db.Column(db.String(5), nullable=False)  # bv. '14:00'
+    reserved_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # koper
+    reserved_at = db.Column(db.DateTime, nullable=True)
+    # Relaties
+    user = db.relationship('User', foreign_keys=[user_id])
+    book = db.relationship('Book', foreign_keys=[book_id])
+    reserved_by = db.relationship('User', foreign_keys=[reserved_by_id])
 
