@@ -1843,6 +1843,8 @@ def make_appointment(item_id):
                     from app import db
                     import datetime
                     slot.reserved_at = datetime.datetime.now()
+                    # Boek op sold zetten
+                    item.sold = True
                     db.session.commit()
                 gekozen_datum = f"{day}-{month}-{year}"
                 gekozen_tijd = time
