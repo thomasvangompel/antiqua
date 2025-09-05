@@ -1,3 +1,56 @@
+      <li class="list-group-item">
+        Boek: {{ afspraak.book.title if afspraak.book else '-' }}<br>
+        Datum: {{ '%02d-%02d-%04d'|format(afspraak.day, afspraak.month+1, afspraak.year) }}<br>
+        Tijd: {{ afspraak.time }}<br>
+        <button class="btn btn-sm btn-outline-danger me-2" data-bs-toggle="modal" data-bs-target="#deleteModal{{ afspraak.id }}">Verwijder</button>
+        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#changeModal{{ afspraak.id }}">Wijzig tijdslot</button>
+
+        <!-- Verwijder Modal -->
+        <div class="modal fade" id="deleteModal{{ afspraak.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ afspraak.id }}" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <form method="POST" action="{{ url_for('main.delete_appointment', appointment_id=afspraak.id) }}">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="deleteModalLabel{{ afspraak.id }}">Reden van annulering</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"></button>
+                </div>
+                <div class="modal-body">
+                  <textarea name="reden" class="form-control" placeholder="Geef een reden op..." required></textarea>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleer</button>
+                  <button type="submit" class="btn btn-danger">Verwijder afspraak</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wijzig tijdslot Modal -->
+        <div class="modal fade" id="changeModal{{ afspraak.id }}" tabindex="-1" aria-labelledby="changeModalLabel{{ afspraak.id }}" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <form method="POST" action="{{ url_for('main.change_appointment', appointment_id=afspraak.id) }}">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="changeModalLabel{{ afspraak.id }}">Kies een nieuw tijdslot</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"></button>
+                </div>
+                <div class="modal-body">
+                  <select name="nieuw_tijdslot" class="form-select" required>
+                    {% for slot in afspraak.book.available_slots %}
+                      <option value="{{ slot.id }}">{{ '%02d-%02d-%04d'|format(slot.day, slot.month+1, slot.year) }} om {{ slot.time }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleer</button>
+                  <button type="submit" class="btn btn-primary">Wijzig tijdslot</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </li>
 {% extends "base.html" %}
 
 {% block content %}

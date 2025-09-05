@@ -1,4 +1,8 @@
 import os
+from app.models import AppointmentSlot, User, Message, Book
+from flask_mail import Message as MailMessage
+from app import mail
+from app.utils import send_appointment_email
 import secrets
 from PIL import Image
 from flask import (
