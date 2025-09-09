@@ -1,3 +1,5 @@
+
+
 import os
 from app.models import AppointmentSlot, User, Message, Book
 from flask_mail import Message as MailMessage
@@ -44,7 +46,70 @@ from app.forms import PostcardForm
 client_secrets = os.getenv("GOOGLE_OAUTH_SECRETS")
 
 
+
+
+
+
+
+
+
+from flask import Blueprint
 main = Blueprint('main', __name__)
+
+# ... bestaande code ...
+@main.route('/api/appointments/delete_all', methods=['POST'])
+@login_required
+def delete_all_appointments():
+    from app.models import AppointmentSlot
+    slots = AppointmentSlot.query.filter_by(user_id=current_user.id).all()
+    count = len(slots)
+    for slot in slots:
+        db.session.delete(slot)
+    db.session.commit()
+    return jsonify({'status': 'success', 'deleted': count})
+
+@main.route('/api/appointments/available/<int:year>/<int:month>', methods=['GET'])
+@login_required
+def get_appointments_for_month(year, month):
+    from app.models import AppointmentSlot
+    # month is 1-based
+    slots = AppointmentSlot.query.filter_by(user_id=current_user.id, month=month, year=year).all()
+    result = [
+        {
+            'year': s.year,
+            'month': s.month,
+            'day': s.day,
+            'time': s.time
+        } for s in slots
+    ]
+    return jsonify(result)
+
+# Afspraak wijzigen route
+@main.route('/change_appointment/<int:appointment_id>', methods=['GET', 'POST'])
+@login_required
+def change_appointment(appointment_id):
+    slot = AppointmentSlot.query.get_or_404(appointment_id)
+    if slot.user_id != current_user.id:
+        abort(403)
+    if request.method == 'POST':
+        # Hier kun je logica toevoegen om het tijdslot te wijzigen
+        # Bijvoorbeeld: slot.time = request.form['new_time']
+        db.session.commit()
+        flash('Afspraak succesvol gewijzigd.', 'success')
+        return redirect(url_for('main.dashboard_basic'))
+    return render_template('change_appointment.html', slot=slot)
+
+# Verwijder afspraak route
+@main.route('/delete_appointment/<int:appointment_id>', methods=['POST'])
+@login_required
+def delete_appointment(appointment_id):
+    slot = AppointmentSlot.query.get_or_404(appointment_id)
+    if slot.user_id != current_user.id:
+        abort(403)
+    db.session.delete(slot)
+    db.session.commit()
+    flash('Afspraak succesvol verwijderd.', 'success')
+    return redirect(url_for('main.dashboard_basic'))
 
 
 
@@ -57,12 +122,10 @@ def save_picture(form_picture):
     _, f_ext = os.path.splitext(form_picture.filename)
     picture_fn = random_hex + f_ext
     picture_path = os.path.join(current_app.root_path, 'static/profile_pics', picture_fn)
-
     output_size = (125, 125)
     i = Image.open(form_picture)
     i.thumbnail(output_size)
     i.save(picture_path)
-
     return picture_fn
 
 
@@ -2070,6 +2133,14 @@ def beheer_antiquariaat():
         boek = None
     else:
         boek = Book.query.get(int(boek_id)) if boek_id else (boeken[0] if boeken else None)
+    # Verzamel gereserveerde slots voor de kalender
+    if boek:
+        reserved_slots = [
+            {'year': s.year, 'month': s.month, 'day': s.day, 'time': s.time}
+            for s in boek.appointment_slots if s.reserved_by_id is not None
+        ]
+    else:
+        reserved_slots = []
     return render_template(
         'beheer_antiquariaat.html',
         verkochte_boeken=verkochte_boeken,
@@ -2078,7 +2149,8 @@ def beheer_antiquariaat():
         rek_form=rek_form,
         rekken=rekken,
         boeken=boeken,
-        boek=boek
+        boek=boek,
+        reserved_slots=reserved_slots
     )
 
 
@@ -2204,24 +2276,47 @@ def afspraken_overzicht():
 @login_required
 def save_appointment_slots():
     from app.models import AppointmentSlot
-    data = request.get_json()
-    slots = data.get('slots', [])
-    book_id = data.get('book_id')
-    if book_id == 'all' or not book_id:
-        book_id = None
-    else:
-        book_id = int(book_id)
-    # Verwijder bestaande slots van deze gebruiker en boek (of algemeen)
-    AppointmentSlot.query.filter_by(user_id=current_user.id, book_id=book_id).delete()
-    for slot in slots:
-        new_slot = AppointmentSlot(
-            user_id=current_user.id,
-            book_id=book_id,
-            year=slot['year'],
-            month=slot['month'],
-            day=slot['day'],
-            time=slot['time']
-        )
-        db.session.add(new_slot)
-    db.session.commit()
-    return jsonify({'message': 'Tijdsloten succesvol opgeslagen.'})
+    try:
+        data = request.get_json()
+        slots = data.get('slots', [])
+        book_id = data.get('book_id')
+        if book_id == 'all' or not book_id:
+            book_id = None
+        else:
+            book_id = int(book_id)
+        if not slots:
+            return jsonify({'status': 'error', 'errors': ['slots ontbreekt']}), 400
+        created_count = 0
+        skipped_count = 0
+        for slot in slots:
+            year = slot.get('year')
+            month = slot.get('month')
+            day = slot.get('day')
+            time = slot.get('time')
+            if None in [year, month, day, time]:
+                continue
+            exists = AppointmentSlot.query.filter_by(
+                user_id=current_user.id,
+                book_id=book_id,
+                year=year,
+                month=month,
+                day=day,
+                time=time
+            ).first()
+            if not exists:
+                new_slot = AppointmentSlot(
+                    user_id=current_user.id,
+                    book_id=book_id,
+                    year=year,
+                    month=month,
+                    day=day,
+                    time=time
+                )
+                db.session.add(new_slot)
+                created_count += 1
+            else:
+                skipped_count += 1
+        db.session.commit()
+        return jsonify({'status': 'success', 'message': f'Tijdsloten succesvol opgeslagen. Nieuw: {created_count}, overgeslagen: {skipped_count}', 'created': created_count, 'skipped': skipped_count})
+    except Exception as e:
+        return jsonify({'status': 'error', 'errors': [str(e)]}), 500

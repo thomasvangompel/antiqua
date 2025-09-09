@@ -4,6 +4,7 @@ from app.models import User, Book, Tag, Bid, Message
 app = create_app()
 
 with app.app_context():
-    User.query.delete()
-    db.session.commit()  # <-- commit is noodzakelijk
+    for user in User.query.all():
+        db.session.delete(user)
+    db.session.commit()
     print("Alle users verwijderd.")

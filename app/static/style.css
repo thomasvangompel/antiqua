@@ -1,3 +1,68 @@
+.slot-btn {
+  min-width: 120px;
+  margin: 4px 2px;
+  font-size: 1rem;
+  padding: 8px 12px;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.slot-btn.active,
+.slot-btn:active,
+.slot-btn:focus {
+  background: #198754;
+  color: #fff;
+  border-color: #198754;
+  outline: none;
+}
+.slot-btn:hover {
+  background: #e6f4ea;
+  color: #198754;
+  border-color: #198754;
+}
+.image-modal .modal-content {
+  max-width: 60vw;
+  max-height: 60vh;
+}
+
+@media (max-width: 600px) {
+  .image-modal .modal-content {
+    max-width: 90vw;
+    max-height: 60vh;
+  }
+  .close-modal {
+    top: 10px;
+    right: 20px;
+    font-size: 2rem;
+  }
+}
+.image-modal {
+  display: flex;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.8);
+  justify-content: center;
+  align-items: center;
+}
+.image-modal .modal-content {
+  max-width: 60vw;
+  max-height: 60vh;
+  border-radius: 8px;
+  box-shadow: 0 0 20px #000;
+}
+.close-modal {
+  position: absolute;
+  top: 30px;
+  right: 50px;
+  color: #fff;
+  font-size: 3rem;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 10000;
+}
 /* Kalender groene vakje voor afspraken */
 .bg-success {
   background-color: #198754 !important;

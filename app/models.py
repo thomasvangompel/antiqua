@@ -115,7 +115,7 @@ class User(db.Model, UserMixin):
     posters = db.relationship('Poster', backref='user', lazy=True, cascade="all, delete")
 
     # appointment slots
-    appointment_slots = db.relationship('AppointmentSlot', backref='verkoper', lazy=True, cascade='all, delete', foreign_keys='AppointmentSlot.user_id')
+    appointment_slots = db.relationship('AppointmentSlot', backref='verkoper', lazy=True, cascade='all, delete', foreign_keys='AppointmentSlot.user_id', overlaps="user")
 
 class Book(db.Model):
 
@@ -162,7 +162,7 @@ class Book(db.Model):
     side_image = db.Column(db.String(150), nullable=True)
     back_image = db.Column(db.String(150), nullable=True)
 
-    appointment_slots = db.relationship('AppointmentSlot', backref='boek', lazy=True, cascade='all, delete', foreign_keys='AppointmentSlot.book_id')
+    appointment_slots = db.relationship('AppointmentSlot', backref='boek', lazy=True, cascade='all, delete', foreign_keys='AppointmentSlot.book_id', overlaps="book")
 
 
 
@@ -332,7 +332,7 @@ class AppointmentSlot(db.Model):
     reserved_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # koper
     reserved_at = db.Column(db.DateTime, nullable=True)
     # Relaties
-    user = db.relationship('User', foreign_keys=[user_id])
-    book = db.relationship('Book', foreign_keys=[book_id])
+    user = db.relationship('User', foreign_keys=[user_id], overlaps="verkoper,appointment_slots")
+    book = db.relationship('Book', foreign_keys=[book_id], overlaps="boek,appointment_slots")
     reserved_by = db.relationship('User', foreign_keys=[reserved_by_id])
 

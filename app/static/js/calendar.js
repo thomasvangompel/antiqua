@@ -2,6 +2,7 @@
 // Vereist een <div id="calendar"></div> en <div id="time-slots"></div> in de template
 
 let selectedSlots = [];
+let savedSlots = [];
 let currentYear, currentMonth;
 let lastSelectedDay = null; // Track last selected calendar day
 
@@ -25,7 +26,7 @@ function renderCalendar(year, month) {
   for (let day = 1; day <= daysInMonth; day++) {
     if ((firstDay + day - 1) % 7 === 0 && day !== 1) html += '</tr><tr>';
     // Controleer of er een slot is voor deze dag
-    const hasSlot = selectedSlots.some(s => s.year === year && s.month === month && s.day === day);
+  const hasSlot = savedSlots.some(s => s.year === year && s.month === month && s.day === day);
     const slotClass = hasSlot ? 'bg-success text-white' : '';
     html += `<td class="calendar-day ${slotClass}" data-day="${day}">${day}</td>`;
   }
@@ -54,23 +55,34 @@ function renderTimeSlots(year, month, day) {
   timeSlotsDiv.innerHTML = '<h5>Kies beschikbare tijdsloten</h5>';
   let html = '<div class="d-flex flex-wrap gap-2">';
   for (let hour = 9; hour <= 18; hour++) {
-    [":00", ":30"].forEach(min => {
+    [":00", ":30"].forEach(min => { 
       const time = `${hour}${min}`;
-      const isReserved = selectedSlots.some(s => s.year === year && s.month === month && s.day === parseInt(day) && s.time === time);
-  html += `<button class="btn time-slot-btn ${isReserved ? 'btn-success' : 'btn-outline-primary'}" data-time="${time}">${time}${isReserved ? ' <span style=\'font-size:0.8em\'>verwijder</span>' : ''}</button>`;
+    const isSelected = selectedSlots.some(s => s.year === year && s.month === month && s.day === parseInt(day) && s.time === time);
+    const isSaved = savedSlots.some(s => s.year === year && s.month === month && s.day === parseInt(day) && s.time === time);
+    const isReserved = isSelected || isSaved;
+    html += `<button class="btn time-slot-btn ${isReserved ? 'btn-success' : 'btn-outline-primary'}" data-time="${time}">${time}${isReserved ? ' <span style=\'font-size:0.8em\'>verwijder</span>' : ''}</button>`;
     });
+  }
+  document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('bg-primary', 'text-white'));
+  const selectedDayTd = Array.from(document.querySelectorAll('.calendar-day')).find(td => parseInt(td.dataset.day) === parseInt(day));
+  if (selectedDayTd) {
+    // Check of er een tijdslot voor deze dag is gekozen
+    const hasSelectedSlot = selectedSlots.some(s => s.year === year && s.month === month && s.day === parseInt(day));
+    if (hasSelectedSlot) {
+      selectedDayTd.classList.remove('bg-primary');
+      selectedDayTd.classList.add('bg-success', 'text-white');
+    } else {
+      selectedDayTd.classList.add('bg-primary', 'text-white');
+    }
   }
   html += '</div>';
 
   timeSlotsDiv.innerHTML += html;
   document.querySelectorAll('.time-slot-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-      const slot = { year, month, day: parseInt(day), time: this.dataset.time, book_id: window.bookId };
-      const before = selectedSlots.length;
-      // Verwijder ALLE matching slots
+      const slot = { year, month: month + 1, day: parseInt(day), time: this.dataset.time, book_id: window.bookId };
       const wasPresent = selectedSlots.some(s => s.year === slot.year && s.month === slot.month && s.day === slot.day && s.time === slot.time);
       if (wasPresent) {
-        // Verwijder uit backend
         fetch('/api/appointments/delete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -78,14 +90,18 @@ function renderTimeSlots(year, month, day) {
         }).then(res => res.json()).then(data => {
           if (data.status === 'success') {
             selectedSlots = selectedSlots.filter(s => !(s.year === slot.year && s.month === slot.month && s.day === slot.day && s.time === slot.time));
-            this.classList.remove('btn-success');
-            this.classList.add('btn-outline-primary');
-            this.innerHTML = slot.time;
             addBulkSaveButton();
-            renderCalendar(year, month);
-            renderTimeSlots(year, month, day);
+            // Kalender en slots direct updaten
+            fetch(`/api/appointments/available/${year}/${month + 1}`)
+              .then(res => res.json())
+              .then(slots => {
+                savedSlots = slots.map(s => ({ year: s.year, month: s.month - 1, day: s.day, time: s.time }));
+                renderCalendar(year, month);
+                renderTimeSlots(year, month, day);
+                document.getElementById('afspraak-feedback').innerHTML = `<div class='alert alert-success'>Tijdslot verwijderd.</div>`;
+              });
           } else {
-            alert('Verwijderen mislukt: ' + (data.message || 'Onbekende fout'));
+            document.getElementById('afspraak-feedback').innerHTML = `<div class='alert alert-danger'>Verwijderen mislukt: ${data.message || 'Onbekende fout'}</div>`;
           }
         });
       } else {
@@ -156,11 +172,6 @@ function showSelectedSlots() {
   feedback.innerHTML = html;
 }
 
-function isThursday(year, month, day) {
-  // JS: zondag=0, maandag=1, ..., donderdag=4
-  return new Date(year, month, day).getDay() === 4;
-}
-
 function getWeekdayName(dayIndex) {
   return ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'][dayIndex];
 }
@@ -190,58 +201,90 @@ function updateBulkModalOptions() {
 }
 
 // Initialiseren
-if (document.getElementById('calendar')) {
-  const now = new Date();
-  window.bookId = document.getElementById('calendar') ? document.getElementById('calendar').dataset.bookId : null;
-  // Stel bookId in voor ophalen van tijdsloten
-  const bookId = window.bookId === '' || window.bookId === 'all' ? 0 : window.bookId;
-  fetch(`/api/appointments/available/${bookId}`)
-    .then(res => res.json())
-    .then(data => {
-      // Zet opgehaalde tijdsloten als geselecteerd
-      selectedSlots = data.map(s => ({ year: s.year, month: s.month, day: s.day, time: s.time }));
-      renderCalendar(now.getFullYear(), now.getMonth());
-    });
-  // renderCalendar wordt nu pas aangeroepen na het laden van de slots
-}
-
 document.addEventListener('DOMContentLoaded', function() {
-  const bulkModal = new bootstrap.Modal(document.getElementById('bulkSlotModal'));
-  document.getElementById('openBulkModal').addEventListener('click', function() {
-    updateBulkModalOptions();
-    bulkModal.show();
-  });
-  document.getElementById('bulkSlotForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const bulkType = document.querySelector('input[name="bulkType"]:checked').value;
-    const bookId = window.bookId === '' ? null : window.bookId;
-  let slotsToSend = selectedSlots;
-  // Voor 'once' gewoon alle geselecteerde slots meesturen
-    fetch('/api/appointments/bulk_reserve', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slots: slotsToSend, bulkType: bulkType, book_id: bookId })
-    })
-    .then(res => res.json())
-    .then(data => {
-      bulkModal.hide();
-      if (data.status === 'success') {
-        document.getElementById('afspraak-feedback').innerHTML = `<div class='alert alert-success'>${data.created} tijdslot(s) opgeslagen (${bulkType}).</div>`;
-        // Na bulkactie: slots opnieuw ophalen en kalender updaten
-        const bookId = window.bookId === '' || window.bookId === 'all' ? 0 : window.bookId;
-        fetch(`/api/appointments/available/${bookId}`)
-          .then(res => res.json())
-          .then(slots => {
-            // Normaliseer maand naar 0-based voor de kalender
-            selectedSlots = slots.map(s => ({ year: s.year, month: s.month - 1, day: s.day, time: s.time }));
+  // Kalender initialiseren
+  if (document.getElementById('calendar')) {
+    const now = new Date();
+    const loader = document.getElementById('calendar-loader');
+    if (loader) loader.style.display = 'block';
+    document.getElementById('calendar').style.display = 'none';
+    fetch(`/api/appointments/available/${now.getFullYear()}/${now.getMonth() + 1}`)
+      .then(res => res.json())
+      .then(data => {
+        savedSlots = data.map(s => ({ year: s.year, month: s.month - 1, day: s.day, time: s.time }));
+        renderCalendar(now.getFullYear(), now.getMonth());
+        if (loader) loader.style.display = 'none';
+        document.getElementById('calendar').style.display = 'block';
+      });
+  }
+
+  // Verwijder alle tijdslots knop
+  const deleteBtn = document.getElementById('deleteAllSlots');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', function() {
+      if (confirm('Weet je zeker dat je alle tijdslots wilt verwijderen?')) {
+        fetch('/api/appointments/delete_all', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            savedSlots = [];
+            selectedSlots = [];
             renderCalendar(currentYear, currentMonth);
-          });
-      } else {
-        document.getElementById('afspraak-feedback').innerHTML = `<div class='alert alert-danger'>Fout: ${data.errors.join(', ')}</div>`;
+            document.getElementById('afspraak-feedback').innerHTML = `<div class='alert alert-success'>Alle tijdslots verwijderd (${data.deleted}).</div>`;
+          } else {
+            document.getElementById('afspraak-feedback').innerHTML = `<div class='alert alert-danger'>Fout bij verwijderen.</div>`;
+          }
+        });
       }
-      selectedSlots = [];
-      document.getElementById('openBulkModal').style.display = 'none';
-      document.querySelectorAll('.time-slot-btn').forEach(btn => btn.classList.remove('active'));
     });
-  });
+  }
+
+  // Bulk opslaan modal
+  const bulkModalElem = document.getElementById('bulkSlotModal');
+  const bulkModal = bulkModalElem ? new bootstrap.Modal(bulkModalElem) : null;
+  const bulkBtn = document.getElementById('openBulkModal');
+  if (bulkBtn && bulkModal) {
+    bulkBtn.addEventListener('click', function() {
+      updateBulkModalOptions();
+      bulkModal.show();
+    });
+  }
+
+  const bulkForm = document.getElementById('bulkSlotForm');
+  if (bulkForm) {
+    bulkForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const bulkType = document.querySelector('input[name="bulkType"]:checked').value;
+      const bookId = window.bookId === '' ? null : window.bookId;
+      let slotsToSend = selectedSlots;
+      fetch('/api/appointments/bulk_reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slots: slotsToSend, bulkType: bulkType, book_id: bookId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        bulkModal.hide();
+        if (data.status === 'success') {
+          document.getElementById('afspraak-feedback').innerHTML = `<div class='alert alert-success'>${data.created} tijdslot(s) opgeslagen (${bulkType}).</div>`;
+          // Na bulkactie: slots opnieuw ophalen en kalender updaten
+          const bookId = window.bookId === '' || window.bookId === 'all' ? 0 : window.bookId;
+          fetch(`/api/appointments/available/${currentYear}/${currentMonth + 1}`)
+            .then(res => res.json())
+            .then(slots => {
+              savedSlots = slots.map(s => ({ year: s.year, month: s.month - 1, day: s.day, time: s.time }));
+              renderCalendar(currentYear, currentMonth);
+            });
+        } else {
+          document.getElementById('afspraak-feedback').innerHTML = `<div class='alert alert-danger'>Fout: ${data.errors.join(', ')}</div>`;
+        }
+        selectedSlots = [];
+        document.getElementById('openBulkModal').style.display = 'none';
+        document.querySelectorAll('.time-slot-btn').forEach(btn => btn.classList.remove('active'));
+      });
+    });
+  }
 });
