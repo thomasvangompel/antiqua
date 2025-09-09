@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}{{ book.title }}{% endblock %}
+
+{% block content %}
+
+{% set just_paid = request.args.get('just_paid') %}
+
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="container mt-3">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="container">
+  <div class="row">
+    <!-- Afbeeldingen -->
+    <div class="col-md-6 text-center">
+      <div class="book-images mb-4">
+        <div>
+          <img id="mainImage"
+               src="{{ book.front_image_url or url_for('static', filename='img/no-image.png') }}"
+               alt="Voorkant boek"
+               style="max-width: 100%; max-height: 400px; cursor: zoom-in;" />
+        </div>
+        <div class="d-flex justify-content-center mt-3 gap-3">
+          {% if book.front_image_url %}
+            <img src="{{ book.front_image_url }}" alt="Voorkant" class="img-thumbnail thumb active-thumb" style="width: 80px; cursor: pointer;" data-img="{{ book.front_image_url }}">
+          {% endif %}
+          {% if book.side_image_url %}
+            <img src="{{ book.side_image_url }}" alt="Zijkant" class="img-thumbnail thumb" style="width: 80px; cursor: pointer;" data-img="{{ book.side_image_url }}">
+          {% endif %}
+          {% if book.back_image_url %}
+            <img src="{{ book.back_image_url }}" alt="Achterkant" class="img-thumbnail thumb" style="width: 80px; cursor: pointer;" data-img="{{ book.back_image_url }}">
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Boekdetails -->
+    <div class="col-md-6">
+      <h2>{{ book.title }}</h2>
+
+
+      {% if book.sold %}
+        <!-- Boek is verkocht, geen winkelwagen knop -->
+      {% else %}
+        {% if not current_user.is_authenticated or book.user_id != current_user.id %}
+          <button class="add-to-cart-btn btn btn-success" data-type="book" data-id="{{ book.id }}">
+            Voeg toe aan winkelwagen
+          </button>
+        {% endif %}
+      {% endif %}
+
+      {% if book.author_description %}
+        <p><strong>Over de auteur:</strong><br>
+          {{ book.author_description | replace('\n\n', '<br><br>') | replace('\n', '<br>') | safe }}
+        </p>
+      {% endif %}
+
+      <p><strong>Genre:</strong> {{ book.genre or 'Onbekend' }}</p>
+
+      <p><strong>Beschrijving:</strong><br>
+        {{ book.description | replace('\n\n', '<br><br>') | replace('\n', '<br>') | safe }}
+      </p>
+
+      <p><strong>Winkel:</strong>
+        <a href="{{ url_for('main.public_seller_profile', business_name=book.user.business_name or book.user.username) }}">
+          {{ book.user.business_name or book.user.username }}
+        </a>
+      </p>
+
+      {% if book.is_auction %}
+        <h3>Veiling</h3>
+        <p><strong>Minimum bod:</strong>
+          {% if book.auction_min_price is not none %}
+            €{{ "%.2f"|format(book.auction_min_price) }}
+          {% else %}
+            Niet ingesteld
+          {% endif %}
+        </p>
+        <p><strong>Einde veiling:</strong>
+          {% if book.auction_end %}
+            {{ book.auction_end.strftime('%Y-%m-%d %H:%M') }}
+          {% else %}
+            Niet ingesteld
+          {% endif %}
+        </p>
+
+        {% if auction_open %}
+          {% set highest_bid = bids.items[0] if bids.items else None %}
+          {% if highest_bid and current_user.is_authenticated and highest_bid.bidder.id == current_user.id %}
+            <p class="alert alert-info">Je hebt al het hoogste bod en kunt niet hoger bieden.</p>
+          {% else %}
+            {% if current_user.is_authenticated %}
+              <form action="{{ url_for('main.book_detail', book_id=book.id) }}" method="post">
+                {{ bid_form.hidden_tag() }}
+                <div class="mb-3">
+                  {{ bid_form.amount.label }}
+                  {{ bid_form.amount(class="form-control", min=min_bid|string, step="0.01", value=min_bid|string) }}
+                  {% for error in bid_form.amount.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                  {% endfor %}
+                  <small class="form-text text-muted">
+                    Minimum bod: €{{ "%.2f"|format(min_bid) }}
+                  </small>
+                </div>
+                {{ bid_form.submit(class="btn btn-primary mt-2") }}
+              </form>
+            {% else %}
+              <p><a href="{{ url_for('main.login') }}">Log in</a> om een bod te plaatsen.</p>
+            {% endif %}
+          {% endif %}
+        {% else %}
+          <p>De veiling is gesloten.</p>
+        {% endif %}
+
+        <h3>Biedingen</h3>
+        {% if bids.items %}
+          <ul class="list-group">
+            {% for bid in bids.items %}
+              <li class="list-group-item">
+                €{{ "%.2f"|format(bid.amount) }} - door {{ bid.bidder.username }} op {{ bid.timestamp.strftime('%Y-%m-%d %H:%M') }}
+              </li>
+            {% endfor %}
+          </ul>
+
+          <nav aria-label="Biedingen paginatie" class="mt-3">
+            <ul class="pagination justify-content-center">
+              {% if bids.has_prev %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('main.book_detail', book_id=book.id, page=bids.prev_num) }}">Vorige</a></li>
+              {% else %}
+                <li class="page-item disabled"><span class="page-link">Vorige</span></li>
+              {% endif %}
+              {% for p in bids.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if p %}
+                  <li class="page-item {% if p == bids.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('main.book_detail', book_id=book.id, page=p) }}">{{ p }}</a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+              {% endfor %}
+              {% if bids.has_next %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('main.book_detail', book_id=book.id, page=bids.next_num) }}">Volgende</a></li>
+              {% else %}
+                <li class="page-item disabled"><span class="page-link">Volgende</span></li>
+              {% endif %}
+            </ul>
+          </nav>
+        {% else %}
+          <p>Er zijn nog geen biedingen.</p>
+        {% endif %}
+
+      {% else %}
+        <h3>Prijs</h3>
+        <p>
+          {% if book.price is not none %}
+            €{{ "%.2f"|format(book.price) }}
+          {% else %}
+            Prijs niet beschikbaar
+          {% endif %}
+        </p>
+
+        {% if not book.sold %}
+        
+<button class="add-to-cart-btn btn btn-success" data-type="book" data-id="{{ book.id }}">
+  Voeg toe aan winkelwagen
+</button>
+
+
+
+
+        </div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const mainImage = document.getElementById('mainImage');
+    const thumbs = document.querySelectorAll('.thumb');
+    thumbs.forEach(thumb => {
+      thumb.addEventListener('click', () => {
+        mainImage.src = thumb.dataset.img;
+        thumbs.forEach(t => t.classList.remove('active-thumb'));
+        thumb.classList.add('active-thumb');
+      });
+    });
+
+    mainImage.addEventListener('click', () => {
+      const isZoomed = mainImage.style.maxWidth === 'none';
+      mainImage.style.maxWidth = isZoomed ? '100%' : 'none';
+      mainImage.style.maxHeight = isZoomed ? '400px' : 'none';
+      mainImage.style.cursor = isZoomed ? 'zoom-in' : 'zoom-out';
+    });
+
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+      setTimeout(() => {
+        alert.classList.remove('show');
+        alert.classList.add('fade');
+        setTimeout(() => alert.remove(), 500);
+      }, 5000);
+    });
+  });
+</script>
+
+<style>
+  .active-thumb {
+    border: 2px solid #007bff;
+  }
+  .shipping-payment-container {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .shipping-options, .payment-options {
+    background-color: #f8f9fa;
+  }
+  .shipping-options h4, .payment-options h4 {
+    font-weight: 600;
+    border-bottom: 2px solid #28a745;
+    padding-bottom: 5px;
+  }
+  .shipping-options ul li,
+  .payment-options ul li {
+    font-size: 1rem;
+    color: #333;
+  }
+  .shipping-options ul li i,
+  .payment-options ul li i {
+    font-size: 1.2rem;
+    vertical-align: middle;
+  }
+  .payment-options form button {
+    transition: background-color 0.3s ease;
+  }
+  .payment-options form button:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+  }
+</style>
+
+{% endblock %}

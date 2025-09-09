@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="container mt-3">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Sluiten"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% endwith %}
+
+  <div class="row">
+
+    <!-- Sidebar -->
+    <aside class="col-md-3 mb-4">
+      <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+          <h5 class="mb-0">Admin Navigatie</h5>
+        </div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item"><a href="#gebruikers" class="text-decoration-none">👤 Gebruikers</a></li>
+          <li class="list-group-item"><a href="#boeken" class="text-decoration-none">📚 Boeken</a></li>
+          <li class="list-group-item"><a href="#posters" class="text-decoration-none">🖼️ Posters</a></li>
+          <li class="list-group-item"><a href="#postcards" class="text-decoration-none">💌 Postcards</a></li>
+          <li class="list-group-item"><a href="#veilingen" class="text-decoration-none">💸 Actieve veilingen</a></li>
+          <li class="list-group-item"><a href="#reviews" class="text-decoration-none">📝 Recente reviews</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Hoofdinhoud -->
+    <div class="col-md-9">
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Pro-gebruikers &amp; BTW-nummers</h5>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Gebruikersnaam</th>
+                <th>Email</th>
+                <th>Business Name</th>
+                <th>BTW-nummer</th>
+                <th>VIES-check</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in pro_users %}
+              <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.business_name }}</td>
+                <td>{{ user.vat_number }}</td>
+                <td>
+                  {% if user.vat_number %}
+                  <a href="https://ec.europa.eu/taxation_customs/vies/vatResponse.html?memberStateCode={{ user.vat_number[:2] }}&number={{ user.vat_number[2:] }}" target="_blank" class="btn btn-sm btn-outline-info">Controleer bij VIES</a>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h2 class="mb-4">Admin Dashboard</h2>
+
+      <!-- Gebruikers -->
+      <div id="gebruikers" class="card mb-5">
+        <div class="card-header">
+          <h5 class="mb-0">Gebruikers ({{ users.total }})</h5>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Gebruikersnaam</th>
+                <th>Email</th>
+                <th>Acties</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in users.items %}
+              <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                  <a href="#" class="btn btn-sm btn-warning">Waarschuwen</a>
+                  <form action="{{ url_for('main.delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Weet je zeker dat je deze gebruiker wilt verwijderen?');">Verwijderen</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <!-- Paginatie gebruikers -->
+          <nav>
+            <ul class="pagination justify-content-center">
+              {% if users.has_prev %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.admin_dashboard', page_users=users.prev_num, page_books=books.page, page_posters=posters.page, page_postcards=postcards.page) }}">Vorige</a>
+              </li>
+              {% endif %}
+              {% for page in users.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page %}
+                  <li class="page-item {{ 'active' if page == users.page else '' }}">
+                    <a class="page-link" href="{{ url_for('main.admin_dashboard', page_users=page, page_books=books.page, page_posters=posters.page, page_postcards=postcards.page) }}">{{ page }}</a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+              {% endfor %}
+              {% if users.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.admin_dashboard', page_users=users.next_num, page_books=books.page, page_posters=posters.page, page_postcards=postcards.page) }}">Volgende</a>
+              </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Boeken -->
+      <div id="boeken" class="card mb-5">
+        <div class="card-header">
+          <h5 class="mb-0">Boeken ({{ books.total }})</h5>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Titel</th>
+                <th>Auteur</th>
+                <th>Verkoper</th>
+                <th>Acties</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for boek in books.items %}
+              <tr>
+                <td>{{ boek.id }}</td>
+                <td>{{ boek.title }}</td>
+                <td>{{ boek.author }}</td>
+                <td>{{ boek.user.username if boek.user else 'Onbekend' }}</td>
+                <td>
+                  <a href="{{ url_for('main.book_detail', book_id=boek.id) }}" class="btn btn-sm btn-info">Details</a>
+                  <form action="{{ url_for('main.delete_book_admin', book_id=boek.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Boek verwijderen?');">Verwijder</button>
+                </form>
+
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <!-- Paginatie boeken -->
+          <nav>
+            <ul class="pagination justify-content-center">
+              {% if books.has_prev %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.admin_dashboard', page_users=users.page, page_books=books.prev_num, page_posters=posters.page, page_postcards=postcards.page) }}">Vorige</a>
+              </li>
+              {% endif %}
+              {% for page in books.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page %}
+                  <li class="page-item {{ 'active' if page == books.page else '' }}">
+                    <a class="page-link" href="{{ url_for('main.admin_dashboard', page_users=users.page, page_books=page, page_posters=posters.page, page_postcards=postcards.page) }}">{{ page }}</a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+              {% endfor %}
+              {% if books.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.admin_dashboard', page_users=users.page, page_books=books.next_num, page_posters=posters.page, page_postcards=postcards.page) }}">Volgende</a>
+              </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Posters -->
+      <div id="posters" class="card mb-5">
+        <div class="card-header">
+          <h5 class="mb-0">Posters ({{ posters.total }})</h5>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Titel</th>
+                <th>Ontwerper</th>
+                <th>Verkoper</th>
+                <th>Acties</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for poster in posters.items %}
+              <tr>
+                <td>{{ poster.id }}</td>
+                <td>{{ poster.title }}</td>
+                <td>{{ poster.designer }}</td>
+                <td>{{ poster.user.username if poster.user else 'Onbekend' }}</td>
+                <td>
+                  <a href="{{ url_for('main.poster_detail', poster_id=poster.id) }}" class="btn btn-sm btn-info">Details</a>
+                  <form action="{{ url_for('main.delete_poster', poster_id=poster.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Poster verwijderen?');">Verwijder</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <!-- Paginatie posters -->
+          <nav>
+            <ul class="pagination justify-content-center">
+              {% if posters.has_prev %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.admin_dashboard', page_users=users.page, page_books=books.page, page_posters=posters.prev_num, page_postcards=postcards.page) }}">Vorige</a>
+              </li>
+              {% endif %}
+              {% for page in posters.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page %}
+                  <li class="page-item {{ 'active' if page == posters.page else '' }}">
+                    <a class="page-link" href="{{ url_for('main.admin_dashboard', page_users=users.page, page_books=books.page, page_posters=page, page_postcards=postcards.page) }}">{{ page }}</a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+              {% endfor %}
+              {% if posters.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.admin_dashboard', page_users=users.page, page_books=books.page, page_posters=posters.next_num, page_postcards=postcards.page) }}">Volgende</a>
+              </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Postcards -->
+      <div id="postcards" class="card mb-5">
+        <div class="card-header">
+          <h5 class="mb-0">Postcards ({{ postcards.total }})</h5>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Titel</th>
+                <th>Ontwerper</th>
+                <th>Verkoper</th>
+                <th>Acties</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for postcard in postcards.items %}
+              <tr>
+                <td>{{ postcard.id }}</td>
+                <td>{{ postcard.title }}</td>
+                <td>{{ postcard.designer }}</td>
+                <td>{{ postcard.user.username if postcard.user else 'Onbekend' }}</td>
+                <td>
+                  <a href="{{ url_for('main.postcard_detail', postcard_id=postcard.id) }}" class="btn btn-sm btn-info">Details</a>
+                  <form action="{{ url_for('main.delete_postcard', postcard_id=postcard.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Postcard verwijderen?');">Verwijder</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <!-- Paginatie postcards -->
+          <nav>
+            <ul class="pagination justify-content-center">
+              {% if postcards.has_prev %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.admin_dashboard', page_users=users.page, page_books=books.page, page_posters=posters.page, page_postcards=postcards.prev_num) }}">Vorige</a>
+              </li>
+              {% endif %}
+              {% for page in postcards.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page %}
+                  <li class="page-item {{ 'active' if page == postcards.page else '' }}">
+                    <a class="page-link" href="{{ url_for('main.admin_dashboard', page_users=users.page, page_books=books.page, page_posters=posters.page, page_postcards=page) }}">{{ page }}</a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+              {% endfor %}
+              {% if postcards.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.admin_dashboard', page_users=users.page, page_books=books.page, page_posters=posters.page, page_postcards=postcards.next_num) }}">Volgende</a>
+              </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Extra secties -->
+      <div id="veilingen" class="mb-5">
+        <h5>💸 Actieve veilingen</h5>
+        <p>(Toevoegen in Python route)</p>
+      </div>
+
+      <div id="reviews">
+        <h5>📝 Recente reviews</h5>
+        <p>(Toevoegen in Python route)</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+

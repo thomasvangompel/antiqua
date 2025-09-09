@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.db
+*.sqlite3
+*.log
+.env
+venv/
+instance/
+client_secrets.json
+test_user.py
+create_admin.py
+maak_admin.py
+

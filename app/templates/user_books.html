@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Boeken van {{ user.business_name }}</h2>
+    <div class="row">
+    {% for book in books.items %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ book.title }}</h5>
+                <p class="card-text"><strong>Auteur:</strong> {{ book.author }}</p>
+                <p class="card-text"><strong>Genre:</strong> {{ book.genre }}</p>
+                <p class="card-text"><strong>Prijs:</strong> € {{ '%.2f'|format(book.price) if book.price is not none else 'N/B' }}</p>
+                <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="btn btn-primary">Bekijk boek</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    </div>
+
+    <!-- Paginatie -->
+    <nav aria-label="Boeken navigatie">
+        <ul class="pagination justify-content-center">
+            {% if books.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.user_books', user_id=user.id, page=books.prev_num) }}">Vorige</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Vorige</span></li>
+            {% endif %}
+
+            {% for p in books.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if p %}
+                    <li class="page-item {% if p == books.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('main.user_books', user_id=user.id, page=p) }}">{{ p }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if books.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('main.user_books', user_id=user.id, page=books.next_num) }}">Volgende</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Volgende</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endblock %}

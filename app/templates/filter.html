@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category|capitalize }}{% endblock %}
+
+{% block content %}
+<section class="container my-5">
+  <!-- Titel -->
+  <div class="mb-4 text-center">
+    <h2 class="fw-bold">{{ category | capitalize }}</h2>
+  </div>
+
+  <!-- Filterformulier -->
+  <form method="GET" class="mb-5">
+  <input type="hidden" name="category" value="{{ category }}">
+
+  <div class="mb-3">
+    <label for="search_term" class="form-label">Zoek op naam of auteur</label>
+    <input type="text" name="search_term" id="search_term" class="form-control" value="{{ selected_search_term|default('') }}">
+  </div>
+
+  <div class="mb-3">
+    <label for="postcode" class="form-label">Postcode</label>
+    <input type="text" name="postcode" id="postcode" class="form-control" value="{{ selected_postcode|default('') }}">
+  </div>
+
+  <div class="mb-3">
+    <label for="stad" class="form-label">Stad</label>
+    <input type="text" name="stad" id="stad" class="form-control" value="{{ selected_stad|default('') }}">
+  </div>
+
+  <div class="mb-3">
+    <label for="radius" class="form-label">Maximale afstand (km)</label>
+    <input type="number" name="radius" id="radius" class="form-control" min="1" max="100" step="1" value="{{ selected_radius|default(20) }}">
+  </div>
+
+  <button type="submit" class="btn btn-primary">Filter</button>
+</form>
+
+
+  <!-- Resultaten -->
+  <div id="itemsContainer" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+    {% if items %}
+      {% for item in items %}
+        <div class="col">
+          <div class="card h-100">
+            {% if category in ['postcards', 'posters'] %}
+              {% if item.front_image_url %}
+                <img src="{{ url_for('static', filename=item.front_image_url) }}" alt="Voorkant"
+                     class="card-img-top img-fluid"
+                     style=""
+                     data-img="{{ url_for('static', filename=item.front_image_url) }}">
+              {% else %}
+                <img src="{{ url_for('static', filename='images/placeholder.jpg') }}" class="card-img-top" alt="Geen afbeelding">
+              {% endif %}
+            {% elif category == 'books' %}
+              {% if item.front_image_url %}
+                <img src="{{ item.front_image_url }}" alt="Voorkant"
+                     class="card-img-top img-fluid"
+                     style=""
+                     data-img="{{ item.front_image_url }}">
+              {% else %}
+                <img src="{{ url_for('static', filename='images/placeholder.jpg') }}" class="card-img-top" alt="Geen afbeelding">
+              {% endif %}
+            {% else %}
+              <img src="{{ url_for('static', filename='images/placeholder.jpg') }}" class="card-img-top" alt="Geen afbeelding">
+            {% endif %}
+
+            <div class="card-body">
+              <h5 class="card-title">{{ item.title }}</h5>
+              <p class="card-text mb-1">Prijs: €{{ "%.2f"|format(item.price) }}</p>
+              <p>{{ item.category }}</p>
+
+              {% if category == 'books' %}
+                <a href="{{ url_for('main.book_detail', book_id=item.id) }}" class="btn btn-sm btn-primary">Bekijk boek</a>
+              {% elif category == 'postcards' %}
+                <a href="{{ url_for('main.postcard_detail', postcard_id=item.id) }}" class="btn btn-sm btn-primary">Bekijk postkaart</a>
+              {% elif category == 'posters' %}
+                <a href="{{ url_for('main.poster_detail', poster_id=item.id) }}" class="btn btn-sm btn-primary">Bekijk poster</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted">Geen resultaten gevonden voor deze categorie.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+<script>
+  const postcodeInput = document.getElementById('postcode');
+  const stadInput = document.getElementById('stad');
+  const validationMessage = document.getElementById('validationMessage');
+
+  function showValidation() {
+    validationMessage.style.display = 'block';
+  }
+
+  function hideValidation() {
+    validationMessage.style.display = 'none';
+  }
+
+  function validateAddress() {
+    const postcode = postcodeInput.value.trim();
+    const stad = stadInput.value.trim();
+
+    if (!postcode || !stad) {
+      hideValidation();
+      return;
+    }
+
+    const query = `${postcode} ${stad}, België`;
+
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(query)}&countrycodes=be&limit=1&accept-language=nl`)
+      .then(response => response.json())
+      .then(data => {
+        if (data && data.length > 0) {
+          showValidation();
+        } else {
+          hideValidation();
+        }
+      })
+      .catch(() => {
+        hideValidation();
+      });
+  }
+
+  let debounceTimer;
+  function debounceValidate() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(validateAddress, 700);
+  }
+
+  postcodeInput.addEventListener('input', debounceValidate);
+  stadInput.addEventListener('input', debounceValidate);
+
+  // Init check als velden al gevuld zijn
+  if (postcodeInput.value && stadInput.value) {
+    validateAddress();
+  }
+</script>

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Betaling mislukt{% endblock %}
+
+{% block content %}
+<div class="text-center my-5">
+    <i class="fas fa-times-circle text-danger" style="font-size: 4rem;"></i>
+    <h2 class="mt-3">Betaling mislukt</h2>
+    <p class="lead">Er is iets misgegaan met je betaling. Probeer het opnieuw of neem contact met ons op.</p>
+    <a href="{{ url_for('main.home') }}" class="btn btn-primary mt-3">
+        Terug naar de homepage
+    </a>
+</div>
+{% endblock %}

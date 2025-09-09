@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+  <h2>Boek bewerken</h2>
+  <form method="POST">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      {{ form.title.label(class="form-label") }}
+      {{ form.title(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.author.label(class="form-label") }}
+      {{ form.author(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.author_description.label(class="form-label") }}
+      {{ form.author_description(class="form-control", rows=4) }}
+      <small class="form-text text-muted">Bewerk de auteursbeschrijving</small>
+    </div>
+
+
+    <div class="mb-3">
+      {{ form.description.label(class="form-label") }}
+      {{ form.description(class="form-control", rows=4) }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.genre.label(class="form-label") }}
+      {{ form.genre(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.price.label(class="form-label") }}
+      {{ form.price(class="form-control", step="0.01") }}
+      <small class="form-text text-muted">Geef de prijs op in euro's, bijvoorbeeld 12.50</small>
+    </div>
+
+    <div class="mb-3">
+      {{ form.tags.label(class="form-label") }}
+      {{ form.tags(class="form-control") }}
+      <small class="form-text text-muted">Gebruik max. 5 tags, gescheiden door komma's</small>
+    </div>
+
+    <div class="mb-3">
+      <div class="d-flex gap-4 align-items-start">
+        <div>
+          <label class="form-label">Voorkant afbeelding</label>
+          {{ form.front_image(class="form-control") }}
+          {% if book.front_image %}
+            <img src="{{ url_for('static', filename='uploads/' ~ book.front_image) }}" alt="Voorkant" style="max-width:120px; margin-top:10px;">
+          {% endif %}
+        </div>
+        <div>
+          <label class="form-label">Zijkant afbeelding</label>
+          {{ form.side_image(class="form-control") }}
+          {% if book.side_image %}
+            <img src="{{ url_for('static', filename='uploads/' ~ book.side_image) }}" alt="Zijkant" style="max-width:120px; margin-top:10px;">
+          {% endif %}
+        </div>
+        <div>
+          <label class="form-label">Achterkant afbeelding</label>
+          {{ form.back_image(class="form-control") }}
+          {% if book.back_image %}
+            <img src="{{ url_for('static', filename='uploads/' ~ book.back_image) }}" alt="Achterkant" style="max-width:120px; margin-top:10px;">
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="mb-3">
+      {{ form.rek.label(class="form-label") }}
+      {{ form.rek(class="form-select", id="rekSelect") }}
+    </div>
+    <div class="mb-3">
+      {{ form.verdieping.label(class="form-label") }}
+      {{ form.verdieping(class="form-select", id="verdiepingSelect") }}
+    </div>
+    <div class="mb-3">
+      {{ form.positie.label(class="form-label") }}
+      {{ form.positie(class="form-select") }}
+    </div>
+
+    {{ form.submit(class="btn btn-primary") }}
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rekSelect = document.getElementById('rekSelect');
+    const verdiepingSelect = document.getElementById('verdiepingSelect');
+    rekSelect.addEventListener('change', function() {
+        const rekId = this.value;
+        fetch(`/api/verdiepingen?rek_id=${rekId}`)
+            .then(response => response.json())
+            .then(data => {
+                verdiepingSelect.innerHTML = '';
+                data.forEach(function(v) {
+                    const option = document.createElement('option');
+                    option.value = v.id;
+                    option.textContent = `Verdieping ${v.nummer}`;
+                    verdiepingSelect.appendChild(option);
+                });
+            });
+    });
+});
+</script>
+{% endblock %}

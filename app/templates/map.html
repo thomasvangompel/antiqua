@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+  <h2>Boekhandelaars op de kaart</h2>
+  <div id="map" style="height: 600px;"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-o9N1j8FzQt+X/1RO5QhB4ZKwKpAyxZ4AqjUIZ6b6ktM="
+    crossorigin=""
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-o9N1j8FzQt+X/1RO5QhB4ZKwKpAyxZ4AqjUIZ6b6ktM="
+    crossorigin=""
+  ></script>
+
+  <script>
+    const map = L.map('map').setView([51.05, 3.73], 8);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    {% for user in verkopers %}
+      {% if user.latitude and user.longitude %}
+        L.marker([{{ user.latitude }}, {{ user.longitude }}])
+          .addTo(map)
+          .bindPopup({{ (user.business_name or user.username)|tojson }});
+      {% endif %}
+    {% endfor %}
+  </script>
+{% endblock %}

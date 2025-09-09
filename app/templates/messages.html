@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Sluiten"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+<div class="container mt-4">
+
+  <h2>Ontvangen berichten</h2>
+  {% if ontvangen %}
+    <ul class="list-group mb-4">
+      {% for msg in ontvangen %}
+        <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+          <div class="mb-2 mb-md-0" style="flex:1;">
+            <strong>Van:</strong> {{ msg.sender.username }}<br>
+            <small>{{ msg.timestamp.strftime('%d-%m-%Y %H:%M') }}</small><br>
+            {{ msg.content }}
+          </div>
+          <div class="d-flex flex-column w-50" role="group" aria-label="Acties">
+            {% if not msg.read %}
+              <a href="{{ url_for('main.read_message', message_id=msg.id) }}" class="btn btn-secondary w-100 mb-2" title="Markeer als gelezen">Markeer gelezen</a>
+            {% endif %}
+            <a href="{{ url_for('main.reply_message', message_id=msg.id) }}" class="btn btn-primary w-100 mb-2" title="Beantwoorden">Beantwoorden</a>
+            <form method="post" action="{{ url_for('main.delete_message', message_id=msg.id) }}" style="display:inline;" onsubmit="return confirm('Weet je zeker dat je dit bericht wilt verwijderen?');">
+              <button type="submit" class="btn btn-danger w-100 mb-2" title="Verwijderen">Verwijderen</button>
+            </form>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Je hebt geen ontvangen berichten.</p>
+  {% endif %}
+
+  <hr>
+
+  <h2>Verzonden berichten</h2>
+  {% if verzonden %}
+    <ul class="list-group">
+      {% for msg in verzonden %}
+        <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+          <div class="mb-2 mb-md-0" style="flex:1;">
+            <strong>Aan:</strong> {{ msg.receiver.username }}<br>
+            <small>{{ msg.timestamp.strftime('%d-%m-%Y %H:%M') }}</small><br>
+            {{ msg.content }}
+          </div>
+          <div class="d-flex flex-column w-50" role="group" aria-label="Acties">
+            <form method="post" action="{{ url_for('main.delete_message', message_id=msg.id) }}" style="display:inline;" onsubmit="return confirm('Weet je zeker dat je dit bericht wilt verwijderen?');">
+              <button type="submit" class="btn btn-danger w-100 mb-2" title="Verwijderen">Verwijderen</button>
+            </form>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Je hebt geen verzonden berichten.</p>
+  {% endif %}
+
+</div>
+{% endblock %}

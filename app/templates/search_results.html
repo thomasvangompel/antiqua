@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Zoekresultaten voor "{{ query }}"</h2>
+
+    {% if users %}
+    <h4>Gebruikers</h4>
+    <ul class="list-group mb-4">
+        {% for user in users %}
+        <li class="list-group-item">
+            <a href="{{ url_for('main.books_by_business_name', business_name=user.business_name or user.username) }}">
+                {{ user.business_name or user.username }}
+            </a> - {{ user.city or 'Onbekend' }}
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if books.items %}
+    <h4>Boeken</h4>
+    <div class="row">
+        {% for book in books.items %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 card-verkoper position-relative">
+                {% if book.front_image %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ book.front_image) }}"
+                         alt="Voorkant van {{ book.title }}"
+                         class="card-img-top">
+                    {% if book.sold %}
+                        <span class="badge bg-danger position-absolute top-0 end-0 m-2" style="z-index: 10;">
+                            Verkocht
+                        </span>
+                    {% endif %}
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text"><strong>Auteur:</strong> {{ book.author }}</p>
+                    <p class="card-text"><strong>Genre:</strong> {{ book.genre }}</p>
+                    <p class="card-text"><strong>Prijs:</strong> 
+                        {% if book.price is not none %}
+                            € {{ '%.2f'|format(book.price) }}
+                        {% elif book.is_auction %}
+                            Bieden vanaf €{{ '%.2f'|format(book.auction_min_price) if book.auction_min_price else '0.00' }}
+                        {% else %}
+                            N/B
+                        {% endif %}
+                    </p>
+
+                    <p class="card-text">
+                        <strong>Winkel:</strong>
+                        <a href="{{ url_for('main.public_seller_profile', business_name=book.user.business_name or book.user.username) }}">
+                            {{ book.user.business_name or book.user.username }}
+                        </a>
+                    </p>
+
+                    <p class="card-text"><strong>Plaats:</strong> {{ book.user.city or 'Onbekend' }}</p>
+                    <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="btn btn-primary">Bekijk boek</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if postcards.items %}
+    <h4>Postkaarten</h4>
+    <div class="row">
+        {% for kaart in postcards.items %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 card-verkoper position-relative">
+                {% if kaart.front_image_url %}
+                    <img src="{{ url_for('static', filename=kaart.front_image_url) }}"
+                         alt="Voorkant van {{ kaart.title }}"
+                         class="card-img-top">
+                    {% if kaart.sold %}
+                        <span class="badge bg-danger position-absolute top-0 end-0 m-2" style="z-index: 10;">
+                            Verkocht
+                        </span>
+                    {% endif %}
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ kaart.title }}</h5>
+                    <p class="card-text">{{ kaart.description or '' }}</p>
+                    <p class="card-text"><strong>Winkel:</strong>
+                        <a href="{{ url_for('main.public_seller_profile', business_name=kaart.user.business_name or kaart.user.username) }}">
+                            {{ kaart.user.business_name or kaart.user.username }}
+                        </a>
+                    </p>
+                    <a href="{{ url_for('main.postcard_detail', postcard_id=kaart.id) }}" class="btn btn-primary">Bekijk postkaart</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if posters.items %}
+    <h4>Posters</h4>
+    <div class="row">
+        {% for poster in posters.items %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 card-verkoper position-relative">
+                {% if poster.front_image_url %}
+                    <img src="{{ url_for('static', filename=poster.front_image_url) }}"
+                        alt="Voorkant van {{ poster.title }}"
+                        class="card-img-top">
+                    <p>
+                        {% if poster.sold %}
+                            <strong>Verkocht</strong>
+                        {% else %}
+                            <em>Niet verkocht (debug: {{ poster.sold }})</em>
+                        {% endif %}
+                    </p>
+                {% endif %}
+
+                <div class="card-body">
+                    <h5 class="card-title">{{ poster.title }}</h5>
+                    <p class="card-text">{{ poster.description or '' }}</p>
+                    <p class="card-text"><strong>Winkel:</strong>
+                        <a href="{{ url_for('main.public_seller_profile', business_name=poster.user.business_name or poster.user.username) }}">
+                            {{ poster.user.business_name or poster.user.username }}
+                        </a>
+                    </p>
+                    <a href="{{ url_for('main.poster_detail', poster_id=poster.id) }}" class="btn btn-primary">Bekijk poster</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
