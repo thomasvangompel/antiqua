@@ -2,15 +2,35 @@
 {% block content %}
 <div class="container py-4">
   <h2>Winkelprofiel van {{ user.business_name or user.username }}</h2>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div id="flash-messages">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
   <form method="POST">
     <div class="mb-3">
       <label for="about_shop" class="form-label">Over ons</label>
-  <div id="quill-editor" style="height: 200px;">{{ user.about_shop|safe or '' }}</div>
-  <input type="hidden" name="about_shop" id="about_shop">
+      <div id="quill-editor" style="height: 200px;">{{ user.about_shop|safe or '' }}</div>
+      <input type="hidden" name="about_shop" id="about_shop">
     </div>
-  <button type="submit" class="btn btn-primary">Opslaan</button>
+    <div class="mb-3">
+      <label for="contact_info" class="form-label">Contactinformatie (extra)</label>
+      <div id="contact-quill" style="height: 150px;">{{ user.contact_info|safe or '' }}</div>
+      <input type="hidden" name="contact_info" id="contact_info">
+    </div>
+    <button type="submit" class="btn btn-primary">Opslaan</button>
   </form>
+
 </div>
+  
+
 {% endblock %}
 {% block scripts %}
   <!-- Quill.js CDN -->
@@ -28,9 +48,28 @@
         ]
       }
     });
-    // Zet Quill content in hidden input bij submit
-    document.querySelector('form').onsubmit = function() {
-      document.getElementById('about_shop').value = quill.root.innerHTML;
+      var contactQuill = new Quill('#contact-quill', {
+        theme: 'snow',
+        modules: {
+          toolbar: [
+            [{ header: [1, 2, false] }],
+            ['bold', 'italic', 'underline'],
+            ['link', 'blockquote', 'code-block', 'image'],
+            [{ list: 'ordered' }, { list: 'bullet' }]
+          ]
+        }
+      });
+
+      // Vul Quill met bestaande waarde
+      var contactInfo = document.getElementById('contact_info');
+      if (contactInfo.value) {
+        contactQuill.root.innerHTML = contactInfo.value;
+      }
+
+      // Zet Quill content in hidden input bij submit
+      document.querySelector('form').onsubmit = function() {
+        document.getElementById('about_shop').value = quill.root.innerHTML;
+        document.getElementById('contact_info').value = contactQuill.root.innerHTML;
     };
   </script>
 

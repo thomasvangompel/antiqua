@@ -99,6 +99,7 @@ class User(db.Model, UserMixin):
 
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
     about_shop = db.Column(db.Text, nullable=True)
+    contact_info = db.Column(db.Text, nullable=True)
     def set_password(self, password):
         from werkzeug.security import generate_password_hash
         self.password = generate_password_hash(password)

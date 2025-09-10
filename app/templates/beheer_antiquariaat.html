@@ -16,8 +16,8 @@
     <!-- Aside menu -->
     <aside class="col-md-3 mb-4">
       <div class="list-group">
-            <a href="{{ url_for('main.profile') }}" class="list-group-item list-group-item-action">Winkel Profiel</a>
-            <a href="{{ url_for('main.beheer_antiquariaat') }}" class="list-group-item list-group-item-action">Mijn Antiquariaat</a>
+            
+    
             <a href="#" id="btn-verkocht" class="list-group-item list-group-item-action">Verkocht</a>
             <a href="#" id="btn-rekken-toevoegen" class="list-group-item list-group-item-action">Rekken toevoegen</a>
             <a href="#" id="btn-bestaande-rekken" class="list-group-item list-group-item-action">Bestaande rekken</a>
@@ -30,7 +30,7 @@
     <main class="col-md-9">
       <!-- Winkel Profiel & Mijn Antiquariaat knoppen -->
       <div class="mb-4">
-      <a href="{{ url_for('main.afspraken_overzicht') }}" class="list-group-item list-group-item-action">Afspraken overzicht</a>
+      
       <a href="{{ url_for('shop_profile.shop_profile', user_id=user.id) }}" class="btn btn-primary me-2 mb-2">Winkel Profiel</a>
       <a href="{{ url_for('main.public_seller_profile', business_name=user.business_name) }}" class="btn btn-primary me-2 mb-2">Mijn Antiquariaat</a>
       </div>

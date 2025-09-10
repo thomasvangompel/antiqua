@@ -11,11 +11,14 @@ def shop_profile(user_id):
     if request.method == 'POST':
         import bleach
         about_shop = request.form.get('about_shop')
+        contact_info = request.form.get('contact_info')
         # Sta alleen veilige tags en attributen toe
         allowed_tags = ['b','i','u','a','ul','ol','li','p','br','blockquote','code','h1','h2','h3','strong','em']
         allowed_attrs = {'a': ['href', 'title'], 'img': ['src', 'alt']}
-        clean_html = bleach.clean(about_shop, tags=allowed_tags, attributes=allowed_attrs, strip=True)
-        user.about_shop = clean_html
+        clean_about = bleach.clean(about_shop, tags=allowed_tags, attributes=allowed_attrs, strip=True)
+        clean_contact = bleach.clean(contact_info, tags=allowed_tags, attributes=allowed_attrs, strip=True)
+        user.about_shop = clean_about
+        user.contact_info = clean_contact
         db.session.commit()
         flash('Winkelprofiel bijgewerkt!', 'success')
         return redirect(url_for('shop_profile.shop_profile', user_id=user.id))
