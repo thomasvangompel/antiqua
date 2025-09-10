@@ -1015,29 +1015,35 @@ def contact_seller(business_name):
         flash("Je kunt jezelf geen bericht sturen.", "warning")
         return redirect(url_for('main.public_seller_profile', business_name=business_name))
 
+    import bleach
     form = MessageForm()
-    if form.validate_on_submit():
-        nieuw_bericht = Message(
-            sender_id=current_user.id,
-            receiver_id=seller.id,
-            content=form.content.data,
-            read=False,
-            timestamp=datetime.utcnow()
-        )
-        db.session.add(nieuw_bericht)
-        db.session.commit()
-        flash('Bericht succesvol verstuurd!', 'success')
-        return redirect(url_for('main.public_seller_profile', business_name=business_name))
-
+    if request.method == 'POST':
+        raw_content = request.form.get('content', '')
+        clean_content = bleach.clean(raw_content, tags=["b", "i", "u", "a", "p", "br", "ul", "ol", "li", "strong", "em"], attributes={"a": ["href", "target"]}, strip=True)
+        form.content.data = clean_content
+        if form.validate():
+            nieuw_bericht = Message(
+                sender_id=current_user.id,
+                receiver_id=seller.id,
+                content=clean_content,
+                read=False,
+                timestamp=datetime.utcnow()
+            )
+            db.session.add(nieuw_bericht)
+            db.session.commit()
+            flash('Bericht succesvol verstuurd!', 'success')
+            return redirect(url_for('main.public_seller_profile', business_name=business_name))
     return render_template('contact_seller.html', seller=seller, form=form)
 
 
 @main.route('/messages')
 @login_required
 def messages():
-    ontvangen = Message.query.filter_by(receiver_id=current_user.id).order_by(Message.timestamp.desc()).all()
+    page = request.args.get('page', 1, type=int)
+    ontvangen_pagination = Message.query.filter_by(receiver_id=current_user.id).order_by(Message.timestamp.desc()).paginate(page=page, per_page=3)
+    ontvangen = ontvangen_pagination.items
     verzonden = Message.query.filter_by(sender_id=current_user.id).order_by(Message.timestamp.desc()).all()
-    return render_template('messages.html', ontvangen=ontvangen, verzonden=verzonden)
+    return render_template('messages.html', ontvangen=ontvangen, verzonden=verzonden, ontvangen_pagination=ontvangen_pagination)
 
 
 @main.route('/messages/<int:message_id>/read', methods=['GET'])
@@ -2150,7 +2156,8 @@ def beheer_antiquariaat():
         rekken=rekken,
         boeken=boeken,
         boek=boek,
-        reserved_slots=reserved_slots
+        reserved_slots=reserved_slots,
+        user=current_user
     )
 
 

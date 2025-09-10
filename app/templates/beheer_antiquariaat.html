@@ -26,6 +26,11 @@
 
     <!-- Content -->
     <main class="col-md-9">
+      <!-- Winkel Profiel & Mijn Antiquariaat knoppen -->
+      <div class="mb-4">
+        <a href="{{ url_for('shop_profile.shop_profile', user_id=user.id) }}" class="btn btn-primary me-2 mb-2">Winkel Profiel</a>
+        <a href="{{ url_for('main.public_seller_profile', business_name=user.business_name) }}" class="btn btn-primary me-2 mb-2">Mijn Antiquariaat</a>
+      </div>
       <!-- Verkocht -->
       <div id="content-verkocht" style="display:none;">
         <h3>🏷️ Verkochte Goederen</h3>

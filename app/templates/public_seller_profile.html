@@ -2,6 +2,7 @@
 
 {% block content %}
 <div class="container mt-4">
+
   <h2>{{ seller.business_name or seller.username }}</h2>
 
   <div class="row mb-4">
@@ -9,23 +10,53 @@
       <img src="{{ url_for('static', filename='profile_pics/' + seller.image_file) }}"
            alt="Profielfoto"
            class="img-fluid rounded"
+           style="max-width: 120px; height: auto;"
            onerror="this.style.display='none'">
     </div>
     <div class="col-md-9">
-      <p><strong>Locatie:</strong> {{ seller.city or 'Onbekend' }}</p>
       {% if not (current_user.is_authenticated and current_user.id == seller.id) %}
         <a href="{{ url_for('main.contact_seller', business_name=seller.business_name) }}" 
            class="btn btn-success mt-3 mt-md-0">
           Stuur bericht naar verkoper
         </a>
       {% endif %}
-      
     </div>
   </div>
 
+  <!-- Navbar voor winkelprofiel direct onder de foto -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+    <div class="container-fluid">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="btn btn-primary me-2" style="color: #fff;" data-bs-toggle="collapse" href="#overOnsCollapse" role="button" aria-expanded="false" aria-controls="overOnsCollapse">Over ons</a>
+        </li>
+        <li class="nav-item">
+          <a class="btn btn-primary me-2" style="color: #fff;" href="{{ url_for('main.contact_seller', business_name=seller.business_name) }}">Contact</a>
+        </li>
+        <li class="nav-item">
+          {% if current_user.is_authenticated and current_user.id == seller.id %}
+            <a class="btn btn-secondary disabled" style="color: #fff;" tabindex="-1" aria-disabled="true" title="Je kunt jezelf geen bericht sturen">Stuur bericht naar verkoper</a>
+          {% else %}
+            <a class="btn btn-success" style="color: #fff;" href="{{ url_for('main.contact_seller', business_name=seller.business_name) }}">Stuur bericht naar verkoper</a>
+          {% endif %}
+        </li>
+      </ul>
+    </div>
+  </nav>
 
- 
-<hr>
+  <!-- Over ons sectie -->
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="collapse" id="overOnsCollapse">
+        <h4>Over ons</h4>
+        <div class="border rounded p-3 bg-light">
+          {{ seller.about_shop|safe if seller.about_shop else 'Geen informatie beschikbaar.' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
 
   <h4 class="mt-4">Alle boeken van deze verkoper</h4>
   {% if books %}
