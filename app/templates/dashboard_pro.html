@@ -78,7 +78,7 @@
         <h2>Hallo, {{ user.username or "Nieuweling"}}!</h2>
         <div class="d-flex flex-wrap align-items-center mt-2">
           <a href="{{ url_for('main.profile') }}" class="btn btn-primary me-2 mb-2">Bewerk profiel</a>
-          <a href="{{ url_for('main.verzendgegevens') }}" class="btn btn-primary me-2 mb-2">Verkoop gegevens</a>
+          
           {% if user.business_name %}
             <a href="{{ url_for('main.beheer_antiquariaat') }}" class="btn btn-outline-dark me-2 mb-2">Beheer Antiquariaat</a>
           {% endif %}
