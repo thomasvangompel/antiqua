@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <h2 class="text-primary mb-4">Upgrade naar Pro-account</h2>
+    <div class="row justify-content-center mb-4 g-4">
+      <div class="col-md-4">
+        <div class="card shadow h-100 bg-light border-primary" style="height: 250px; border-radius: 0;">
+          <div class="card-body d-flex flex-column justify-content-center align-items-center">
+            <span class="fs-1 text-primary mb-2"><i class="bi bi-shop"></i></span>
+            <h5 class="card-title">Eigen winkelpagina</h5>
+            <p class="card-text">Met je eigen branding en logo.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow h-100 bg-light border-success" style="height: 250px; border-radius: 0;">
+          <div class="card-body d-flex flex-column justify-content-center align-items-center">
+            <span class="fs-1 text-success mb-2"><i class="bi bi-boxes"></i></span>
+            <h5 class="card-title">Uitgebreid beheer</h5>
+            <p class="card-text">Beheer je collectie en voorraad eenvoudig.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow h-100 bg-light border-info" style="height: 250px; border-radius: 0;">
+          <div class="card-body d-flex flex-column justify-content-center align-items-center">
+            <span class="fs-1 text-info mb-2"><i class="bi bi-bar-chart"></i></span>
+            <h5 class="card-title">Geavanceerde analyse</h5>
+            <p class="card-text">Bekijk statistieken van verkopen en bezoekers.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card shadow h-100 bg-light border-warning" style="height: 250px; border-radius: 0;">
+          <div class="card-body d-flex flex-column justify-content-center align-items-center">
+            <span class="fs-1 text-warning mb-2"><i class="bi bi-calendar-check"></i></span>
+            <h5 class="card-title">Afspraakbeheer</h5>
+            <p class="card-text">Kalender voor afhalen en afspraken.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card shadow h-100 bg-light border-danger" style="height: 250px; border-radius: 0;">
+          <div class="card-body d-flex flex-column justify-content-center align-items-center">
+            <span class="fs-1 text-danger mb-2"><i class="bi bi-gift"></i></span>
+            <h5 class="card-title">Tot 250 items gratis</h5>
+            <p class="card-text">Daarna voordelig uitbreiden.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-12">
+        <div class="card shadow h-100 bg-light border-dark" style="height: 250px; border-radius: 0;">
+          <div class="card-body d-flex flex-column justify-content-center align-items-center">
+            <span class="fs-1 text-dark mb-2"><i class="bi bi-lightning-charge"></i></span>
+            <h5 class="card-title">Snelle support & exclusieve functies</h5>
+            <p class="card-text">Altijd hulp en toegang tot nieuwe features.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row justify-content-center g-4 mb-4">
+      <div class="col-md-6">
+        <div class="card shadow h-100 bg-success text-white" style="height: 180px; border-radius: 0;">
+          <div class="card-body d-flex flex-column justify-content-center align-items-center">
+            <span class="fs-2 mb-2"><i class="bi bi-gem"></i></span>
+            <h5 class="card-title">Pro gratis</h5>
+            <p class="card-text">Tot 250 items volledig gratis!</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card shadow h-100 bg-primary text-white" style="height: 180px; border-radius: 0;">
+          <div class="card-body d-flex flex-column justify-content-center align-items-center">
+            <span class="fs-2 mb-2"><i class="bi bi-unlock"></i></span>
+            <h5 class="card-title">Pro betaald</h5>
+            <p class="card-text">Onbeperkt items voor €15,99 per maand.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row justify-content-center mb-4">
+      <div class="col-lg-8 col-md-10">
+        <div class="card shadow h-100" style="border-radius: 0;">
+          <div class="card-body">
+            <form method="POST" action="{{ url_for('main.upgrade_account') }}">
+              <fieldset>
+                <legend class="fs-3 mb-3 text-success fw-bold d-flex align-items-center">
+                  <i class="bi bi-gem me-2"></i>
+                  Start gratis
+                </legend>
+                {% for field in form if field.type != 'CSRFToken' %}
+                  {% if field.name == 'show_on_map' %}
+                    <div class="form-check mb-3 text-start">
+                      {{ field(class="form-check-input") }}
+                      {{ field.label(class="form-check-label ms-2") }}
+                    </div>
+                  {% else %}
+                    <div class="mb-3 text-start">
+                      {{ field.label(class="form-label") }}
+                      {{ field(class="form-control") }}
+                      {% if field.errors %}
+                        <div class="text-danger small">{{ field.errors[0] }}</div>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                {% endfor %}
+                <button type="submit" class="btn btn-success w-100 py-3 fs-5 fw-bold d-flex justify-content-center align-items-center border border-3 border-warning shadow-lg">
+                  <i class="bi bi-gem me-2"></i> Start gratis
+                </button>
+              </fieldset>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary mt-3">Annuleer</a>
+</div>
+{% endblock %}

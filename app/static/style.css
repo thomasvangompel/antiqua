@@ -1,0 +1,392 @@
+.slot-btn {
+  min-width: 120px;
+  margin: 4px 2px;
+  font-size: 1rem;
+  padding: 8px 12px;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.slot-btn.active,
+.slot-btn:active,
+.slot-btn:focus {
+  background: #198754;
+  color: #fff;
+  border-color: #198754;
+  outline: none;
+}
+.slot-btn:hover {
+  background: #e6f4ea;
+  color: #198754;
+  border-color: #198754;
+}
+.image-modal .modal-content {
+  max-width: 60vw;
+  max-height: 60vh;
+}
+
+@media (max-width: 600px) {
+  .image-modal .modal-content {
+    max-width: 90vw;
+    max-height: 60vh;
+  }
+  .close-modal {
+    top: 10px;
+    right: 20px;
+    font-size: 2rem;
+  }
+}
+.image-modal {
+  display: flex;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.8);
+  justify-content: center;
+  align-items: center;
+}
+.image-modal .modal-content {
+  max-width: 60vw;
+  max-height: 60vh;
+  border-radius: 8px;
+  box-shadow: 0 0 20px #000;
+}
+.close-modal {
+  position: absolute;
+  top: 30px;
+  right: 50px;
+  color: #fff;
+  font-size: 3rem;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 10000;
+}
+/* Kalender groene vakje voor afspraken */
+.bg-success {
+  background-color: #198754 !important;
+  color: #fff !important;
+}
+
+html, body {
+  height: auto;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    text-align: center;
+    padding-top: 50px;
+}
+
+.profile-pic {
+  width: 125px;
+  height: 125px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: top;
+  display: block;
+}
+
+
+.thumb {
+  border: 2px solid transparent;
+  transition: border-color 0.3s;
+}
+.thumb:hover {
+  border-color: #007bff;
+}
+.active-thumb {
+  border-color: #007bff;
+}
+
+
+
+.custom-container{
+
+max-width: 1400px;
+
+}
+
+
+.brand-bordered{
+
+  border: 2px solid black;
+  border-radius: 0;
+  padding: 5px 10px;
+  display: inline-block;
+
+
+}
+
+.card-verkoper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.card-verkoper img {
+  max-height: 250px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+}
+
+.card-verkoper .card-body {
+  width: 100%;
+}
+
+
+.wrap{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  
+}
+
+.card-promo{
+  border:1px solid black;
+  padding:5px;
+  margin:1px;
+}
+
+.title{
+
+  
+  text-align: center;
+}
+
+.verkoop-sectie{
+
+  margin-top: 3em;
+}
+
+
+
+
+
+
+.btn-main{
+
+  background-color: red;
+}
+
+
+
+
+.container-section {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(2, 150px);
+  gap: 10px;
+  width: 100%;
+  max-width: 1400px;  /* zelfde als Bootstrap container op large screens */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.oude-postkaarten {
+  grid-column: 1 / 4; /* kolom 1 t/m 3 */
+  grid-row: 1 / 2;    /* rij 1 */
+  background-image: url('/static/uploads/oude-postkaart-1.jpg');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  color: white;
+  font-size: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease;
+}
+
+.oude-posters {
+  grid-column: 4 / 6;  /* kolom 4 t/m 5 */
+  grid-row: 1 / 3;     /* rij 1 t/m 2 */
+  background-image: url('/static/uploads/oude_poster.jpg');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  color: white;
+  font-size: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease;
+}
+
+.derde-item {
+  grid-column: 1 / 4;  /* kolom 1 t/m 3 */
+  grid-row: 2 / 3;     /* rij 2 */
+  background-image: url('/static/uploads/ephemera.jpg');
+  background-color: #444;
+  color: white;
+  font-size: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  cursor: pointer;
+  position: relative; /* nodig voor ::before */
+  overflow: hidden;   /* voorkomt dat glow buiten div komt */
+}
+
+/* Overlay en hover glow voor derde-item */
+.derde-item::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.6);
+  z-index: 0;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.derde-item > * {
+  position: relative;
+  z-index: 1;
+}
+
+.derde-item:hover::before {
+  background-color: rgba(0,0,0,0.4);
+  box-shadow: 0 0 15px 5px rgba(255,255,255,0.7);
+}
+
+.derde-item:hover {
+  box-shadow: 0 0 20px 8px rgba(255,255,255,0.8);
+}
+
+/* Titel centreren */
+.derde-item > h1 {
+  margin: 0;
+}
+
+
+/* Donkere overlay en hover glow (zelfde als vorige) */
+.oude-postkaarten::before,
+.oude-posters::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.6);
+  z-index: 0;
+  transition: background-color 0.3s ease;
+}
+
+.oude-postkaarten > *,
+.oude-posters > * {
+  position: relative;
+  z-index: 1;
+}
+
+.oude-postkaarten:hover::before,
+.oude-posters:hover::before {
+  background-color: rgba(0,0,0,0.4);
+  box-shadow: 0 0 15px 5px rgba(255,255,255,0.7);
+}
+
+.oude-postkaarten:hover,
+.oude-posters:hover {
+  box-shadow: 0 0 20px 8px rgba(255,255,255,0.8);
+}
+
+/* Titel centreren */
+.oude-postkaarten > h1,
+.oude-posters > h1 {
+  margin: 0;
+}
+
+
+.active-thumb {
+  border: 2px solid #007bff;
+}
+
+
+
+img {
+  image-orientation: from-image;
+}
+
+/* Custom button style: vierkantig, border, logo-style */
+.btn, .btn:focus, .btn:active, .btn:visited {
+  border-radius: 0 !important;
+  border: 2px solid #bbb !important;
+  box-shadow: none !important;
+  font-family: Arial, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.btn-primary {
+  background-color: #fff !important;
+  color: #222 !important;
+  border-color: #bbb !important;
+}
+.btn-primary:hover, .btn-primary:focus {
+  background-color: #222 !important;
+  color: #fff !important;
+  border-color: #bbb !important;
+}
+
+.btn-success {
+  background-color: #fff !important;
+  color: #007b3a !important;
+  border-color: #bbb !important;
+}
+.btn-success:hover, .btn-success:focus {
+  background-color: #007b3a !important;
+  color: #fff !important;
+  border-color: #bbb !important;
+}
+
+.btn-danger {
+  background-color: #fff !important;
+  color: #b30000 !important;
+  border-color: #b30000 !important;
+}
+.btn-danger:hover, .btn-danger:focus {
+  background-color: #b30000 !important;
+  color: #fff !important;
+  border-color: #b30000 !important;
+}
+
+.btn-warning {
+  background-color: #fff !important;
+  color: #e6a700 !important;
+  border-color: #e6a700 !important;
+}
+.btn-warning:hover, .btn-warning:focus {
+  background-color: #e6a700 !important;
+  color: #fff !important;
+  border-color: #e6a700 !important;
+}
+
+.btn-info {
+  background-color: #fff !important;
+  color: #007bff !important;
+  border-color: #007bff !important;
+}
+.btn-info:hover, .btn-info:focus {
+  background-color: #007bff !important;
+  color: #fff !important;
+  border-color: #007bff !important;
+}
+
+.btn-outline-dark, .btn-outline-primary, .btn-outline-success, .btn-outline-warning, .btn-outline-info, .btn-outline-danger {
+  border-radius: 0 !important;
+  border-width: 2px !important;
+  font-weight: 600;
+}
+
+.btn-lg, .btn-sm {
+  border-radius: 0 !important;
+}

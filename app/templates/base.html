@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>OudeBoekenMarkt - {% block title %}{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+  <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+  <style>
+    #loader.spinner-grow {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+    }
+
+    .profile-pic {
+      width: 125px;
+      height: 125px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+
+    .payment-options {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #f9f9f9;
+      margin-bottom: 15px;
+    }
+
+    .payment-options label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container.mt-4 {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white">
+  <div class="container">
+    <a class="navbar-brand brand-bordered" href="{{ url_for('main.home') }}">Antiqua.be</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto align-items-lg-center text-black">
+
+        <!-- Mobiele winkelkar link - ALTIJD tonen -->
+        <li class="nav-item d-lg-none position-relative">
+          <a class="nav-link position-relative d-flex align-items-center" href="{{ url_for('main.cart') }}">
+            <span>Winkelkar</span>
+            {% if cart_count > 0 %}
+            <span class="badge bg-danger rounded-pill ms-2">
+              {{ cart_count }}
+              <span class="visually-hidden">items in winkelwagen</span>
+            </span>
+            {% endif %}
+          </a>
+        </li>
+
+        {% if current_user.is_authenticated %}
+
+          <!-- Mobiele berichten link -->
+          <li class="nav-item d-lg-none">
+            <a class="nav-link position-relative d-flex align-items-center" href="{{ url_for('main.messages') }}">
+              <i class="fas fa-envelope me-1"></i>
+              {% if new_message_count > 0 %}
+              <span class="badge bg-green rounded-pill position-absolute top-0 start-10 translate-middle"
+                    style="transform: translate(-40%, 50%);">
+                {{ new_message_count }}
+                <span class="visually-hidden">nieuwe berichten</span>
+              </span>
+              {% endif %}
+              <span>Berichten</span>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main.logout') }}">Logout</a>
+          </li>
+
+          <!-- Desktop berichten icoon -->
+          <li class="nav-item d-none d-lg-block ms-3 position-relative">
+            <a class="nav-link" href="{{ url_for('main.messages') }}" title="Berichten">
+              <i class="fas fa-envelope fa-lg"></i>
+              {% if new_message_count > 0 %}
+              <span class="badge bg-danger rounded-pill position-absolute top-40 start-100 translate-middle"
+                    style="transform: translate(-40%, 10%);">
+                {{ new_message_count }}
+                <span class="visually-hidden">nieuwe berichten</span>
+              </span>
+              {% endif %}
+            </a>
+          </li>
+
+          <!-- Desktop winkelwagen icoon -->
+          <li class="nav-item d-none d-lg-block ms-3 position-relative">
+            <a class="nav-link" href="{{ url_for('main.cart') }}" title="Winkelwagen">
+              <i class="fas fa-shopping-cart fa-lg"></i>
+              <span id="cart-badge" class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle"
+                style="display: {{ 'inline-block' if cart_count > 0 else 'none' }};">
+                {{ cart_count }}
+                <span class="visually-hidden">items in winkelwagen</span>
+              </span>
+            </a>
+          </li>
+
+        {% else %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main.login') }}">Login</a>
+          </li>
+          <span class="mx-2 d-none d-lg-inline">|</span>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main.register') }}">Registreer</a>
+          </li>
+
+          <!-- Desktop winkelwagen icoon -->
+          <li class="nav-item d-none d-lg-block ms-3 position-relative">
+            <a class="nav-link" href="{{ url_for('main.cart') }}" title="Winkelwagen">
+              <i class="fas fa-shopping-cart fa-lg"></i>
+              <span id="cart-badge" class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle"
+                style="display: {{ 'inline-block' if cart_count > 0 else 'none' }};">
+                {{ cart_count }}
+                <span class="visually-hidden">items in winkelwagen</span>
+              </span>
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Pagina-inhoud -->
+<div class="container mt-4">
+  {% block content %}{% endblock %}
+</div>
+
+<footer class="mt-5 text-white">
+  <div class="bg-dark py-4">
+    <div class="container ">
+      <div class="row">
+        <!-- Quick Links -->
+        <div class="col-md-4 mb-3">
+          <h5>Quick Links</h5>
+          <ul class="list-unstyled">
+            <li><a href="{{ url_for('main.home') }}" class="text-white text-decoration-none">Home</a></li>
+            {% if current_user.is_authenticated %}
+              {% if current_user.is_admin %}
+                <li><a href="{{ url_for('main.admin_dashboard') }}" class="text-white text-decoration-none">Admin Dashboard</a></li>
+              {% else %}
+                <li><a href="{{ url_for('main.dashboard') }}" class="text-white text-decoration-none">Dashboard</a></li>
+              {% endif %}
+              <li><a href="{{ url_for('main.logout') }}" class="text-white text-decoration-none">Uitloggen</a></li>
+            {% else %}
+              <li><a href="{{ url_for('main.register') }}" class="text-white text-decoration-none">Registreer</a></li>
+              <li><a href="{{ url_for('main.login') }}" class="text-white text-decoration-none">Login</a></li>
+            {% endif %}
+          </ul>
+        </div>
+
+        <!-- Contact -->
+        <div class="col-md-4 mb-3">
+          <h5>Contacteer ons</h5>
+          <p class="mb-1"><i class="fas fa-envelope me-2"></i>info@antiqua.be</p>
+          <p class="mb-1"><i class="fas fa-phone me-2"></i>+32 123 456 789</p>
+          <p class="mb-1"><i class="fas fa-map-marker-alt me-2"></i>Antwerpen, België</p>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="col-md-4 mb-3">
+          <h5>Gratis lid worden</h5>
+          <p>Word vandaag nog lid en begin met verkopen of kopen van tweedehands boeken!</p>
+          {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('main.register') }}" class="btn btn-outline-light btn-sm mt-2">Registreer Nu</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <hr class="bg-white" />
+      <p class="text-center mb-0">&copy; {{ current_year or 2025 }} Antiqua.be – Alle rechten voorbehouden.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- Bootstrap JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Loader-script en winkelwagen update -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('searchForm');
+    const loader = document.getElementById('loader');
+
+    if (form && loader) {
+      form.addEventListener('submit', function () {
+        loader.style.display = 'flex';
+      });
+    }
+
+    window.addEventListener('pageshow', event => {
+      if (event.persisted && loader) {
+        loader.style.display = 'none';
+      }
+    });
+
+    setTimeout(() => {
+      const flashMessages = document.getElementById('flash-messages');
+      if (flashMessages) {
+        flashMessages.style.transition = 'opacity 0.5s ease';
+        flashMessages.style.opacity = '0';
+        setTimeout(() => flashMessages.remove(), 500);
+      }
+    }, 2000);
+
+    document.querySelectorAll('input, textarea, select').forEach(input => {
+      input.addEventListener('focus', () => {
+        setTimeout(() => {
+          input.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }, 300);
+      });
+    });
+
+    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const itemType = this.getAttribute('data-type');
+        const itemId = this.getAttribute('data-id');
+
+        fetch(`/api/add_to_cart/${itemType}/${itemId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if(data.success) {
+            const badge = document.getElementById('cart-badge');
+            if (badge) {
+              badge.textContent = data.cart_count;
+              badge.style.display = data.cart_count > 0 ? 'inline-block' : 'none';
+            }
+          } else {
+            alert('Fout bij toevoegen aan winkelwagen.');
+          }
+        })
+        .catch(() => alert('Serverfout bij toevoegen aan winkelwagen.'));
+      });
+    });
+  });
+</script>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

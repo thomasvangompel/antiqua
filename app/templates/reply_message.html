@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Beantwoord Bericht</h2>
+    
+    <div class="card my-3">
+        <div class="card-body">
+            <h5 class="card-title">Origineel bericht van {{ original.sender.username }}</h5>
+            <p class="card-text">{{ original.content }}</p>
+            <p class="text-muted"><small>Verzonden op {{ original.timestamp.strftime('%d-%m-%Y %H:%M') }}</small></p>
+        </div>
+    </div>
+
+   <form method="POST">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.reply.label(class="form-label") }}
+        {{ form.reply(class="form-control", rows="5") }}
+    </div>
+    <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
+    <a href="{{ url_for('main.messages') }}" class="btn btn-secondary">Annuleer</a>
+   </form>
+
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Upgrade naar Pro{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-lg">
+        <div class="card-body">
+          <h2 class="mb-4 text-center text-primary">Upgrade naar Pro</h2>
+          <p class="lead text-center">Ontgrendel alle voordelen van een eigen antiquariaat-winkel!</p>
+          <ul class="list-group list-group-flush mb-4">
+            <li class="list-group-item"><strong>Eigen winkelpagina</strong> met je branding en logo</li>
+            <li class="list-group-item"><strong>Uitgebreid beheer</strong> van je collectie en voorraad</li>
+            <li class="list-group-item"><strong>Geavanceerde analyse</strong> van verkopen en bezoekers</li>
+            <li class="list-group-item"><strong>Afspraakbeheer</strong> en kalender voor afhalen</li>
+            <li class="list-group-item"><strong>Tot 250 items gratis</strong> in je winkel, daarna voordelig uitbreiden</li>
+            <li class="list-group-item"><strong>Snelle support</strong> en exclusieve functies</li>
+          </ul>
+          <div class="text-center mb-3">
+            <span class="badge bg-success fs-5">Pro gratis tot 250 items!</span>
+          </div>
+          <div class="d-grid gap-2">
+            <a href="/pro-aanvragen" class="btn btn-primary btn-lg">Direct upgraden</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

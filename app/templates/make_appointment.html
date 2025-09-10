@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Afspraak maken{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h2>Afspraak maken voor ophalen</h2>
+
+  <div class="card p-4 shadow-sm" style="max-width: 500px; margin: auto;">
+    <h5>{{ item.title }}</h5>
+    <div id="available-slots"></div>
+    <div id="reserve-feedback" class="mt-3"></div>
+    <form method="POST">
+      <div class="mb-3">
+        <label for="tijdslot" class="form-label">Kies een tijdslot:</label>
+        <select name="tijdslot" id="tijdslot" class="form-select" required>
+          {% for slot in tijdsloten %}
+            <option value="{{ slot.year }}-{{ slot.month }}-{{ slot.day }} {{ slot.time }}">
+              {{ slot.day }}-{{ slot.month+1 }}-{{ slot.year }} om {{ slot.time }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-success">Afspraak maken</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const bookId = {{ item.id }};
+fetch(`/api/appointments/available/${bookId}`)
+  .then(res => res.json())
+  .then(data => {
+    const div = document.getElementById('available-slots');
+    let html = '<form id="slotForm"><div class="d-flex flex-wrap gap-2">';
+    data.forEach(slot => {
+      html += `<button type='button' class='btn btn-outline-primary slot-btn' data-id='${slot.id}'>${slot.day}-${slot.month+1}-${slot.year} ${slot.time}</button>`;
+    });
+    html += '</div><button type="submit" class="btn btn-primary mt-3">Bevestig afspraak</button></form>';
+    div.innerHTML = html;
+    let selectedSlot = null;
+    document.querySelectorAll('.slot-btn').forEach(btn => {
+      btn.onclick = function() {
+        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        selectedSlot = this.dataset.id;
+      };
+    });
+    document.getElementById('slotForm').onsubmit = function(e) {
+      e.preventDefault();
+      if (!selectedSlot) {
+        document.getElementById('reserve-feedback').innerHTML = '<div class="alert alert-danger">Selecteer een tijdslot.</div>';
+        return;
+      }
+      fetch('/api/appointments/reserve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slot_id: selectedSlot })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('reserve-feedback').innerHTML = `<div class='alert alert-success'>${data.message}</div>`;
+        setTimeout(function() {
+          window.location.href = '/dashboard';
+        }, 1500);
+      });
+    };
+  });
+</script>
+{% endblock %}

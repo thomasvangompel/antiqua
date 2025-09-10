@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="container-fluid py-4">
+  <div class="row">
+    <!-- Aside menu -->
+    <aside class="col-md-3 mb-4">
+      <div class="list-group">
+        <a href="#" id="btn-verkocht" class="list-group-item list-group-item-action">Verkocht</a>
+        <a href="#" id="btn-rekken-toevoegen" class="list-group-item list-group-item-action">Rekken toevoegen</a>
+        <a href="#" id="btn-bestaande-rekken" class="list-group-item list-group-item-action">Bestaande rekken</a>
+        <a href="#" id="btn-afspraken" class="list-group-item list-group-item-action">Beschikbaarheid afspraken</a>
+        <a href="{{ url_for('main.afspraken_overzicht') }}" class="list-group-item list-group-item-action">Afspraken overzicht</a>
+      </div>
+    </aside>
+
+    <!-- Content -->
+    <main class="col-md-9">
+      <!-- Verkocht -->
+      <div id="content-verkocht" style="display:none;">
+        <h3>🏷️ Verkochte Goederen</h3>
+        {% if verkochte_boeken or verkochte_postkaarten or verkochte_posters %}
+          {% if verkochte_boeken %}
+            <h5 class="mt-4">📚 Boeken</h5>
+            <ul class="list-group mb-4">
+              {% for boek in verkochte_boeken %}
+                <li class="list-group-item">
+                  {{ boek.title }} <small class="text-muted">door {{ boek.author }}</small>
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+          {% if verkochte_postkaarten %}
+            <h5 class="mt-4">📬 Postkaarten</h5>
+            <ul class="list-group mb-4">
+              {% for kaart in verkochte_postkaarten %}
+                <li class="list-group-item">{{ kaart.title or 'Geen titel' }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+          {% if verkochte_posters %}
+            <h5 class="mt-4">🖼️ Posters</h5>
+            <ul class="list-group">
+              {% for poster in verkochte_posters %}
+                <li class="list-group-item">{{ poster.title or 'Geen titel' }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% else %}
+          <p>Geen verkochte goederen gevonden.</p>
+        {% endif %}
+      </div>
+
+      <!-- Rekken toevoegen -->
+      <div id="content-rekken-toevoegen" style="display:none;">
+        <h3 class="mt-5">➕ Rekken toevoegen</h3>
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title">Nieuw rek toevoegen</h5>
+            <form method="POST" action="{{ url_for('main.add_rek') }}">
+              {{ rek_form.hidden_tag() }}
+              <div class="mb-3">
+                {{ rek_form.naam.label }}
+                {{ rek_form.naam(class="form-control", maxlength=100) }}
+              </div>
+              <div class="mb-3">
+                {{ rek_form.aantal_verdiepingen.label }}
+                {{ rek_form.aantal_verdiepingen(class="form-control", min=1, max=20, id='aantal-verdiepingen') }}
+              </div>
+              <div id="verdiepingen-fields">
+                {% for i in range(rek_form.aantal_verdiepingen.data or 1) %}
+                  <div class="mb-3 border p-2 rounded">
+                    <strong>Verdieping {{ i+1 }}</strong><br>
+                    {{ rek_form.verdiepingen[i].links.label }}
+                    {{ rek_form.verdiepingen[i].links(class="form-select d-inline w-auto mx-1", style="width:50px;") }}
+                    {{ rek_form.verdiepingen[i].midden.label }}
+                    {{ rek_form.verdiepingen[i].midden(class="form-select d-inline w-auto mx-1", style="width:50px;") }}
+                    {{ rek_form.verdiepingen[i].rechts.label }}
+                    {{ rek_form.verdiepingen[i].rechts(class="form-select d-inline w-auto mx-1", style="width:50px;") }}
+                  </div>
+                {% endfor %}
+              </div>
+              <button type="submit" class="btn btn-primary">Rek toevoegen</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bestaande rekken -->
+      <div id="content-bestaande-rekken" style="display:none;">
+        <h3 class="mt-5">📚 Bestaande rekken</h3>
+        {% if rekken %}
+        <div class="card">
+          <div class="card-body">
+            <ul class="list-group">
+              {% for rek in rekken %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{{ rek.naam }}</strong> ({{ rek.verdiepingen|length }} verdiepingen)
+                    <ul>
+                      {% for verdieping in rek.verdiepingen %}
+                        <li>
+                          Verdiep {{ verdieping.nummer }}:
+                          <span class="badge bg-primary">links: {{ verdieping.links or '-' }}</span>
+                          <span class="badge bg-success">midden: {{ verdieping.midden or '-' }}</span>
+                          <span class="badge bg-info">rechts: {{ verdieping.rechts or '-' }}</span>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                  <form method="POST" action="{{ url_for('main.delete_rek', rek_id=rek.id) }}" style="display:inline;">
+                    {{ rek_form.hidden_tag() }}
+                    <button type="submit" class="btn btn-danger btn-sm"
+                            onclick="return confirm('Weet je zeker dat je dit rek wilt verwijderen?');">
+                      Verwijder
+                    </button>
+                  </form>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        {% else %}
+          <p>Geen rekken gevonden.</p>
+        {% endif %}
+      </div>
+
+      <!-- Beschikbaarheid afspraken -->
+      <div id="content-afspraken" style="display:none;">
+        <h3 class="mt-5">📅 Beschikbaarheid afspraken</h3>
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title">Kies een moment voor je afhaalafspraak</h5>
+            <div class="mb-3">
+              <label for="boekSelect" class="form-label">Kies boek voor tijdslotbeheer:</label>
+              <select id="boekSelect" class="form-select" onchange="window.location='?boek_id='+this.value;">
+                <option value="all" {% if not boek %}selected{% endif %}>Alle boeken</option>
+                {% for b in boeken %}
+                  <option value="{{ b.id }}" {% if boek and boek.id == b.id %}selected{% endif %}>{{ b.title }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div id="calendar" data-book-id="{{ boek.id if boek else '' }}"></div>
+            <div id="calendar-loader" class="text-center my-4" style="display:none;">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading calendar...</span>
+              </div>
+              <div>Loading calendar...</div>
+            </div>
+            <div id="time-slots" class="mt-3"></div>
+            <button id="openBulkModal" class="btn btn-success mt-3" style="display:none;">Bulk tijdsloten opslaan</button>
+            <button id="deleteAllSlots" class="btn btn-danger mt-3">Verwijder alle tijdslots</button>
+            <div id="afspraak-feedback" class="mt-3"></div>
+            <!-- Bulk tijdsloten modal -->
+            <div class="modal fade" id="bulkSlotModal" tabindex="-1" aria-labelledby="bulkSlotModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form id="bulkSlotForm">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="bulkSlotModalLabel">Bulk tijdsloten opslaan</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"></button>
+                    </div>
+                    <div class="modal-body">
+                      <p>Wil je deze tijdsloten opslaan voor:</p>
+                      <div id="bulkOptions"></div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleer</button>
+                      <button type="submit" class="btn btn-primary">Opslaan</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="beheer-book-id" value="{{ boek.id if boek else '' }}">
+    </main>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
+<script>
+window.bookId = document.getElementById('beheer-book-id') ? document.getElementById('beheer-book-id').value : null;
+// Gereserveerde slots doorgeven aan JS
+window.reservedSlots = {{ reserved_slots|tojson|safe }};
+if (window.reservedSlots && window.reservedSlots.length) {
+  window.reservedSlots = window.reservedSlots.map(function(s) {
+    s.month = s.month - 1;
+    return s;
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const sections = {
+    'verkocht': {
+      btn: document.getElementById('btn-verkocht'),
+      content: document.getElementById('content-verkocht')
+    },
+    'rekken-toevoegen': {
+      btn: document.getElementById('btn-rekken-toevoegen'),
+      content: document.getElementById('content-rekken-toevoegen')
+    },
+    'bestaande-rekken': {
+      btn: document.getElementById('btn-bestaande-rekken'),
+      content: document.getElementById('content-bestaande-rekken')
+    },
+    'afspraken': {
+      btn: document.getElementById('btn-afspraken'),
+      content: document.getElementById('content-afspraken')
+    }
+  };
+
+  function showSectie(sectie) {
+    Object.values(sections).forEach(s => {
+      s.content.style.display = 'none';
+      s.btn.classList.remove('active');
+    });
+    if (sections[sectie]) {
+      sections[sectie].content.style.display = 'block';
+      sections[sectie].btn.classList.add('active');
+    }
+  }
+
+  Object.keys(sections).forEach(key => {
+    sections[key].btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      showSectie(key);
+    });
+  });
+
+  // Initial state
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('sectie')) {
+    showSectie(params.get('sectie'));
+  } else {
+    // Vervang Jinja door JS: standaard naar bestaande-rekken als die sectie bestaat, anders naar verkocht
+    if (document.getElementById('content-bestaande-rekken')) {
+      showSectie('bestaande-rekken');
+    } else {
+      showSectie('verkocht');
+    }
+  }
+
+  // Dynamische verdiepingen velden
+  const aantalVerdiepingenInput = document.getElementById('aantal-verdiepingen');
+  const verdiepingenFields = document.getElementById('verdiepingen-fields');
+
+  if (aantalVerdiepingenInput) {
+    aantalVerdiepingenInput.addEventListener('input', function() {
+      const aantal = parseInt(this.value) || 1;
+      let html = '';
+      for (let i = 0; i < aantal; i++) {
+        html += `
+          <div class="mb-3 border p-2 rounded">
+            <strong>Verdieping ${i+1}</strong><br>
+            <label>Links</label>
+            <select name="verdiepingen-${i}-links" class="form-select d-inline w-auto mx-1" style="width: 50px;">
+              ${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => `<option value="${letter}">${letter}</option>`).join('')}
+            </select>
+            <label>Midden</label>
+            <select name="verdiepingen-${i}-midden" class="form-select d-inline w-auto mx-1" style="width: 50px;">
+              ${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => `<option value="${letter}">${letter}</option>`).join('')}
+            </select>
+            <label>Rechts</label>
+            <select name="verdiepingen-${i}-rechts" class="form-select d-inline w-auto mx-1" style="width: 50px;">
+              ${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => `<option value="${letter}">${letter}</option>`).join('')}
+            </select>
+          </div>`;
+      }
+      verdiepingenFields.innerHTML = html;
+    });
+  }
+
+  document.getElementById('btn-afspraken').addEventListener('click', function() {
+    document.querySelectorAll('[id^="content-"]').forEach(function(el) { el.style.display = 'none'; });
+    document.getElementById('content-afspraken').style.display = 'block';
+  });
+  document.getElementById('afspraak-bevestigen').addEventListener('click', function() {
+    const datum = document.getElementById('afspraak-datum').value;
+    const tijd = document.getElementById('afspraak-tijd').value;
+    if (datum && tijd) {
+      document.getElementById('afspraak-feedback').innerHTML = `<div class='alert alert-success'>Afspraak vastgelegd op <strong>${datum}</strong> om <strong>${tijd}</strong>.</div>`;
+    } else {
+      document.getElementById('afspraak-feedback').innerHTML = `<div class='alert alert-danger'>Kies een datum en tijd.</div>`;
+    }
+  });
+});
+</script>
+{% endblock %}

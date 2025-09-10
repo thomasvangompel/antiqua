@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Poster: {{ poster.title }}{% endblock %}
+
+{% block content %}
+{% set just_paid = request.args.get('just_paid') %}
+
+{# Flashed messages tonen #}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="container mt-3">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+{# Loader zichtbaar maken na betaling #}
+<div id="loader" style="display:none; text-align:center; margin: 20px 0;">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Laden...</span>
+  </div>
+  <p>Even geduld, we verwerken je betaling...</p>
+</div>
+
+{% if just_paid %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelector('.container').style.display = 'none';
+    document.getElementById('loader').style.display = 'block';
+    setTimeout(() => {
+      const url = new URL(window.location);
+      url.searchParams.delete('just_paid');
+      window.location.href = url.toString();
+    }, 5000);
+  });
+</script>
+{% endif %}
+
+<div class="container mt-4">
+  <div class="row">
+    
+      <div class="col-md-6 text-center">
+  <div class="postcard-images mb-4">
+    <div>
+      <img id="mainImage"
+           src="{{ url_for('static', filename=poster.front_image_url or 'img/no-image.png') }}"
+           alt="Voorkant kaart"
+           style="width: 100%; max-width: 800px; height: auto; cursor: zoom-in;" />
+    </div>
+    <div class="d-flex justify-content-center mt-3 gap-3">
+      {% if poster.front_image_url %}
+        <img src="{{ url_for('static', filename=poster.front_image_url) }}" alt="Voorkant"
+             class="img-thumbnail thumb active-thumb"
+             style="width: 80px; cursor: pointer;"
+             data-img="{{ url_for('static', filename=poster.front_image_url) }}">
+      {% endif %}
+      {% if poster.back_image_url %}
+        <img src="{{ url_for('static', filename=poster.back_image_url) }}" alt="Achterkant"
+             class="img-thumbnail thumb"
+             style="width: 80px; cursor: pointer;"
+             data-img="{{ url_for('static', filename=poster.back_image_url) }}">
+      {% endif %}
+      
+    
+  </div>
+</div>
+
+    </div>
+
+    <div class="col-md-6">
+      <h2>{{ poster.title }}</h2>
+
+      <p><strong>Uitgever:</strong> {{ poster.publisher or 'Onbekend' }}</p>
+
+      <p><strong>Beschrijving:</strong><br>
+        {{ poster.description | replace('\n\n', '<br><br>') | replace('\n', '<br>') | safe or 'Geen beschrijving beschikbaar.' }}
+      </p>
+
+      <p><strong>Prijs:</strong>
+        {% if poster.price %}
+          €{{ "%.2f"|format(poster.price) }}
+        {% else %}
+          Niet beschikbaar
+        {% endif %}
+      </p>
+
+      <p><strong>Verkoper:</strong>
+        <a href="{{ url_for('main.public_seller_profile', business_name=poster.user.business_name or poster.user.username) }}">
+          {{ poster.user.business_name or poster.user.username }}
+        </a>
+      </p>
+
+      
+
+        
+
+      {% if poster.price %}
+    {% if not current_user.is_authenticated or poster.user_id != current_user.id %}
+    <button class="add-to-cart-btn btn btn-success" data-type="poster" data-id="{{ poster.id }}">Toevoegen Winkelwagen</button>
+    {% endif %}
+      {% endif %}
+
+      
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const mainImage = document.getElementById('mainImage');
+    if (mainImage) {
+      mainImage.addEventListener('click', () => {
+        const isZoomed = mainImage.style.maxWidth === 'none';
+        mainImage.style.maxWidth = isZoomed ? '100%' : 'none';
+        mainImage.style.maxHeight = isZoomed ? '400px' : 'none';
+        mainImage.style.cursor = isZoomed ? 'zoom-in' : 'zoom-out';
+      });
+    }
+
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+      setTimeout(() => {
+        alert.classList.remove('show');
+        alert.classList.add('fade');
+        setTimeout(() => alert.remove(), 500);
+      }, 5000);
+    });
+  });
+
+
+
+
+  const mainImage = document.getElementById('mainImage');
+const thumbs = document.querySelectorAll('.thumb');
+thumbs.forEach(thumb => {
+  thumb.addEventListener('click', () => {
+    mainImage.src = thumb.dataset.img;
+    thumbs.forEach(t => t.classList.remove('active-thumb'));
+    thumb.classList.add('active-thumb');
+  });
+});
+
+mainImage.addEventListener('click', () => {
+  const isZoomed = mainImage.style.maxWidth === 'none';
+  mainImage.style.maxWidth = isZoomed ? '100%' : 'none';
+  mainImage.style.maxHeight = isZoomed ? '400px' : 'none';
+  mainImage.style.cursor = isZoomed ? 'zoom-in' : 'zoom-out';
+});
+
+</script>
+
+{% endblock %}
+

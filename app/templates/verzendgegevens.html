@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Verzendgegevens{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Standaard verzend- en betaalinstellingen</h2>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+
+        <div class="row">
+            <!-- TRANSPORT -->
+            <div class="col-md-6">
+                <h5>Transportopties</h5>
+                <div class="form-check mb-3">
+                    {{ form.allow_shipping(class="form-check-input", id="allowShipping") }}
+                    <label class="form-check-label" for="allowShipping">Verzending toestaan?</label>
+                    {% for error in form.allow_shipping.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3" id="shippingCostGroup">
+                    {{ form.shipping_cost.label(class="form-label") }}
+                    {{ form.shipping_cost(class="form-control", placeholder="Bijv. 4.95") }}
+                    {% for error in form.shipping_cost.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-check mb-3">
+                    {{ form.pickup_only(class="form-check-input", id="pickupOnly") }}
+                    <label class="form-check-label" for="pickupOnly">Afhalen toestaan?</label>
+                    {% for error in form.pickup_only.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- BETALING -->
+            <div class="col-md-6">
+                <h5>Betaalmethoden</h5>
+                <div class="form-check mb-3">
+                    {{ form.platform_payment_only(class="form-check-input", id="platformPayment") }}
+                    <label class="form-check-label" for="platformPayment">Betaling via platform (online)</label>
+                    {% for error in form.platform_payment_only.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-check mb-3">
+                    {{ form.cash_payment_allowed(class="form-check-input", id="cashPayment") }}
+                    <label class="form-check-label" for="cashPayment">Ter plaatse betalen bij afhaling</label>
+                    {% for error in form.cash_payment_allowed.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">{{ form.submit.label.text }}</button>
+    </form>
+</div>
+
+<script>
+    const allowShipping = document.getElementById("allowShipping");
+    const pickupOnly = document.getElementById("pickupOnly");
+    const shippingCostGroup = document.getElementById("shippingCostGroup");
+    const platformPayment = document.getElementById("platformPayment");
+    const cashPayment = document.getElementById("cashPayment");
+
+    function updatePaymentOptions() {
+        if (allowShipping.checked) {
+            // Verzending → online betaling
+            shippingCostGroup.style.display = "block";
+            platformPayment.checked = true;
+            platformPayment.disabled = false;
+            cashPayment.checked = false;
+            cashPayment.disabled = true;
+        } else if (pickupOnly.checked) {
+            // Alleen ophaling → cash betaling
+            shippingCostGroup.style.display = "none";
+            cashPayment.checked = true;
+            cashPayment.disabled = false;
+            platformPayment.checked = false;
+            platformPayment.disabled = true;
+        } else {
+            // Geen optie geselecteerd → alles uit en verzendkosten verbergen
+            shippingCostGroup.style.display = "none";
+            platformPayment.checked = false;
+            platformPayment.disabled = false;
+            cashPayment.checked = false;
+            cashPayment.disabled = false;
+        }
+    }
+
+    allowShipping.addEventListener("change", updatePaymentOptions);
+    pickupOnly.addEventListener("change", updatePaymentOptions);
+    window.addEventListener("load", updatePaymentOptions);
+</script>
+{% endblock %}

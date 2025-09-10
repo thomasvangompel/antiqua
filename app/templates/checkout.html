@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+
+<div class="container py-4">
+  <h2 class="mb-4">Checkout</h2>
+
+  <div class="card shadow-sm mb-4" style="max-width: 540px; margin: auto;">
+    {% if item.front_image_url %}
+      <img src="{{ item.front_image_url }}" alt="{{ item.title }}" class="card-img-top" style="object-fit: cover; max-height: 300px; width: 100%;">
+    {% endif %}
+    <div class="card-body">
+      <h5 class="card-title">{{ item.title }}</h5>
+      {% if item.description %}
+        <p class="card-text">{{ item.description }}</p>
+      {% endif %}
+      <p class="card-text"><strong>Prijs:</strong> €{{ "%.2f"|format(item.price) }}</p>
+
+      <hr>
+
+      <h6>Verzendinformatie</h6>
+      {% if item.pickup_only %}
+        <p>📍 Alleen afhalen</p>
+      {% elif item.allow_shipping %}
+        <p>🚚 Verzenden toegestaan</p>
+        {% if item.shipping_cost %}
+          <p>Verzendkosten: €{{ "%.2f"|format(item.shipping_cost) }}</p>
+        {% else %}
+          <p>Verzendkosten: Niet gespecificeerd</p>
+        {% endif %}
+      {% else %}
+        <p>Geen verzendopties beschikbaar</p>
+      {% endif %}
+
+      <h6>Betalingsmogelijkheden</h6>
+      {% if item.platform_payment_only %}
+        <p>💳 Betaling alleen via platform</p>
+      {% endif %}
+      {% if item.cash_payment_only %}
+        <p>💵 Ter plaatse betalen</p>
+      {% endif %}
+      {% if not item.platform_payment_only and not item.cash_payment_only %}
+        <p>Alle betalingsmethoden toegestaan</p>
+      {% endif %}
+
+      <form action="
+      {% if item.pickup_only and item.cash_payment_only %}
+        {{ url_for('main.make_appointment', item_id=item.id) }}
+      {% else %}
+        {{ url_for('main.start_mollie_payment', item_type=item_type, item_id=item.id) }}
+      {% endif %}" 
+      method="post" class="mt-4">
+
+        {% if item.pickup_only and item.cash_payment_only %}
+          <button type="submit" class="btn btn-success me-2">Bevestig aankoop afspraak</button>
+        {% else %}
+          <button type="submit" class="btn btn-success me-2">Bevestig aankoop & betaal</button>
+        {% endif %}
+
+        <a href="{{ url_for('main.cart') }}" class="btn btn-secondary">Annuleren</a>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

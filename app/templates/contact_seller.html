@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Contacteer {{ seller.business_name or seller.username }}</h2>
+
+<form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+
+    <div class="form-group">
+        {{ form.content.label }}
+        {{ form.content(class="form-control", rows=5) }}
+    </div>
+
+    {{ form.submit(class="btn btn-primary") }}
+</form>
+
+<a href="{{ url_for('main.public_seller_profile', business_name=seller.business_name) }}">Terug naar profiel</a>
+{% endblock %}

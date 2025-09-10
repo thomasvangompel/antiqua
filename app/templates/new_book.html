@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+{% block title %}Nieuw Boek{% endblock %}
+
+{% block content %}
+<h2>Nieuw boek toevoegen</h2>
+
+<form method="POST" enctype="multipart/form-data">
+
+    {{ form.hidden_tag() }}
+
+    <!-- Boek afbeeldingen met preview -->
+    <div class="mb-3">
+        <label class="form-label d-block">Afbeeldingen van het boek</label>
+        <div class="d-flex flex-wrap gap-3">
+            <div class="flex-grow-1" style="min-width: 120px;">
+                <label for="{{ form.front_image.id }}" class="form-label fw-bold">Voorkant</label>
+                {{ form.front_image(class="form-control") }}
+                <img id="previewFront" src="#" alt="Preview voorkant" class="img-fluid mt-2" style="display:none; max-height:120px; object-fit: contain; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div class="flex-grow-1" style="min-width: 120px;">
+                <label for="{{ form.side_image.id }}" class="form-label fw-bold">Zijkant</label>
+                {{ form.side_image(class="form-control") }}
+                <img id="previewSide" src="#" alt="Preview zijkant" class="img-fluid mt-2" style="display:none; max-height:120px; object-fit: contain; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div class="flex-grow-1" style="min-width: 120px;">
+                <label for="{{ form.back_image.id }}" class="form-label fw-bold">Achterkant</label>
+                {{ form.back_image(class="form-control") }}
+                <img id="previewBack" src="#" alt="Preview achterkant" class="img-fluid mt-2" style="display:none; max-height:120px; object-fit: contain; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Titel -->
+    <div class="mb-3">
+        {{ form.title.label(class="form-label") }}
+        {{ form.title(class="form-control", placeholder="Titel van het boek") }}
+        {% for error in form.title.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <!-- Auteur -->
+    <div class="mb-3">
+        {{ form.author.label(class="form-label") }}
+        {{ form.author(class="form-control", placeholder="Auteur van het boek") }}
+        {% for error in form.author.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <!-- Rek, verdieping en positie -->
+    <div class="mb-3">
+        {{ form.rek.label(class="form-label") }}
+        {{ form.rek(class="form-select", id="rekSelect") }}
+        {% for error in form.rek.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+    <div class="mb-3">
+        {{ form.verdieping.label(class="form-label") }}
+        {{ form.verdieping(class="form-select", id="verdiepingSelect") }}
+        {% for error in form.verdieping.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+    <div class="mb-3">
+        {{ form.positie.label(class="form-label") }}
+        {{ form.positie(class="form-select") }}
+        {% for error in form.positie.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <hr>
+
+    <!-- Veiling checkbox -->
+    <div class="form-check mb-3">
+        {{ form.is_auction(class="form-check-input", id="isAuctionCheck") }}
+        <label class="form-check-label" for="isAuctionCheck">Bieden toestaan i.p.v. vaste prijs?</label>
+        {% for error in form.is_auction.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <!-- Vaste prijs -->
+    <div id="fixedPriceFields" class="mb-3">
+        {{ form.price.label(class="form-label") }}
+        {{ form.price(class="form-control", placeholder="Prijs in euro's") }}
+        {% for error in form.price.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <!-- Veiling velden -->
+    <div id="auctionFields" style="display: none;">
+        <div class="mb-3">
+            {{ form.auction_min.label(class="form-label") }}
+            {{ form.auction_min(class="form-control", placeholder="Minimum bod in euro's") }}
+            {% for error in form.auction_min.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+     <div class="mb-3">
+    {{ form.auction_days.label(class="form-label") }}
+    {{ form.auction_days(class="form-control", placeholder="Aantal dagen (max 30)") }}
+    {% for error in form.auction_days.errors %}
+        <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+    <small class="form-text text-muted">Veiling kan maximaal 30 dagen duren.</small>
+</div>
+
+    </div>
+
+
+    <!-- Verzenden toestaan checkbox -->
+<div class="form-check mb-3">
+    {{ form.allow_shipping(class="form-check-input", id="allowShippingCheck") }}
+    <label class="form-check-label" for="allowShippingCheck">Verzenden toegestaan</label>
+    {% for error in form.allow_shipping.errors %}
+        <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<!-- Verzendkosten, standaard verborgen -->
+<div class="mb-3" id="shippingCostField" style="display:none;">
+    {{ form.shipping_cost.label(class="form-label") }}
+    {{ form.shipping_cost(class="form-control", placeholder="Verzendkosten (€) (optioneel)") }}
+    {% for error in form.shipping_cost.errors %}
+        <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<!-- Afhalen -->
+<div class="form-check mb-3">
+    {{ form.pickup_only(class="form-check-input", id="pickupOnlyCheck") }}
+    <label class="form-check-label" for="pickupOnlyCheck">Alleen afhalen</label>
+    {% for error in form.pickup_only.errors %}
+        <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<!-- Betalingsopties -->
+<div class="form-check mb-3">
+    {{ form.platform_payment_only(class="form-check-input", id="platformPaymentOnlyCheck") }}
+    <label class="form-check-label" for="platformPaymentOnlyCheck">Betaling alleen via platform</label>
+    {% for error in form.platform_payment_only.errors %}
+        <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<div class="form-check mb-3">
+    {{ form.cash_payment_only(class="form-check-input", id="cashPaymentOnlyCheck") }}
+    <label class="form-check-label" for="cashPaymentOnlyCheck">Alleen contante betaling</label>
+    {% for error in form.cash_payment_only.errors %}
+        <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+</div>
+
+
+    <button type="submit" class="btn btn-primary" id="submitBtn">
+        <span id="spinner" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" style="display: none;"></span>
+        {{ form.submit.label.text }}
+    </button>
+
+</form>
+
+<script>
+    // Afbeelding preview functie
+    function previewImage(input, previewId) {
+        const preview = document.getElementById(previewId);
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+
+    // Preview event listeners
+    document.querySelector('input[name="{{ form.front_image.name }}"]').addEventListener('change', function() {
+        previewImage(this, 'previewFront');
+    });
+    document.querySelector('input[name="{{ form.side_image.name }}"]').addEventListener('change', function() {
+        previewImage(this, 'previewSide');
+    });
+    document.querySelector('input[name="{{ form.back_image.name }}"]').addEventListener('change', function() {
+        previewImage(this, 'previewBack');
+    });
+
+    // Toggle vaste prijs / veiling velden
+    const isAuctionCheckbox = document.getElementById('isAuctionCheck');
+    const fixedPriceFields = document.getElementById('fixedPriceFields');
+    const auctionFields = document.getElementById('auctionFields');
+
+    function toggleFields() {
+        if (isAuctionCheckbox.checked) {
+            fixedPriceFields.style.display = 'none';
+            auctionFields.style.display = 'block';
+        } else {
+            fixedPriceFields.style.display = 'block';
+            auctionFields.style.display = 'none';
+        }
+    }
+
+    isAuctionCheckbox.addEventListener('change', toggleFields);
+    window.addEventListener('load', toggleFields);
+
+    // Spinner activeren bij submit
+    const form = document.querySelector('form');
+    const spinner = document.getElementById('spinner');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', () => {
+        submitBtn.disabled = true;
+        spinner.style.display = 'inline-block';
+    });
+
+
+
+
+
+
+    const allowShippingCheckbox = document.getElementById('allowShippingCheck');
+const shippingCostField = document.getElementById('shippingCostField');
+const cashPaymentOnlyCheckbox = document.getElementById('cashPaymentOnlyCheck');
+
+function toggleShippingCost() {
+    if (allowShippingCheckbox.checked) {
+        shippingCostField.style.display = 'block';
+    } else {
+        shippingCostField.style.display = 'none';
+        const input = shippingCostField.querySelector('input');
+        if(input) input.value = '';
+    }
+}
+
+function checkShippingAndCash(e) {
+    if (allowShippingCheckbox.checked && cashPaymentOnlyCheckbox.checked) {
+        alert('Verzenden toegestaan en alleen contante betaling kan niet samen.');
+        e.target.checked = false;
+    }
+}
+
+allowShippingCheckbox.addEventListener('change', toggleShippingCost);
+cashPaymentOnlyCheckbox.addEventListener('change', checkShippingAndCash);
+
+window.addEventListener('load', () => {
+    toggleShippingCost();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const rekSelect = document.getElementById('rekSelect');
+    const verdiepingSelect = document.getElementById('verdiepingSelect');
+    rekSelect.addEventListener('change', function() {
+        const rekId = this.value;
+        fetch(`/api/verdiepingen?rek_id=${rekId}`)
+            .then(response => response.json())
+            .then(data => {
+                verdiepingSelect.innerHTML = '';
+                data.forEach(function(v) {
+                    const option = document.createElement('option');
+                    option.value = v.id;
+                    option.textContent = `Verdieping ${v.nummer}`;
+                    verdiepingSelect.appendChild(option);
+                });
+            });
+    });
+});
+</script>
+{% endblock %}

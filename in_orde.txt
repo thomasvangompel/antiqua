@@ -1,0 +1,58 @@
+ Setup & Structuur
+Flask project aangemaakt met:
+
+app/ module structuur (__init__.py, routes.py, models.py, forms.py)
+
+templates/ en static/ mappen
+
+SQLAlchemy en Flask-Login geïnstalleerd en geconfigureerd
+
+init_db.py script om database aan te maken
+
+👤 Gebruikersbeheer
+Registratie (/register)
+
+Inloggen (/login)
+
+Uitloggen (/logout)
+
+Wachtwoorden gehashed opgeslagen
+
+Redirects + flash messages toegevoegd
+
+📚 Boekbeheer
+Dashboard (/dashboard) met boeken van de ingelogde gebruiker
+
+Boeken aanmaken (/books/new)
+
+Boeken bewerken (/books/<id>/edit)
+
+Boeken verwijderen via POST (/books/<id>/delete)
+
+Relatie User ↔ Book correct gedefinieerd
+
+🧱 Templates & UI
+base.html gemaakt met Bootstrap 5
+
+home.html met hero-section en call-to-action (gratis lid worden / login)
+
+Navigatie aangepast afhankelijk van login-status
+
+Mobielvriendelijk ontwerp
+
+🐞 Bugfixes opgelost
+Application context fouten (app.app_context())
+
+Meerdere model-definities samengevoegd
+
+url_for() routing issues opgelost
+
+Jinja2 template fouten zoals 'book is undefined'
+
+HTTP method errors (GET vs POST bij delete)
+
+
+
+
+-------------------
+jivu flmy tusx xwon

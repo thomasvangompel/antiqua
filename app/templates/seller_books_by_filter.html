@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3>{{ seller.business_name or seller.username }}</h3>
+    <p><strong>Filter:</strong> {{ filter_type }} = "{{ filter_value }}"</p>
+
+    {% if books %}
+    <div class="row">
+        {% for book in books %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text"><strong>Auteur:</strong> {{ book.author }}</p>
+                    <p class="card-text"><strong>Genre:</strong> {{ book.genre }}</p>
+                    <p class="card-text"><strong>Prijs:</strong> € {{ '%.2f'|format(book.price) }}</p>
+                    <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="btn btn-primary">Bekijk boek</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p>Geen boeken gevonden voor deze {{ filter_type.lower() }}.</p>
+    {% endif %}
+
+    <a href="{{ url_for('main.public_seller_profile', business_name=seller.business_name) }}" class="btn btn-secondary mt-3">← Terug naar verkopersprofiel</a>
+</div>
+{% endblock %}

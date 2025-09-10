@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Winkelwagen{% endblock %}
+{% block content %}
+
+<h2 class="mb-4"> Winkelwagen</h2>
+
+{% if items_in_cart %}
+  <div class="list-group">
+    {% for entry in items_in_cart %}
+      <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 rounded shadow-sm p-3">
+        
+        <div class="d-flex align-items-start mb-2">
+          {% if entry.item.image_url %}
+            <img src="{{ entry.item.image_url }}" 
+                 alt="{{ entry.item.title }}" 
+                 class="me-3 rounded" 
+                 style="width: 80px; height: auto; object-fit: cover;">
+          {% endif %}
+          <div>
+            <h5 class="mb-1">{{ entry.item.title }}</h5>
+            <small class="text-muted d-block">
+              {% if entry.type == 'book' %}
+                Boek
+              {% elif entry.type == 'postcard' %}
+                Ansichtkaart
+              {% elif entry.type == 'poster' %}
+                Poster
+              {% endif %}
+            </small>
+            {% if entry.item.description %}
+              <p class="mb-0">{{ entry.item.description.split()[:12] | join(' ') }}...</p>
+            {% endif %}
+            <p class="mt-1"><strong>Aantal:</strong> {{ entry.quantity }}</p>
+          </div>
+        </div>
+
+        <div class="mt-2">
+          <form action="{{ url_for('main.remove_from_cart') }}" method="post" style="display:inline;">
+            <input type="hidden" name="item_type" value="{{ entry.type }}">
+            <input type="hidden" name="item_id" value="{{ entry.item.id }}">
+            <button type="submit" class="btn btn-sm btn-outline-danger me-2">Verwijderen</button>
+          </form>
+
+          <form action="{{ url_for('main.checkout_item', item_type=entry.type, item_id=entry.item.id) }}" method="get" style="display:inline;">
+            <button type="submit" class="btn btn-sm btn-outline-success">Checkout</button>
+          </form>
+        </div>
+
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p>Je winkelwagen is leeg.</p>
+{% endif %}
+
+{% endblock %}

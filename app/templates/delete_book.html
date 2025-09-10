@@ -1,0 +1,16 @@
+@main.route('/books/<int:book_id>/delete', methods=['POST', 'GET'])
+@login_required
+def delete_book(book_id):
+    book = Book.query.get_or_404(book_id)
+    if book.user_id != current_user.id:
+        flash('Je hebt geen toestemming om dit boek te verwijderen.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    if request.method == 'POST':
+        db.session.delete(book)
+        db.session.commit()
+        flash('Boek verwijderd!', 'success')
+        return redirect(url_for('main.dashboard'))
+    
+    # Optioneel: vraag om bevestiging op een aparte pagina of via modal
+    return render_template('confirm_delete.html', book=book)
