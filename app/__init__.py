@@ -16,11 +16,6 @@ mail = Mail()
 
 def create_app():
     app = Flask(__name__)
-<<<<<<< HEAD
-
-=======
-    
->>>>>>> 9e8477048062832c84e5ee9e4cea609c4a0f160d
     # Algemene configuratie
     app.config['SECRET_KEY'] = os.getenv("FLASK_SECRET_KEY") or os.urandom(24)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
@@ -32,21 +27,10 @@ def create_app():
     app.config['MAIL_USE_TLS'] = True
     app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-<<<<<<< HEAD
+
     app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL')
     app.config['MOLLIE_API_KEY'] = os.getenv('MOLLIE_API_KEY')
     app.config['BASE_URL'] = os.getenv('BASE_URL', 'http://localhost:5000')
-
-=======
-    app.config['MOLLIE_API_KEY'] = os.getenv('MOLLIE_API_KEY')
-    app.config['BASE_URL'] = os.getenv('BASE_URL', 'http://localhost:5000')
-
-    
-
-    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL')
-
-
->>>>>>> 9e8477048062832c84e5ee9e4cea609c4a0f160d
     # Voor lokaal testen (alleen dev!)
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
@@ -59,7 +43,7 @@ def create_app():
     login_manager.login_view = 'main.login'
     login_manager.login_message_category = 'info'
 
-<<<<<<< HEAD
+
     # Context processor voor cart_count beschikbaar maken in alle templates
     @app.context_processor
     def inject_cart_count():
@@ -70,22 +54,19 @@ def create_app():
         return {'cart_count': cart_count - sold_count}
 
     # Blueprints registeren
-=======
-    # Blueprint registeren
->>>>>>> 9e8477048062832c84e5ee9e4cea609c4a0f160d
+
+
     from .routes import main
     app.register_blueprint(main)
     from .routes_appointments import bp_appointments
     app.register_blueprint(bp_appointments)
     from .routes_pickup import bp_pickup
     app.register_blueprint(bp_pickup)
-<<<<<<< HEAD
+
     from .routes_shop_profile import shop_profile_bp
     app.register_blueprint(shop_profile_bp)
 
     return app
 
-=======
 
-    return app
->>>>>>> 9e8477048062832c84e5ee9e4cea609c4a0f160d
+

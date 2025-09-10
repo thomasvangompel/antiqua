@@ -98,12 +98,7 @@ class User(db.Model, UserMixin):
     cash_payment_only = db.Column(db.Boolean, default=False)
 
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
-
-<<<<<<< HEAD
     about_shop = db.Column(db.Text, nullable=True)
-
-=======
->>>>>>> 9e8477048062832c84e5ee9e4cea609c4a0f160d
     def set_password(self, password):
         from werkzeug.security import generate_password_hash
         self.password = generate_password_hash(password)
@@ -194,13 +189,7 @@ class BookView(db.Model):
     book = db.relationship('Book', back_populates='views')
 
 class Postcard(db.Model):
-
-
-<<<<<<< HEAD
-        # Winkel profiel: 'Over ons' tekst
-        
-=======
->>>>>>> 9e8477048062832c84e5ee9e4cea609c4a0f160d
+    allow_shipping = db.Column(db.Boolean, default=False)
     allow_shipping = db.Column(db.Boolean, default=False)
     shipping_cost = db.Column(db.Numeric(6, 2), nullable=True)
     pickup_only = db.Column(db.Boolean, default=False)
