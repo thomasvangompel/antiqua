@@ -104,7 +104,7 @@ def change_appointment(appointment_id):
 @login_required
 def delete_appointment(appointment_id):
     slot = AppointmentSlot.query.get_or_404(appointment_id)
-    if slot.user_id != current_user.id:
+    if slot.user_id != current_user.id and slot.reserved_by_id != current_user.id:
         abort(403)
     db.session.delete(slot)
     db.session.commit()
@@ -546,14 +546,32 @@ def new_book():
     form.rek.choices = [(rek.id, rek.naam) for rek in reks]
     # Vul verdieping dropdown
     form.verdieping.choices = []
+    verdiepingen = []
     if form.rek.data:
         verdiepingen = RekVerdieping.query.filter_by(rek_id=form.rek.data).all()
         form.verdieping.choices = [(v.id, f"{v.nummer} ({v.rek.naam})") for v in verdiepingen]
     elif reks:
-        # Bij GET: kies eerste rek als default
         eerste_rek_id = reks[0].id
         verdiepingen = RekVerdieping.query.filter_by(rek_id=eerste_rek_id).all()
         form.verdieping.choices = [(v.id, f"Verdieping {v.nummer}") for v in verdiepingen]
+
+    # Vul positie dropdown met letter van verdieping
+    positie_choices = []
+    gekozen_verdieping = None
+    if form.verdieping.data:
+        gekozen_verdieping = next((v for v in verdiepingen if v.id == form.verdieping.data), None)
+    elif verdiepingen:
+        gekozen_verdieping = verdiepingen[0]
+    if gekozen_verdieping:
+        if gekozen_verdieping.links:
+            positie_choices.append(('links', f'Links ({gekozen_verdieping.links})'))
+        if gekozen_verdieping.midden:
+            positie_choices.append(('midden', f'Midden ({gekozen_verdieping.midden})'))
+        if gekozen_verdieping.rechts:
+            positie_choices.append(('rechts', f'Rechts ({gekozen_verdieping.rechts})'))
+    else:
+        positie_choices = [('links','Links'),('midden','Midden'),('rechts','Rechts')]
+    form.positie.choices = positie_choices
 
     if form.validate_on_submit():
         # Upload-map aanmaken als die nog niet bestaat
