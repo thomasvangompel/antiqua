@@ -344,7 +344,7 @@ def dashboard():
     else:
         template = 'dashboard_basic.html'
     
-    from app.models import AppointmentSlot
+    from .models import AppointmentSlot
     afspraken = AppointmentSlot.query.filter_by(reserved_by_id=current_user.id).order_by(
         AppointmentSlot.year, AppointmentSlot.month, AppointmentSlot.day, AppointmentSlot.time.asc()
     ).all()
@@ -679,18 +679,19 @@ def edit_book(book_id):
         # Afbeeldingen verwerken
         upload_folder = os.path.join(current_app.root_path, 'static/uploads')
         os.makedirs(upload_folder, exist_ok=True)
+        from werkzeug.datastructures import FileStorage
         def save_image(image_field):
-            if image_field.data:
+            if image_field.data and isinstance(image_field.data, FileStorage):
                 filename = secure_filename(image_field.data.filename)
                 image_path = os.path.join(upload_folder, filename)
                 image_field.data.save(image_path)
                 return filename
             return None
-        if form.front_image.data:
+        if form.front_image.data and isinstance(form.front_image.data, FileStorage):
             book.front_image = save_image(form.front_image)
-        if form.side_image.data:
+        if form.side_image.data and isinstance(form.side_image.data, FileStorage):
             book.side_image = save_image(form.side_image)
-        if form.back_image.data:
+        if form.back_image.data and isinstance(form.back_image.data, FileStorage):
             book.back_image = save_image(form.back_image)
         # Locatie verwerken
         book.rek_id = form.rek.data if form.rek.data else None
@@ -1470,53 +1471,53 @@ def postcard_detail(postcard_id):
 @main.route('/posters/edit/<int:poster_id>', methods=['GET', 'POST'])
 @login_required
 def edit_poster(poster_id):
-    poster = Poster.query.get_or_404(poster_id)
-    form = PosterForm(obj=poster)
-    form.rek.choices = [(rek.id, rek.naam) for rek in Rek.query.all()]
-    form.verdieping.choices = []
-    if form.rek.data:
-        verdiepingen = RekVerdieping.query.filter_by(rek_id=form.rek.data).all()
-        form.verdieping.choices = [(v.id, f"Verdieping {v.nummer}") for v in verdiepingen]
-    elif reks:
-        eerste_rek_id = reks[0].id
-        verdiepingen = RekVerdieping.query.filter_by(rek_id=eerste_rek_id).all()
-        form.verdieping.choices = [(v.id, f"Verdieping {v.nummer}") for v in verdiepingen]
-    if form.validate_on_submit():
-        poster.title = form.title.data
-        poster.description = form.description.data
-        poster.condition = form.condition.data
-        poster.publisher = form.publisher.data
-        poster.is_auction = form.is_auction.data
-        poster.price = form.price.data
-        poster.auction_min_price = form.auction_min_price.data
-        poster.auction_end = form.auction_end.data
-
-        if form.front_image.data:
-            # Verwijder oude afbeelding als die er is
-            if poster.front_image_url:
-                old_image_path = os.path.join(current_app.root_path, 'static', poster.front_image_url)
-                if os.path.exists(old_image_path):
-                    os.remove(old_image_path)
-
-            # Sla nieuwe afbeelding op en update database
-            filename = save_image(form.front_image.data)
-            poster.front_image_url = f'uploads/{filename}'
-
+    book = Book.query.get_or_404(book_id)
+    # Boekweergave vastleggen
+    new_view = BookView(book_id=book.id)
+    db.session.add(new_view)
+    book.view_count = (book.view_count or 0) + 1
+    db.session.commit()
+    # Informatie voor veiling
+    auction_open = book.is_auction and book.auction_end and book.auction_end > datetime.utcnow()
+    seller = book.user
+    highest_bid = max(book.bids, key=lambda b: b.amount) if book.bids else None
+    user_bids = [b for b in book.bids if current_user.is_authenticated and b.bidder_id == current_user.id]
+    user_highest_bid = max(user_bids, key=lambda b: b.amount) if user_bids else None
+    base_minimum = float(book.auction_min_price or 0)
+    if user_highest_bid and highest_bid and user_highest_bid.amount == highest_bid.amount:
+        min_bid = float(user_highest_bid.amount) + 1
+    elif highest_bid:
+        min_bid = float(highest_bid.amount) + 5
+    else:
+        min_bid = base_minimum
+    bid_form = BidForm()
+    # Paginate biedingen
+    page = request.args.get('page', 1, type=int)
+    bids = Bid.query.filter_by(book_id=book.id).order_by(Bid.amount.desc()).paginate(page=page, per_page=5)
+    if bid_form.validate_on_submit():
+        if not auction_open:
+            flash('De veiling is gesloten.', 'warning')
+            return redirect(url_for('main.book_detail', book_id=book.id))
+        nieuwe_bod = float(bid_form.amount.data)
+        if nieuwe_bod < min_bid:
+            flash(f'Je bod moet minimaal €{min_bid:.2f} zijn.', 'danger')
+            return redirect(url_for('main.book_detail', book_id=book.id))
+        # Extra controle of gebruiker al hoogste bod heeft
+        if user_highest_bid and highest_bid and user_highest_bid.amount == highest_bid.amount:
+            flash('Je hebt al het hoogste bod en kunt niet nog een hoger bod plaatsen.', 'danger')
+            return redirect(url_for('main.book_detail', book_id=book.id))
+        # Bieddrempel: moet €5 hoger zijn dan hoogste bod van anderen
+        andere_bods = [b.amount for b in book.bids if b.bidder_id != current_user.id]
+        hoogste_andere_bod = max(andere_bods) if andere_bods else 0
+        if hoogste_andere_bod > 0 and nieuwe_bod < hoogste_andere_bod + 5:
+            flash(f'Je bod moet minimaal €{hoogste_andere_bod + 5:.2f} zijn.', 'danger')
+            return redirect(url_for('main.book_detail', book_id=book.id))
+        # Bod opslaan
+        bid = Bid(amount=nieuwe_bod, bidder_id=current_user.id, book_id=book.id)
+        db.session.add(bid)
         db.session.commit()
-        flash('Poster bijgewerkt!', 'success')
-        return redirect(url_for('main.dashboard'))
-
-    return render_template('edit_poster.html', form=form, poster=poster)
-
-
-def save_image(form_image):
-    """Sla de geüploade afbeelding op met een unieke naam en verklein deze."""
-    random_hex = secrets.token_hex(8)
-    _, f_ext = os.path.splitext(secure_filename(form_image.filename))
-    picture_fn = random_hex + f_ext
-    picture_path = os.path.join(current_app.root_path, 'static/uploads', picture_fn)
-
-    # Open en verklein de afbeelding (optioneel)
+        flash('Je bod is geplaatst!', 'success')
+        return redirect(url_for('main.book_detail', book_id=book.id))
     output_size = (500, 500)
     i = Image.open(form_image)
     i.thumbnail(output_size)
@@ -2165,6 +2166,9 @@ def beheer_antiquariaat():
         ]
     else:
         reserved_slots = []
+    # Ensure slots and pagination are always defined for template
+    slots = []
+    pagination = None
     return render_template(
         'beheer_antiquariaat.html',
         verkochte_boeken=verkochte_boeken,
@@ -2175,7 +2179,9 @@ def beheer_antiquariaat():
         boeken=boeken,
         boek=boek,
         reserved_slots=reserved_slots,
-        user=current_user
+        user=current_user,
+        slots=slots,
+        pagination=pagination
     )
 
 
@@ -2294,7 +2300,30 @@ def afspraken_overzicht():
         AppointmentSlot.year, AppointmentSlot.month, AppointmentSlot.day, AppointmentSlot.time
     ).paginate(page=page, per_page=per_page, error_out=False)
     slots = pagination.items
-    return render_template('afspraken_overzicht.html', slots=slots, pagination=pagination)
+    # Render beheer_antiquariaat.html, show afspraken-overzicht section
+    from .forms import RekForm
+    rek_form = RekForm()
+    from .models import Rek, Book
+    rekken = Rek.query.all()
+    boeken = Book.query.filter_by(user_id=current_user.id, sold=False).all()
+    boek_id = request.args.get('boek_id')
+    if boek_id == 'all':
+        boek = None
+    else:
+        boek = Book.query.get(int(boek_id)) if boek_id else (boeken[0] if boeken else None)
+    reserved_slots = []
+    return render_template(
+        'beheer_antiquariaat.html',
+        slots=slots,
+        pagination=pagination,
+        sectie='afspraken-overzicht',
+        user=current_user,
+        rek_form=rek_form,
+        rekken=rekken,
+        boeken=boeken,
+        boek=boek,
+        reserved_slots=reserved_slots
+    )
 
 
 @main.route('/api/appointments/save', methods=['POST'])

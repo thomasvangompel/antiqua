@@ -16,11 +16,13 @@
     <!-- Aside menu -->
     <aside class="col-md-3 mb-4">
       <div class="list-group">
-        <a href="#" id="btn-verkocht" class="list-group-item list-group-item-action">Verkocht</a>
-        <a href="#" id="btn-rekken-toevoegen" class="list-group-item list-group-item-action">Rekken toevoegen</a>
-        <a href="#" id="btn-bestaande-rekken" class="list-group-item list-group-item-action">Bestaande rekken</a>
-        <a href="#" id="btn-afspraken" class="list-group-item list-group-item-action">Beschikbaarheid afspraken</a>
-        <a href="{{ url_for('main.afspraken_overzicht') }}" class="list-group-item list-group-item-action">Afspraken overzicht</a>
+            <a href="{{ url_for('main.profile') }}" class="list-group-item list-group-item-action">Winkel Profiel</a>
+            <a href="{{ url_for('main.beheer_antiquariaat') }}" class="list-group-item list-group-item-action">Mijn Antiquariaat</a>
+            <a href="#" id="btn-verkocht" class="list-group-item list-group-item-action">Verkocht</a>
+            <a href="#" id="btn-rekken-toevoegen" class="list-group-item list-group-item-action">Rekken toevoegen</a>
+            <a href="#" id="btn-bestaande-rekken" class="list-group-item list-group-item-action">Bestaande rekken</a>
+            <a href="#" id="btn-afspraken" class="list-group-item list-group-item-action">Beschikbaarheid afspraken</a>
+        <a href="#" id="btn-afspraken-overzicht" class="list-group-item list-group-item-action">Afspraken overzicht</a>
       </div>
     </aside>
 
@@ -28,8 +30,9 @@
     <main class="col-md-9">
       <!-- Winkel Profiel & Mijn Antiquariaat knoppen -->
       <div class="mb-4">
-        <a href="{{ url_for('shop_profile.shop_profile', user_id=user.id) }}" class="btn btn-primary me-2 mb-2">Winkel Profiel</a>
-        <a href="{{ url_for('main.public_seller_profile', business_name=user.business_name) }}" class="btn btn-primary me-2 mb-2">Mijn Antiquariaat</a>
+      <a href="{{ url_for('main.afspraken_overzicht') }}" class="list-group-item list-group-item-action">Afspraken overzicht</a>
+      <a href="{{ url_for('shop_profile.shop_profile', user_id=user.id) }}" class="btn btn-primary me-2 mb-2">Winkel Profiel</a>
+      <a href="{{ url_for('main.public_seller_profile', business_name=user.business_name) }}" class="btn btn-primary me-2 mb-2">Mijn Antiquariaat</a>
       </div>
       <!-- Verkocht -->
       <div id="content-verkocht" style="display:none;">
@@ -190,6 +193,66 @@
           </div>
         </div>
       </div>
+
+      <!-- Afspraken overzicht sectie -->
+  <div id="content-afspraken-overzicht" style="{% if sectie == 'afspraken-overzicht' or not sectie %}display:block;{% else %}display:none;{% endif %}">
+        <h3 class="mt-5">Overzicht afspraken</h3>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th>Tijd</th>
+              <th>Boek</th>
+              <th>Koper</th>
+              <th>Gereserveerd op</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for slot in slots %}
+            <tr>
+              <td>{{ '%02d'|format(slot.day) }}-{{ '%02d'|format(slot.month) }}-{{ slot.year }}</td>
+              <td>{{ slot.time }}</td>
+              <td>{% if slot.book %}{{ slot.book.title }}{% else %}-{% endif %}</td>
+              <td>{{ slot.reserved_by.username if slot.reserved_by else '-' }}</td>
+              <td>{{ slot.reserved_at.strftime('%d-%m-%Y %H:%M') if slot.reserved_at else '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% if pagination and pagination.pages > 1 %}
+        <nav aria-label="Afspraken paginatie">
+          <ul class="pagination justify-content-center mt-4">
+            {% if pagination.has_prev %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ pagination.prev_num }}&sectie=afspraken-overzicht" aria-label="Vorige">
+                  <span aria-hidden="true">&laquo;</span>
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled">
+                <span class="page-link">&laquo;</span>
+              </li>
+            {% endif %}
+            {% for p in range(1, pagination.pages + 1) %}
+              <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                <a class="page-link" href="?page={{ p }}&sectie=afspraken-overzicht">{{ p }}</a>
+              </li>
+            {% endfor %}
+            {% if pagination.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ pagination.next_num }}&sectie=afspraken-overzicht" aria-label="Volgende">
+                  <span aria-hidden="true">&raquo;</span>
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled">
+                <span class="page-link">&raquo;</span>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+        {% endif %}
+      </div>
       <input type="hidden" id="beheer-book-id" value="{{ boek.id if boek else '' }}">
     </main>
   </div>
@@ -230,14 +293,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
 
+  // Add afspraken-overzicht to sections
+  sections['afspraken-overzicht'] = {
+    btn: document.getElementById('btn-afspraken-overzicht'),
+    content: document.getElementById('content-afspraken-overzicht')
+  };
   function showSectie(sectie) {
     Object.values(sections).forEach(s => {
       s.content.style.display = 'none';
-      s.btn.classList.remove('active');
+      if (s.btn) s.btn.classList.remove('active');
     });
     if (sections[sectie]) {
       sections[sectie].content.style.display = 'block';
-      sections[sectie].btn.classList.add('active');
+      if (sections[sectie].btn) sections[sectie].btn.classList.add('active');
     }
   }
 
