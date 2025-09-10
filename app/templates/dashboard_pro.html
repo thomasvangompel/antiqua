@@ -78,7 +78,10 @@
         <h2>Hallo, {{ user.username or "Nieuweling"}}!</h2>
         <div class="d-flex flex-wrap align-items-center mt-2">
           <a href="{{ url_for('main.profile') }}" class="btn btn-primary me-2 mb-2">Bewerk profiel</a>
+<<<<<<< HEAD
           <a href="{{ url_for('shop_profile.shop_profile', user_id=user.id) }}" class="btn btn-success me-2 mb-2">Winkel Profiel</a>
+=======
+>>>>>>> 9e8477048062832c84e5ee9e4cea609c4a0f160d
           <a href="{{ url_for('main.verzendgegevens') }}" class="btn btn-primary me-2 mb-2">Verkoop gegevens</a>
           {% if user.business_name %}
             <a href="{{ url_for('main.public_seller_profile', business_name=user.business_name) }}" class="btn btn-primary me-2 mb-2">Mijn Antiquariaat</a>
