@@ -1,3 +1,24 @@
+from flask_wtf import FlaskForm
+from wtforms import StringField, TextAreaField, DecimalField, BooleanField, FileField, SubmitField
+from flask_wtf.file import FileAllowed
+from wtforms.validators import DataRequired, Length, Optional
+
+class ArtForm(FlaskForm):
+    title = StringField('Titel', validators=[DataRequired(), Length(max=140)])
+    artist = StringField('Kunstenaar', validators=[Length(max=140)])
+    description = TextAreaField('Beschrijving')
+    condition = StringField('Conditie', validators=[Length(max=50)])
+    image = FileField('Afbeelding', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Alleen afbeeldingen toegestaan!')])
+    price = DecimalField('Prijs', validators=[Optional()])
+    allow_shipping = BooleanField('Verzending toestaan')
+    shipping_cost = DecimalField('Verzendkosten', validators=[Optional()])
+    pickup_only = BooleanField('Alleen afhalen')
+    platform_payment_only = BooleanField('Alleen platformbetaling')
+    cash_payment_only = BooleanField('Alleen contant')
+    is_auction = BooleanField('Veiling')
+    auction_min_price = DecimalField('Minimale veilingprijs', validators=[Optional()])
+    auction_end = StringField('Einddatum veiling (YYYY-MM-DD HH:MM)')
+    submit = SubmitField('Opslaan')
 
 from datetime import datetime, timedelta
 

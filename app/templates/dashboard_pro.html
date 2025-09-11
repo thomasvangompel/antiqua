@@ -96,13 +96,13 @@
       <div>
         <h3>Mijn Collectie</h3>
         <p class="text-muted mb-0">Beheer je boeken, postkaarten, posters en categorieën</p>
-  <!-- Categorieën sectie verwijderd -->
+        <!-- Categorieën sectie verwijderd -->
       </div>
       <div>
         <a href="{{ url_for('main.new_book') }}" class="btn btn-outline-success me-2">+ Boek</a>
-  <!-- + Categorie knop verwijderd -->
         <a href="{{ url_for('main.add_postcard') }}" class="btn btn-outline-success me-2">+ Postkaart</a>
-        <a href="{{ url_for('main.add_poster') }}" class="btn btn-outline-success">+ Poster</a>
+        <a href="{{ url_for('main.add_poster') }}" class="btn btn-outline-success me-2">+ Poster</a>
+        <a href="{{ url_for('main.add_art') }}" class="btn btn-outline-success">+ Kunst</a>
       </div>
     </div>
 
@@ -110,8 +110,11 @@
     {% set beschikbare_boeken = boeken | selectattr('sold', 'equalto', False) | list %}
     {% set verkochte_boeken = boeken | selectattr('sold', 'equalto', True) | list %}
 
-    <h4 class="mt-4">📚 Mijn Boeken</h4>
+    <h4 class="mt-4"> Mijn Boeken</h4>
     {% if beschikbare_boeken %}
+      <ul class="list-inline mt-4 mb-4">
+        <li class="list-inline-item fw-bold">Mijn Boeken</li>
+      </ul>
       <div class="list-group">
         {% for boek in beschikbare_boeken %}
           <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 rounded shadow-sm p-3">
@@ -143,18 +146,17 @@
           </div>
         {% endfor %}
       </div>
-    {% else %}
-      <p>Je hebt nog geen boeken toegevoegd. <a href="{{ url_for('main.new_book') }}">Voeg er nu één toe!</a></p>
-    {% endif %}
+  {% endif %}
 
-    
-
-    {# ------------------- POSTKAARTEN ------------------- #}
+  {# ------------------- POSTKAARTEN ------------------- #}
     {% set beschikbare_postkaarten = postkaarten | selectattr('sold', 'equalto', False) | list %}
     {% set verkochte_postkaarten = postkaarten | selectattr('sold', 'equalto', True) | list %}
 
-    <h4 class="mt-5">📬 Mijn Postkaarten</h4>
+    <h4 class="mt-5"> Mijn Postkaarten</h4>
     {% if beschikbare_postkaarten %}
+      <ul class="list-inline mt-5 mb-4">
+        <li class="list-inline-item fw-bold">Mijn Postkaarten</li>
+      </ul>
       <div class="list-group">
         {% for kaart in beschikbare_postkaarten %}
           <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 rounded shadow-sm p-3">
@@ -179,18 +181,17 @@
           </div>
         {% endfor %}
       </div>
-    {% else %}
-      <p>Je hebt nog geen postkaarten toegevoegd. <a href="{{ url_for('main.add_postcard') }}">Voeg er nu één toe!</a></p>
-    {% endif %}
+  {% endif %}
 
-    
-
-    {# ------------------- POSTERS ------------------- #}
+  {# ------------------- POSTERS ------------------- #}
     {% set beschikbare_posters = posters | selectattr('sold', 'equalto', False) | list %}
     {% set verkochte_posters = posters | selectattr('sold', 'equalto', True) | list %}
 
-    <h4 class="mt-5">🖼️ Mijn Posters</h4>
+    <h4 class="mt-5"> Mijn Posters</h4>
     {% if beschikbare_posters %}
+      <ul class="list-inline mt-5 mb-4">
+        <li class="list-inline-item fw-bold">Mijn Posters</li>
+      </ul>
       <div class="list-group">
         {% for poster in beschikbare_posters %}
           <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 rounded shadow-sm p-3">
@@ -215,11 +216,47 @@
           </div>
         {% endfor %}
       </div>
-    {% else %}
-      <p>Je hebt nog geen posters toegevoegd. <a href="{{ url_for('main.add_poster') }}">Voeg er nu één toe!</a></p>
-    {% endif %}
+  {% endif %}
 
-    
+    {# ------------------- KUNST NA POSTERS ------------------- #}
+    {% set beschikbare_kunst = kunst | selectattr('sold', 'equalto', False) | list %}
+    {% set verkochte_kunst = kunst | selectattr('sold', 'equalto', True) | list %}
+
+    <h4 class="mt-5"> Mijn Kunst</h4>
+    {% if beschikbare_kunst %}
+      <ul class="list-inline mt-5 mb-4">
+        <li class="list-inline-item fw-bold">Mijn Kunst</li>
+      </ul>
+      <div class="list-group">
+        {% for art in beschikbare_kunst %}
+          <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 rounded shadow-sm p-3">
+            <h5 class="mb-1">{{ art.title }}</h5>
+            <small class="text-muted mb-2 d-block">door {{ art.artist }}</small>
+            <div class="d-flex align-items-start mb-2">
+              {% if art.image_url %}
+                <img src="{{ url_for('static', filename='uploads/' ~ art.image_url) }}" alt="Kunstwerk" class="me-3 rounded" style="width: 80px; height: auto; object-fit: cover;">
+              {% endif %}
+              <div>
+                <p class="mb-0">
+                  {% if art.description %}
+                    {{ art.description.split()[:10] | join(' ') }}...
+                  {% else %}
+                    Geen beschrijving
+                  {% endif %}
+                </p>
+              </div>
+            </div>
+            <div class="mt-2">
+              <a href="{{ url_for('main.edit_art', art_id=art.id) }}" class="btn btn-sm btn-outline-primary me-2">Bewerk</a>
+              <a href="{{ url_for('main.art_analytics', art_id=art.id) }}" class="btn btn-sm btn-outline-info me-2">Analyseer</a>
+              <form action="{{ url_for('main.delete_art', art_id=art.id) }}" method="POST" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Weet je zeker dat je dit kunstwerk wilt verwijderen?');">Verwijder</button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+  {% endif %}
 
   </div>
 {% endblock %}

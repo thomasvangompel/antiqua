@@ -1,3 +1,8 @@
+
+
+
+from app.forms import ArtForm
+
 from app.forms import ShopProfileForm
 
 import os
@@ -57,9 +62,122 @@ main = Blueprint('main', __name__)
 client_secrets = os.getenv("GOOGLE_OAUTH_SECRETS")
 
 
+@main.route('/art/<int:art_id>/delete', methods=['POST'])
+@login_required
+def delete_art(art_id):
+    from app.models import Art
+    art = Art.query.get_or_404(art_id)
+    if art.user_id != current_user.id and not current_user.is_admin:
+        abort(403)
+    from . import db
+    db.session.delete(art)
+    db.session.commit()
+    flash('Kunstwerk verwijderd!', 'success')
+    return redirect(url_for('main.dashboard'))
+
+
+@main.route('/art/<int:art_id>/analytics')
+@login_required
+def art_analytics(art_id):
+    from app.models import Art
+    art = Art.query.get_or_404(art_id)
+    if art.user_id != current_user.id and not current_user.is_admin:
+        abort(403)
+    # Hier kun je analytics-data toevoegen, bijvoorbeeld views, biedingen, etc.
+    # Voor nu tonen we alleen de basisinformatie
+    return render_template('art_analytics.html', art=art)
+
+@main.route('/art/<int:art_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_art(art_id):
+    from app.models import Art
+    art = Art.query.get_or_404(art_id)
+    if art.user_id != current_user.id and not current_user.is_admin:
+        abort(403)
+    from app.forms import ArtForm
+    form = ArtForm(obj=art)
+    if form.validate_on_submit():
+        import bleach
+        art.title = form.title.data
+        art.artist = form.artist.data
+        art.description = bleach.clean(form.description.data, tags=['b', 'i', 'u', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'span', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'], attributes={'a': ['href', 'target', 'rel'], 'span': ['style'], '*': ['style']}, strip=True)
+        art.condition = form.condition.data
+        if form.image.data:
+            image_file = form.image.data
+            image_filename = secure_filename(image_file.filename)
+            image_path = os.path.join(current_app.root_path, 'static/uploads', image_filename)
+            image_file.save(image_path)
+            art.image_url = image_filename
+        art.price = form.price.data
+        art.allow_shipping = form.allow_shipping.data
+        art.shipping_cost = form.shipping_cost.data
+        art.pickup_only = form.pickup_only.data
+        art.platform_payment_only = form.platform_payment_only.data
+        art.cash_payment_only = form.cash_payment_only.data
+        art.is_auction = form.is_auction.data
+        art.auction_min_price = form.auction_min_price.data if form.is_auction.data else None
+        auction_end_value = None
+        if form.is_auction.data and form.auction_end.data:
+            try:
+                from datetime import datetime
+                auction_end_value = datetime.strptime(form.auction_end.data, "%Y-%m-%d %H:%M")
+            except Exception:
+                auction_end_value = None
+        art.auction_end = auction_end_value
+        from . import db
+        db.session.commit()
+        flash('Kunstwerk bijgewerkt!', 'success')
+        return redirect(url_for('main.dashboard'))
+    return render_template('add_art.html', form=form, edit=True, art=art)
 
 
 
+
+@main.route('/art/add', methods=['GET', 'POST'])
+@login_required
+def add_art():
+    from app.models import Art
+    form = ArtForm()
+    if form.validate_on_submit():
+        import bleach
+        image_filename = None
+        if form.image.data:
+            image_file = form.image.data
+            image_filename = secure_filename(image_file.filename)
+            image_path = os.path.join(current_app.root_path, 'static/uploads', image_filename)
+            image_file.save(image_path)
+        allowed_tags = ['b', 'i', 'u', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'span', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+        allowed_attrs = {'a': ['href', 'target', 'rel'], 'span': ['style'], '*': ['style']}
+        # Auction end: alleen als veiling actief is en veld ingevuld
+        auction_end_value = None
+        if form.is_auction.data and form.auction_end.data:
+            try:
+                from datetime import datetime
+                auction_end_value = datetime.strptime(form.auction_end.data, "%Y-%m-%d %H:%M")
+            except Exception:
+                auction_end_value = None
+        art = Art(
+            title=form.title.data,
+            artist=form.artist.data,
+            description=bleach.clean(form.description.data, tags=allowed_tags, attributes=allowed_attrs, strip=True),
+            condition=form.condition.data,
+            image_url=image_filename,
+            price=form.price.data,
+            allow_shipping=form.allow_shipping.data,
+            shipping_cost=form.shipping_cost.data,
+            pickup_only=form.pickup_only.data,
+            platform_payment_only=form.platform_payment_only.data,
+            cash_payment_only=form.cash_payment_only.data,
+            is_auction=form.is_auction.data,
+            auction_min_price=form.auction_min_price.data if form.is_auction.data else None,
+            auction_end=auction_end_value,
+            user_id=current_user.id
+        )
+        db.session.add(art)
+        db.session.commit()
+        flash('Kunstwerk toegevoegd!', 'success')
+        return redirect(url_for('main.dashboard'))
+    return render_template('add_art.html', form=form)
 
 
 @main.route('/verkoper/winkelprofiel/<int:user_id>', methods=['GET', 'POST'])
@@ -388,6 +506,8 @@ def dashboard():
     boeken = Book.query.filter_by(user_id=current_user.id).all()
     postkaarten = Postcard.query.filter_by(user_id=current_user.id).all()
     posters = Poster.query.filter_by(user_id=current_user.id).all()
+    from .models import Art
+    kunst = Art.query.filter_by(user_id=current_user.id).all()
    
     new_message_count = Message.query.filter_by(receiver_id=current_user.id, read=False).count()
     
@@ -407,6 +527,7 @@ def dashboard():
         boeken=boeken, 
         postkaarten=postkaarten,
         posters=posters,
+        kunst=kunst,
         new_message_count=new_message_count,
         afspraken=afspraken
     )
@@ -958,6 +1079,7 @@ def search():
     books = []
     postkaarten = []
     posters = []
+    kunstwerken = []
 
     if query:
         # Zoek gebruikers
@@ -996,8 +1118,7 @@ def search():
             )
         ).paginate(page=page, per_page=12)
 
-
-
+        # Zoek posters
         posters = Poster.query.filter(
             or_(
                 Poster.title.ilike(f'%{query}%'),
@@ -1007,7 +1128,18 @@ def search():
             )
         ).paginate(page=page, per_page=12)
 
-    return render_template('search_results.html', query=query, users=users, books=books, postcards=postkaarten, posters=posters)
+        # Zoek kunstwerken
+        from app.models import Art
+        kunstwerken = Art.query.filter(
+            or_(
+                Art.title.ilike(f'%{query}%'),
+                Art.artist.ilike(f'%{query}%'),
+                Art.description.ilike(f'%{query}%'),
+                Art.condition.ilike(f'%{query}%')
+            )
+        ).paginate(page=page, per_page=12)
+
+    return render_template('search_results.html', query=query, users=users, books=books, postcards=postkaarten, posters=posters, kunstwerken=kunstwerken)
 
 @main.route('/<business_name>')
 def books_by_business_name(business_name):
@@ -1669,6 +1801,10 @@ def filter_items(category):
     elif category == 'books':
         model = Book
         query = model.query.filter_by(sold=False).join(User, Book.user_id == User.id)
+    elif category == 'art':
+        from app.models import Art
+        model = Art
+        query = model.query.filter_by(sold=False).join(User)
     else:
         flash("Categorie bestaat niet.", "warning")
         return redirect(url_for('main.home'))
@@ -1680,6 +1816,15 @@ def filter_items(category):
                 db.or_(
                     Book.title.ilike(like_pattern),
                     Book.author.ilike(like_pattern)
+                )
+            )
+        elif category == 'art':
+            query = query.filter(
+                db.or_(
+                    model.title.ilike(like_pattern),
+                    model.artist.ilike(like_pattern),
+                    model.description.ilike(like_pattern),
+                    model.condition.ilike(like_pattern)
                 )
             )
         else:

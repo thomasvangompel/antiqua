@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h2>Analytics voor kunstwerk: {{ art.title }}</h2>
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">{{ art.title }}</h5>
+      <p class="card-text"><strong>Kunstenaar:</strong> {{ art.artist }}</p>
+      <p class="card-text"><strong>Conditie:</strong> {{ art.condition }}</p>
+      <p class="card-text"><strong>Prijs:</strong> €{{ '%.2f'|format(art.price) }}</p>
+      <p class="card-text"><strong>Beschrijving:</strong> {{ art.description }}</p>
+      {% if art.image_url %}
+        <img src="{{ url_for('static', filename='uploads/' ~ art.image_url) }}" alt="Kunstwerk" style="max-width:300px;max-height:300px;">
+      {% endif %}
+    </div>
+  </div>
+  <!-- Hier kun je later statistieken, biedingen, views, etc. tonen -->
+  <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Terug naar dashboard</a>
+</div>
+{% endblock %}

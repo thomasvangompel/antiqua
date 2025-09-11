@@ -1,4 +1,5 @@
 
+
 from . import db
 from . import db
 from flask_login import UserMixin
@@ -343,3 +344,33 @@ class AppointmentSlot(db.Model):
     book = db.relationship('Book', foreign_keys=[book_id], overlaps="boek,appointment_slots")
     reserved_by = db.relationship('User', foreign_keys=[reserved_by_id])
 
+
+
+
+class Art(db.Model):
+    allow_shipping = db.Column(db.Boolean, default=False)
+    shipping_cost = db.Column(db.Numeric(6, 2), nullable=True)
+    pickup_only = db.Column(db.Boolean, default=False)
+    platform_payment_only = db.Column(db.Boolean, default=False)
+    cash_payment_only = db.Column(db.Boolean, default=False)
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(140), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    condition = db.Column(db.String(50), nullable=True)
+    image_url = db.Column(db.String(255), nullable=True)
+    price = db.Column(db.Numeric(10, 2), nullable=True)
+    is_auction = db.Column(db.Boolean, default=False)
+    auction_min_price = db.Column(db.Numeric(10, 2), nullable=True)
+    auction_end = db.Column(db.DateTime, nullable=True)
+    artist = db.Column(db.String(140), nullable=True)
+    sold = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    rek_id = db.Column(db.Integer, db.ForeignKey('rek.id'), nullable=True)
+    verdieping_id = db.Column(db.Integer, db.ForeignKey('rek_verdieping.id'), nullable=True)
+    positie = db.Column(db.String(10), nullable=True)
+
+    def __repr__(self):
+        return f"<Art {self.title}>"

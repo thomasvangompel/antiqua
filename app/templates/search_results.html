@@ -16,6 +16,44 @@
     </ul>
     {% endif %}
 
+    {% if kunstwerken.items %}
+    <h4>Kunstwerken</h4>
+    <div class="row">
+        {% for art in kunstwerken.items %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 card-verkoper position-relative">
+                {% if art.image_url %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ art.image_url) }}"
+                         alt="Afbeelding van {{ art.title }}"
+                         class="card-img-top">
+                    {% if art.sold %}
+                        <span class="badge bg-danger position-absolute top-0 end-0 m-2" style="z-index: 10;">
+                            Verkocht
+                        </span>
+                    {% endif %}
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ art.title }}</h5>
+                    <p class="card-text"><strong>Kunstenaar:</strong> {{ art.artist }}</p>
+                    <p class="card-text"><strong>Conditie:</strong> {{ art.condition }}</p>
+                    <p class="card-text"><strong>Prijs:</strong>
+                        {% if art.price is not none %}
+                            € {{ '%.2f'|format(art.price) }}
+                        {% elif art.is_auction %}
+                            Bieden vanaf €{{ '%.2f'|format(art.auction_min_price) if art.auction_min_price else '0.00' }}
+                        {% else %}
+                            N/B
+                        {% endif %}
+                    </p>
+                    <p class="card-text">{{ art.description or '' }}</p>
+                    <a href="#" class="btn btn-primary disabled">Bekijk kunstwerk</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     {% if books.items %}
     <h4>Boeken</h4>
     <div class="row">

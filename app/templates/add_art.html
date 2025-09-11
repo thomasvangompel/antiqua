@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h2>Nieuw kunstwerk toevoegen</h2>
+  <form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+      {{ form.title.label(class="form-label") }}
+      {{ form.title(class="form-control") }}
+    </div>
+    <div class="mb-3">
+      {{ form.artist.label(class="form-label") }}
+      {{ form.artist(class="form-control") }}
+    </div>
+    <div class="mb-3">
+      {{ form.description.label(class="form-label") }}
+      {{ form.description(class="form-control", rows=4) }}
+    </div>
+    <div class="mb-3">
+      {{ form.condition.label(class="form-label") }}
+      {{ form.condition(class="form-control") }}
+    </div>
+    <div class="mb-3">
+      {{ form.image.label(class="form-label") }}
+      {{ form.image(class="form-control") }}
+    </div>
+    <div class="mb-3">
+      {{ form.price.label(class="form-label") }}
+      {{ form.price(class="form-control") }}
+    </div>
+    <div class="form-check mb-2">
+      {{ form.allow_shipping(class="form-check-input") }}
+      {{ form.allow_shipping.label(class="form-check-label") }}
+    </div>
+    <div class="mb-3">
+      {{ form.shipping_cost.label(class="form-label") }}
+      {{ form.shipping_cost(class="form-control") }}
+    </div>
+    <div class="form-check mb-2">
+      {{ form.pickup_only(class="form-check-input") }}
+      {{ form.pickup_only.label(class="form-check-label") }}
+    </div>
+    <div class="form-check mb-2">
+      {{ form.platform_payment_only(class="form-check-input") }}
+      {{ form.platform_payment_only.label(class="form-check-label") }}
+    </div>
+    <div class="form-check mb-2">
+      {{ form.cash_payment_only(class="form-check-input") }}
+      {{ form.cash_payment_only.label(class="form-check-label") }}
+    </div>
+    <div class="form-check mb-2">
+      {{ form.is_auction(class="form-check-input", id="isAuctionCheckArt") }}
+      {{ form.is_auction.label(class="form-check-label") }}
+    </div>
+    <div id="fixedPriceFieldsArt" class="mb-3">
+      {{ form.price.label(class="form-label") }}
+      {{ form.price(class="form-control") }}
+    </div>
+    <div id="auctionFieldsArt" style="display: none;">
+      <div class="mb-3">
+        {{ form.auction_min_price.label(class="form-label") }}
+        {{ form.auction_min_price(class="form-control") }}
+      </div>
+      <div class="mb-3">
+        {{ form.auction_end.label(class="form-label") }}
+        {{ form.auction_end(class="form-control") }}
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Opslaan</button>
+    <script>
+      const isAuctionCheckboxArt = document.getElementById('isAuctionCheckArt');
+      const fixedPriceFieldsArt = document.getElementById('fixedPriceFieldsArt');
+      const auctionFieldsArt = document.getElementById('auctionFieldsArt');
+      function toggleFieldsArt() {
+        if (isAuctionCheckboxArt.checked) {
+          fixedPriceFieldsArt.style.display = 'none';
+          auctionFieldsArt.style.display = 'block';
+        } else {
+          fixedPriceFieldsArt.style.display = 'block';
+          auctionFieldsArt.style.display = 'none';
+        }
+      }
+      isAuctionCheckboxArt.addEventListener('change', toggleFieldsArt);
+      window.addEventListener('load', toggleFieldsArt);
+    </script>
+  </form>
+</div>
+{% endblock %}

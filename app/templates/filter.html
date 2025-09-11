@@ -43,7 +43,14 @@
       {% for item in items %}
         <div class="col">
           <div class="card h-100">
-            {% if category in ['postcards', 'posters'] %}
+            {% if category == 'art' %}
+              {% if item.image_url %}
+                <img src="{{ url_for('static', filename='uploads/' ~ item.image_url) }}" alt="Afbeelding"
+                     class="card-img-top img-fluid">
+              {% else %}
+                <img src="{{ url_for('static', filename='images/placeholder.jpg') }}" class="card-img-top" alt="Geen afbeelding">
+              {% endif %}
+            {% elif category in ['postcards', 'posters'] %}
               {% if item.front_image_url %}
                 <img src="{{ url_for('static', filename=item.front_image_url) }}" alt="Voorkant"
                      class="card-img-top img-fluid"
@@ -67,14 +74,19 @@
 
             <div class="card-body">
               <h5 class="card-title">{{ item.title }}</h5>
-              <p class="card-text mb-1">Prijs: €{{ "%.2f"|format(item.price) }}</p>
-              <p>{{ item.category }}</p>
-
-              {% if category == 'books' %}
+              {% if category == 'art' %}
+                <p class="card-text mb-1">Kunstenaar: {{ item.artist }}</p>
+                <p class="card-text mb-1">Conditie: {{ item.condition }}</p>
+                <p class="card-text mb-1">Prijs: €{{ "%.2f"|format(item.price) }}</p>
+                <a href="#" class="btn btn-sm btn-primary disabled">Bekijk kunstwerk</a>
+              {% elif category == 'books' %}
+                <p class="card-text mb-1">Prijs: €{{ "%.2f"|format(item.price) }}</p>
                 <a href="{{ url_for('main.book_detail', book_id=item.id) }}" class="btn btn-sm btn-primary">Bekijk boek</a>
               {% elif category == 'postcards' %}
+                <p class="card-text mb-1">Prijs: €{{ "%.2f"|format(item.price) }}</p>
                 <a href="{{ url_for('main.postcard_detail', postcard_id=item.id) }}" class="btn btn-sm btn-primary">Bekijk postkaart</a>
               {% elif category == 'posters' %}
+                <p class="card-text mb-1">Prijs: €{{ "%.2f"|format(item.price) }}</p>
                 <a href="{{ url_for('main.poster_detail', poster_id=item.id) }}" class="btn btn-sm btn-primary">Bekijk poster</a>
               {% endif %}
             </div>
