@@ -6,6 +6,7 @@
   <title>OudeBoekenMarkt - {% block title %}{% endblock %}</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='hamburgers.min.css') }}">
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
@@ -74,10 +75,27 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white">
   <div class="container">
     <a class="navbar-brand brand-bordered" href="{{ url_for('main.home') }}">Antiqua.be</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+    <button class="navbar-toggler hamburger hamburger--slider border-0 shadow-none p-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
       aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
+      <span class="hamburger-box">
+        <span class="hamburger-inner"></span>
+      </span>
     </button>
+<script>
+  // Hamburger animatie toggle
+  document.addEventListener('DOMContentLoaded', function() {
+    var toggler = document.querySelector('.navbar-toggler.hamburger');
+    var nav = document.getElementById('navbarNav');
+    if (toggler && nav) {
+      nav.addEventListener('show.bs.collapse', function() {
+        toggler.classList.add('is-active');
+      });
+      nav.addEventListener('hide.bs.collapse', function() {
+        toggler.classList.remove('is-active');
+      });
+    }
+  });
+</script>
 
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto align-items-lg-center text-black">
