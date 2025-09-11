@@ -1,3 +1,14 @@
+from app.forms import ShopProfileForm
+
+import os
+from app.models import AppointmentSlot, User, Message, Book
+from flask_mail import Message as MailMessage
+from app import mail
+from app.utils import send_appointment_email
+import secrets
+from PIL import Image
+
+from flask_login import login_required, current_user
 
 
 import os
@@ -41,7 +52,7 @@ from app.forms import ShippingForm  # pas 'app' aan naar jouw projectnaam indien
 from app.forms import PostcardForm
 
 
-
+main = Blueprint('main', __name__)
 
 client_secrets = os.getenv("GOOGLE_OAUTH_SECRETS")
 
@@ -51,10 +62,33 @@ client_secrets = os.getenv("GOOGLE_OAUTH_SECRETS")
 
 
 
-
-
+@main.route('/verkoper/winkelprofiel/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def edit_winkelprofiel(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.id != current_user.id and not current_user.is_admin:
+        abort(403)
+    form = ShopProfileForm(obj=user)
+    if form.validate_on_submit():
+        import bleach
+        user.hero_section_enabled = form.enable_hero.data
+        if form.hero_image.data:
+            image_file = form.hero_image.data
+            filename = secure_filename(image_file.filename)
+            image_path = os.path.join(current_app.root_path, 'static/uploads', filename)
+            image_file.save(image_path)
+            user.hero_section_image = filename
+        allowed_tags = ['b', 'i', 'u', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'span', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+        allowed_attrs = {'a': ['href', 'target', 'rel'], 'span': ['style'], '*': ['style']}
+        user.about_shop = bleach.clean(form.about_shop.data, tags=allowed_tags, attributes=allowed_attrs, strip=True)
+        user.contact_info = bleach.clean(form.contact_info.data, tags=allowed_tags, attributes=allowed_attrs, strip=True)
+        db.session.commit()
+        flash('Winkelprofiel bijgewerkt!', 'success')
+        return redirect(url_for('main.edit_winkelprofiel', user_id=user.id))
+    return render_template('winkelprofiel.html', form=form, user=user)
 from flask import Blueprint
-main = Blueprint('main', __name__)
+
+
 
 # ... bestaande code ...
 @main.route('/api/appointments/delete_all', methods=['POST'])
@@ -83,6 +117,23 @@ def get_appointments_for_month(year, month):
         } for s in slots
     ]
     return jsonify(result)
+
+
+
+@main.route('/new_category', methods=['GET', 'POST'])
+@login_required
+def new_category():
+    form = CategoryForm()
+    if form.validate_on_submit():
+        from app.models import Category, db
+        category = Category(name=form.name.data, user_id=current_user.id)
+        db.session.add(category)
+        db.session.commit()
+        flash('Categorie toegevoegd!', 'success')
+        return redirect(url_for('main.dashboard'))
+    return render_template('new_category.html', form=form)
+
+
 
 # Afspraak wijzigen route
 @main.route('/change_appointment/<int:appointment_id>', methods=['GET', 'POST'])
@@ -216,6 +267,8 @@ def register():
 
 from urllib.parse import urlparse, urljoin
 def is_safe_url(target):
+    from flask import Blueprint
+    main = Blueprint('main', __name__)
     """
     Controleer of de URL veilig is voor redirects.
     """

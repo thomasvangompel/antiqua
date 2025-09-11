@@ -1,17 +1,26 @@
 
+from datetime import datetime, timedelta
+
 from flask_wtf import FlaskForm
-from wtforms import (
-    StringField, PasswordField, SubmitField, TextAreaField,SelectField,DateField,
-    DecimalField, BooleanField, DateTimeField, RadioField, IntegerField, FieldList, FormField
-)
 from flask_wtf.file import FileField, FileAllowed
+from wtforms import (
+    StringField, PasswordField, SubmitField, TextAreaField, SelectField,
+    DateField, DecimalField, BooleanField, DateTimeField, RadioField,
+    IntegerField, FieldList, FormField
+)
 from wtforms.validators import (
     DataRequired, Email, EqualTo, InputRequired, Length,
     Optional, NumberRange, Regexp, ValidationError
 )
-from datetime import datetime, timedelta
 from flask_login import current_user
 from app.models import User  # pas 'app' aan naar jouw projectnaam indien nodig
+
+class ShopProfileForm(FlaskForm):
+    enable_hero = BooleanField('Hero section tonen')
+    hero_image = FileField('Hero afbeelding', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Alleen afbeeldingen toegestaan!')])
+    about_shop = TextAreaField('Over ons')
+    contact_info = TextAreaField('Contactinformatie (extra)')
+    submit = SubmitField('Opslaan')
 
 
 class VerdiepingForm(FlaskForm):

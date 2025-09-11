@@ -41,6 +41,12 @@
     </div>
   </nav>
 
+    {% if seller.hero_section_enabled and seller.hero_section_image %}
+      <div style="margin:0; padding:0;">
+        <img src="{{ url_for('static', filename='uploads/' ~ seller.hero_section_image) }}" class="img-fluid w-100 rounded shadow" style="max-height:350px; object-fit:cover; margin:0; padding:0; display:block;" alt="Hero afbeelding">
+      </div>
+    {% endif %}
+
   <!-- Over ons sectie -->
   <div class="row mb-4">
     <div class="col-md-12">

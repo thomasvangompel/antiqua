@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h2>Winkelprofiel bewerken</h2>
+  <form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    <div class="form-check mb-3">
+      {{ form.enable_hero.label(class="form-check-label") }}
+      {{ form.enable_hero(class="form-check-input") }}
+    </div>
+    <div class="mb-3" id="hero-image-upload" {% if not form.enable_hero.data %}style="display:none;"{% endif %}>
+      {{ form.hero_image.label(class="form-label") }}
+      {{ form.hero_image(class="form-control") }}
+      {% if user.hero_section_image %}
+        <img src="{{ url_for('static', filename='uploads/' ~ user.hero_section_image) }}" class="img-fluid mt-2" style="max-height:200px;">
+      {% endif %}
+    </div>
+    <div class="mb-3">
+      {{ form.about_shop.label(class="form-label") }}
+  <div id="quill-editor" style="height: 200px;"></div>
+      <input type="hidden" name="about_shop" id="about_shop">
+    </div>
+    <div class="mb-3">
+      {{ form.contact_info.label(class="form-label") }}
+      <div id="contact-quill" style="height: 150px;">{{ user.contact_info|safe or '' }}</div>
+      <input type="hidden" name="contact_info" id="contact_info">
+    </div>
+    <button type="submit" class="btn btn-primary">Opslaan</button>
+  </form>
+</div>
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const enableHero = document.querySelector('[name="enable_hero"]');
+    const heroImageDiv = document.getElementById('hero-image-upload');
+    if (enableHero) {
+      enableHero.addEventListener('change', function() {
+        heroImageDiv.style.display = this.checked ? '' : 'none';
+      });
+    }
+
+    var quill = new Quill('#quill-editor', {
+      theme: 'snow',
+      modules: { toolbar: true }
+    });
+    var contactQuill = new Quill('#contact-quill', {
+      theme: 'snow',
+      modules: { toolbar: true }
+    });
+    document.querySelector('form').addEventListener('submit', function(e) {
+      document.getElementById('about_shop').value = quill.root.innerHTML;
+      document.getElementById('contact_info').value = contactQuill.root.innerHTML;
+    });
+  });
+</script>
+{% endblock %}

@@ -1,4 +1,11 @@
+
 from . import db
+from . import db
+from flask_login import UserMixin
+from . import login_manager
+from datetime import datetime
+from flask import url_for
+from sqlalchemy import Numeric
 
 class Rek(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -21,12 +28,7 @@ class RekVerdieping(db.Model):
 
     def __repr__(self):
         return f"<RekVerdieping {self.nummer} van rek {self.rek_id}>"
-from . import db
-from flask_login import UserMixin
-from . import login_manager
-from datetime import datetime
-from flask import url_for
-from sqlalchemy import Numeric
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -45,6 +47,8 @@ ACCOUNT_TYPES = ('basic', 'pro')
 PRO_TIERS = ('free', 'basic', 'medium', 'full')
 
 class User(db.Model, UserMixin):
+    hero_section_enabled = db.Column(db.Boolean, default=False)
+    hero_section_image = db.Column(db.String(255), nullable=True)
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=False, nullable=True)
     email = db.Column(db.String(150), unique=True, nullable=False)
@@ -115,8 +119,11 @@ class User(db.Model, UserMixin):
     #posters
     posters = db.relationship('Poster', backref='user', lazy=True, cascade="all, delete")
 
+
     # appointment slots
     appointment_slots = db.relationship('AppointmentSlot', backref='verkoper', lazy=True, cascade='all, delete', foreign_keys='AppointmentSlot.user_id', overlaps="user")
+
+    # seller categories
 
 class Book(db.Model):
 

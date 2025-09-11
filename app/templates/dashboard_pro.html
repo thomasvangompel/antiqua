@@ -95,12 +95,14 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
       <div>
         <h3>Mijn Collectie</h3>
-        <p class="text-muted mb-0">Beheer je boeken, postkaarten en posters</p>
+        <p class="text-muted mb-0">Beheer je boeken, postkaarten, posters en categorieën</p>
+  <!-- Categorieën sectie verwijderd -->
       </div>
       <div>
         <a href="{{ url_for('main.new_book') }}" class="btn btn-outline-success me-2">+ Boek</a>
-  <a href="{{ url_for('main.add_postcard') }}" class="btn btn-outline-success me-2">+ Postkaart</a>
-  <a href="{{ url_for('main.add_poster') }}" class="btn btn-outline-success">+ Poster</a>
+  <!-- + Categorie knop verwijderd -->
+        <a href="{{ url_for('main.add_postcard') }}" class="btn btn-outline-success me-2">+ Postkaart</a>
+        <a href="{{ url_for('main.add_poster') }}" class="btn btn-outline-success">+ Poster</a>
       </div>
     </div>
 
