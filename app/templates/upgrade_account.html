@@ -2,125 +2,102 @@
 
 {% block content %}
 <div class="container py-5 text-center">
-  <h2 class="text-primary mb-4">Upgrade naar Pro-account</h2>
-
   <div class="slides-wrapper">
     <div class="slide slide1">
       <span class="slide-icon text-primary"><i class="bi bi-shop"></i></span>
       <h2 class="slide-title">Eigen winkelpagina</h2>
       <p class="slide-desc">Met je eigen branding en logo.</p>
+      <ul class="slide-list text-start" style="max-width: 500px; margin: 1rem auto; font-size: 1.2rem; list-style: none; padding-left: 0;">
+        <li><i class="bi bi-check2 text-success me-2"></i>Eigen shop-URL en unieke uitstraling</li>
+        <li><i class="bi bi-check2 text-success me-2"></i>Upload je eigen logo en banner</li>
+        <li><i class="bi bi-check2 text-success me-2"></i>Extra contactinformatie en shopbeschrijving</li>
+      </ul>
     </div>
     <div class="slide slide2">
       <span class="slide-icon text-success"><i class="bi bi-boxes"></i></span>
       <h2 class="slide-title">Uitgebreid beheer</h2>
       <p class="slide-desc">Beheer je collectie en voorraad eenvoudig.</p>
+      <ul class="slide-list text-start" style="max-width: 500px; margin: 1rem auto; font-size: 1.2rem; list-style: none; padding-left: 0;">
+        <li><i class="bi bi-check2 text-success me-2"></i>Snel boeken, kaarten, posters, kunst,... toevoegen</li>
+        <li><i class="bi bi-check2 text-success me-2"></i>Voorraad en prijzen direct aanpassen</li>
+        <li><i class="bi bi-check2 text-success me-2"></i>Overzicht van je hele aanbod</li>
+      </ul>
     </div>
     <div class="slide slide3">
       <span class="slide-icon text-info"><i class="bi bi-bar-chart"></i></span>
       <h2 class="slide-title">Geavanceerde analyse</h2>
       <p class="slide-desc">Bekijk statistieken van verkopen en bezoekers.</p>
+      <ul class="slide-list text-start" style="max-width: 500px; margin: 1rem auto; font-size: 1.2rem; list-style: none; padding-left: 0;">
+        <li><i class="bi bi-check2 text-success me-2"></i>Inzicht in je best verkopende items</li>
+        <li><i class="bi bi-check2 text-success me-2"></i>Bekijk bezoekersaantallen per dag</li>
+        <li><i class="bi bi-check2 text-success me-2"></i>Analyse van je omzet en trends</li>
+      </ul>
     </div>
     <div class="slide slide4">
       <span class="slide-icon text-warning"><i class="bi bi-calendar-check"></i></span>
       <h2 class="slide-title">Afspraakbeheer</h2>
       <p class="slide-desc">Kalender voor afhalen en afspraken.</p>
+      <ul class="slide-list text-start" style="max-width: 500px; margin: 1rem auto; font-size: 1.2rem; list-style: none; padding-left: 0;">
+        <li><i class="bi bi-check2 text-success me-2"></i>Plan eenvoudig ophaalmomenten met klanten</li>
+        <li><i class="bi bi-check2 text-success me-2"></i>Klanten kiezen zelf een tijdslot</li>
+        <li><i class="bi bi-check2 text-success me-2"></i>Overzichtelijke agenda voor alle afspraken</li>
+        <li><i class="bi bi-check2 text-success me-2"></i>Voorkom dubbele boekingen</li>
+      </ul>
     </div>
     <div class="slide slide5">
       <span class="slide-icon text-danger"><i class="bi bi-gift"></i></span>
       <h2 class="slide-title">Tot 250 items gratis</h2>
       <p class="slide-desc">Daarna voordelig uitbreiden.</p>
+      <ul class="slide-list text-start" style="max-width: 500px; margin: 1rem auto; font-size: 1.2rem; list-style: none; padding-left: 0;">
+        <li><i class="bi bi-check2 text-success me-2"></i>Gratis tot 250 boeken, kaarten, posters,kunst, ... </li>
+        <li><i class="bi bi-check2 text-success me-2"></i>Betaalbare uitbreiding voor grotere collecties</li>
+        <li><i class="bi bi-check2 text-success me-2"></i>Geen verborgen kosten</li>
+      </ul>
     </div>
     <div class="slide slide6">
       <span class="slide-icon text-dark"><i class="bi bi-lightning-charge"></i></span>
       <h2 class="slide-title">Snelle support & exclusieve functies</h2>
       <p class="slide-desc">Altijd hulp en toegang tot nieuwe features.</p>
+      <ul class="slide-list text-start" style="max-width: 500px; margin: 1rem auto; font-size: 1.2rem; list-style: none; padding-left: 0;">
+        <li><i class="bi bi-check2 text-success me-2"></i>Directe hulp bij vragen of problemen</li>
+        <li><i class="bi bi-check2 text-success me-2"></i>Toegang tot nieuwe en exclusieve functies</li>
+        <li><i class="bi bi-check2 text-success me-2"></i>Regelmatig updates en verbeteringen</li>
+      </ul>
     </div>
-  </div>
-
-  <div class="row justify-content-center mb-4">
-    <div class="col-lg-8 col-md-10">
-      <div class="card shadow h-100">
-        <div class="card-body">
-          <form method="POST" action="{{ url_for('main.upgrade_account') }}">
-            <fieldset>
-              {{ form.hidden_tag() }}
-              {% for field in form if field.name != 'csrf_token' and field.type != 'HiddenField' %}
-                {% if field.type == 'BooleanField' %}
-                  <div class="form-check mb-3 text-start">
-                    {{ field(class="form-check-input") }}
-                    {{ field.label(class="form-check-label ms-2") }}
-                  </div>
-                {% else %}
-                  <div class="mb-3 text-start">
-                    {{ field.label(class="form-label") }}
-                    {{ field(class="form-control") }}
-                    {% if field.errors %}
-                      <div class="text-danger small">{{ field.errors[0] }}</div>
-                    {% endif %}
-                  </div>
-                {% endif %}
-              {% endfor %}
-            </fieldset>
-          </form>
-
-          <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary mt-3">Annuleer</a>
+    <div class="slide slide7">
+      <h2 class="slide-title">Pro upgrade Gratis </h2>
+      <div class="d-flex justify-content-center w-100">
+        <div class="card shadow h-100 w-100" style="max-width: 600px; margin: 0 auto;">
+          <div class="card-body">
+            <form method="POST" action="{{ url_for('main.upgrade_account') }}">
+              <fieldset>
+                {{ form.hidden_tag() }}
+                {% for field in form if field.name != 'csrf_token' and field.type != 'HiddenField' %}
+                  {% if field.type == 'BooleanField' %}
+                    <div class="form-check mb-3 text-start">
+                      {{ field(class="form-check-input") }}
+                      {{ field.label(class="form-check-label ms-2") }}
+                    </div>
+                  {% else %}
+                    <div class="mb-3 text-start">
+                      {{ field.label(class="form-label") }}
+                      {{ field(class="form-control") }}
+                      {% if field.errors %}
+                        <div class="text-danger small">{{ field.errors[0] }}</div>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              </fieldset>
+            </form>
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary mt-3">Annuleer</a>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 {% endblock %}
-
-
-<style>
-  .slides-wrapper {
-    position: relative;
-    margin-bottom: 2rem;
-  }
-  .slide {
-    position: sticky;
-    top: 0;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 1;
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.7s cubic-bezier(.5,0,.5,1), transform 0.7s cubic-bezier(.5,0,.5,1);
-  }
-  .slide.is-visible {
-    opacity: 1;
-    transform: none;
-  }
-  .slide-title {
-    font-size: 3rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-    text-align: center;
-  }
-  .slide-icon {
-    font-size: 4rem;
-    margin-bottom: 1rem;
-    display: block;
-    text-align: center;
-  }
-  .slide-desc {
-    font-size: 1.5rem;
-    text-align: center;
-    margin-bottom: 0.5rem;
-  }
-  .slide1 { background: linear-gradient(to bottom, #bbf7d0, #bfdbfe); color: #222; }
-  .slide2 { background: linear-gradient(to bottom, #312e81, #6d28d9); color: #fff; }
-  .slide3 { background: linear-gradient(to bottom, #6d28d9, #db2777); color: #fff; }
-  .slide4 { background: linear-gradient(to bottom, #bfdbfe, #c7d2fe); color: #222; }
-  .slide5 { background: linear-gradient(to bottom, #fca5a5, #fcd34d); color: #222; }
-  .slide6 { background: linear-gradient(to bottom, #f3f4f6, #a7f3d0); color: #222; }
-</style>
-
-
-
 
 {% block scripts %}
 <script>
@@ -141,4 +118,29 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
+
+<style>
+  /* ...bestaande slide styles... */
+  .slide-list {
+    max-width: 500px;
+    margin: 1rem auto;
+    font-size: 1.2rem;
+    list-style: none;
+    padding-left: 0;
+    word-break: break-word;
+    white-space: normal;
+  }
+  .slide-list li {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+    word-break: break-word;
+    white-space: normal;
+  }
+  .slide-list i {
+    flex-shrink: 0;
+    margin-top: 0.15em;
+  }
+</style>
 
