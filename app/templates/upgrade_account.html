@@ -2,94 +2,143 @@
 
 {% block content %}
 <div class="container py-5 text-center">
-    <h2 class="text-primary mb-4">Upgrade naar Pro-account</h2>
-    <div class="row justify-content-center mb-4 g-4">
-      <div class="col-md-4">
-        <div class="card shadow h-100 bg-light border-primary" style="height: 250px; border-radius: 0;">
-          <div class="card-body d-flex flex-column justify-content-center align-items-center">
-            <span class="fs-1 text-primary mb-2"><i class="bi bi-shop"></i></span>
-            <h5 class="card-title">Eigen winkelpagina</h5>
-            <p class="card-text">Met je eigen branding en logo.</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card shadow h-100 bg-light border-success" style="height: 250px; border-radius: 0;">
-          <div class="card-body d-flex flex-column justify-content-center align-items-center">
-            <span class="fs-1 text-success mb-2"><i class="bi bi-boxes"></i></span>
-            <h5 class="card-title">Uitgebreid beheer</h5>
-            <p class="card-text">Beheer je collectie en voorraad eenvoudig.</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card shadow h-100 bg-light border-info" style="height: 250px; border-radius: 0;">
-          <div class="card-body d-flex flex-column justify-content-center align-items-center">
-            <span class="fs-1 text-info mb-2"><i class="bi bi-bar-chart"></i></span>
-            <h5 class="card-title">Geavanceerde analyse</h5>
-            <p class="card-text">Bekijk statistieken van verkopen en bezoekers.</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card shadow h-100 bg-light border-warning" style="height: 250px; border-radius: 0;">
-          <div class="card-body d-flex flex-column justify-content-center align-items-center">
-            <span class="fs-1 text-warning mb-2"><i class="bi bi-calendar-check"></i></span>
-            <h5 class="card-title">Afspraakbeheer</h5>
-            <p class="card-text">Kalender voor afhalen en afspraken.</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card shadow h-100 bg-light border-danger" style="height: 250px; border-radius: 0;">
-          <div class="card-body d-flex flex-column justify-content-center align-items-center">
-            <span class="fs-1 text-danger mb-2"><i class="bi bi-gift"></i></span>
-            <h5 class="card-title">Tot 250 items gratis</h5>
-            <p class="card-text">Daarna voordelig uitbreiden.</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-12">
-        <div class="card shadow h-100 bg-light border-dark" style="height: 250px; border-radius: 0;">
-          <div class="card-body d-flex flex-column justify-content-center align-items-center">
-            <span class="fs-1 text-dark mb-2"><i class="bi bi-lightning-charge"></i></span>
-            <h5 class="card-title">Snelle support & exclusieve functies</h5>
-            <p class="card-text">Altijd hulp en toegang tot nieuwe features.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  <!-- Pro gratis en Pro betaald kaarten verwijderd voor één duidelijke upgrade-knop -->
-    <div class="row justify-content-center mb-4">
-      <div class="col-lg-8 col-md-10">
-        <div class="card shadow h-100" style="border-radius: 0;">
-          <div class="card-body">
-            <form method="POST" action="{{ url_for('main.upgrade_account') }}">
-              <fieldset>
-                {{ form.hidden_tag() }}
-                {% for field in form if field.name != 'csrf_token' and field.type != 'HiddenField' %}
-                  {% if field.name == 'show_on_map' %}
-                    <div class="form-check mb-3 text-start">
-                      {{ field(class="form-check-input") }}
-                      {{ field.label(class="form-check-label ms-2") }}
-                    </div>
-                  {% else %}
-                    <div class="mb-3 text-start">
-                      {{ field.label(class="form-label") }}
-                      {{ field(class="form-control") }}
-                      {% if field.errors %}
-                        <div class="text-danger small">{{ field.errors[0] }}</div>
-                      {% endif %}
-                    </div>
-                  {% endif %}
-                {% endfor %}
-              </fieldset>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
+  <h2 class="text-primary mb-4">Upgrade naar Pro-account</h2>
 
-    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary mt-3">Annuleer</a>
+  <div class="slides-wrapper">
+    <div class="slide slide1">
+      <span class="slide-icon text-primary"><i class="bi bi-shop"></i></span>
+      <h2 class="slide-title">Eigen winkelpagina</h2>
+      <p class="slide-desc">Met je eigen branding en logo.</p>
+    </div>
+    <div class="slide slide2">
+      <span class="slide-icon text-success"><i class="bi bi-boxes"></i></span>
+      <h2 class="slide-title">Uitgebreid beheer</h2>
+      <p class="slide-desc">Beheer je collectie en voorraad eenvoudig.</p>
+    </div>
+    <div class="slide slide3">
+      <span class="slide-icon text-info"><i class="bi bi-bar-chart"></i></span>
+      <h2 class="slide-title">Geavanceerde analyse</h2>
+      <p class="slide-desc">Bekijk statistieken van verkopen en bezoekers.</p>
+    </div>
+    <div class="slide slide4">
+      <span class="slide-icon text-warning"><i class="bi bi-calendar-check"></i></span>
+      <h2 class="slide-title">Afspraakbeheer</h2>
+      <p class="slide-desc">Kalender voor afhalen en afspraken.</p>
+    </div>
+    <div class="slide slide5">
+      <span class="slide-icon text-danger"><i class="bi bi-gift"></i></span>
+      <h2 class="slide-title">Tot 250 items gratis</h2>
+      <p class="slide-desc">Daarna voordelig uitbreiden.</p>
+    </div>
+    <div class="slide slide6">
+      <span class="slide-icon text-dark"><i class="bi bi-lightning-charge"></i></span>
+      <h2 class="slide-title">Snelle support & exclusieve functies</h2>
+      <p class="slide-desc">Altijd hulp en toegang tot nieuwe features.</p>
+    </div>
+  </div>
+
+  <div class="row justify-content-center mb-4">
+    <div class="col-lg-8 col-md-10">
+      <div class="card shadow h-100">
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('main.upgrade_account') }}">
+            <fieldset>
+              {{ form.hidden_tag() }}
+              {% for field in form if field.name != 'csrf_token' and field.type != 'HiddenField' %}
+                {% if field.type == 'BooleanField' %}
+                  <div class="form-check mb-3 text-start">
+                    {{ field(class="form-check-input") }}
+                    {{ field.label(class="form-check-label ms-2") }}
+                  </div>
+                {% else %}
+                  <div class="mb-3 text-start">
+                    {{ field.label(class="form-label") }}
+                    {{ field(class="form-control") }}
+                    {% if field.errors %}
+                      <div class="text-danger small">{{ field.errors[0] }}</div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </fieldset>
+          </form>
+
+          <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary mt-3">Annuleer</a>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
+
+
+<style>
+  .slides-wrapper {
+    position: relative;
+    margin-bottom: 2rem;
+  }
+  .slide {
+    position: sticky;
+    top: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s cubic-bezier(.5,0,.5,1), transform 0.7s cubic-bezier(.5,0,.5,1);
+  }
+  .slide.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+  .slide-title {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .slide-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    display: block;
+    text-align: center;
+  }
+  .slide-desc {
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  .slide1 { background: linear-gradient(to bottom, #bbf7d0, #bfdbfe); color: #222; }
+  .slide2 { background: linear-gradient(to bottom, #312e81, #6d28d9); color: #fff; }
+  .slide3 { background: linear-gradient(to bottom, #6d28d9, #db2777); color: #fff; }
+  .slide4 { background: linear-gradient(to bottom, #bfdbfe, #c7d2fe); color: #222; }
+  .slide5 { background: linear-gradient(to bottom, #fca5a5, #fcd34d); color: #222; }
+  .slide6 { background: linear-gradient(to bottom, #f3f4f6, #a7f3d0); color: #222; }
+</style>
+
+
+
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var slides = document.querySelectorAll('.slide');
+  var observer = new window.IntersectionObserver(function(entries, observer) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  slides.forEach(function(slide) {
+    observer.observe(slide);
+  });
+});
+</script>
+{% endblock %}
+
