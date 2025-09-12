@@ -1,6 +1,3 @@
-
-
-
 from app.forms import ArtForm
 
 from app.forms import ShopProfileForm
@@ -313,7 +310,11 @@ def inject_new_message_count():
 
 
 @main.route('/')
+@login_required
 def home():
+    if not profiel_is_ingevuld(current_user):
+        flash('Vul eerst je profiel volledig in voordat je verder kunt!', 'warning')
+        return redirect(url_for('main.profile'))
     verkopers_met_boeken_of_postkaarten = (
         User.query
         .filter(
@@ -1192,8 +1193,6 @@ def public_seller_profile(business_name):
         highest_bids=highest_bids,
         pagination=books_pagination
     )
-
-
 
 @main.route('/verkoper/<business_name>/genre/<genre>')
 def seller_books_by_genre(business_name, genre):

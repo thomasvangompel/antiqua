@@ -4,10 +4,37 @@ __pycache__/
 *.sqlite3
 *.log
 .env
+.venv/
 venv/
 instance/
 client_secrets.json
 test_user.py
 create_admin.py
 maak_admin.py
+clear_users.py
+auto_backup.py
+backups/
 
+# IDE/Editor bestanden
+.vscode/
+.idea/
+
+# MacOS/Windows systeemfiles
+.DS_Store
+Thumbs.db
+
+# Migratie/compilatie bestanden
+migrations/versions/
+*.egg-info/
+dist/
+build/
+
+# Database dumps
+*.sql
+
+# Static uploads (indien niet op GitHub)
+app/static/uploads/
+app/static/profile_pics/
+
+# Jupyter notebooks
+*.ipynb

@@ -18,7 +18,7 @@ def create_app():
     app = Flask(__name__)
     # Algemene configuratie
     app.config['SECRET_KEY'] = os.getenv("FLASK_SECRET_KEY") or os.urandom(24)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/antiqua'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Mailconfiguratie

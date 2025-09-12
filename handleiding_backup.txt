@@ -1,0 +1,35 @@
+# MySQL Database Back-up en Herstel (Windows/XAMPP)
+
+1. Back-up maken via CMD:
+
+Open een Command Prompt (CMD) en voer uit:
+
+C:\xampp\mysql\bin\mysqldump.exe -u root antiqua > C:\Users\vdab\Desktop\antiqua-master\backup_antiqua.sql
+
+- Dit maakt een back-up van de database 'antiqua' in het bestand 'backup_antiqua.sql'.
+- Zorg dat XAMPP/MySQL actief is.
+
+2. Database verwijderen en opnieuw aanmaken:
+
+Open CMD en start de MySQL client:
+
+C:\xampp\mysql\bin\mysql.exe -u root
+
+In de MySQL prompt:
+DROP DATABASE antiqua;
+CREATE DATABASE antiqua;
+exit;
+
+3. Back-up terugzetten:
+
+Open CMD en voer uit:
+
+C:\xampp\mysql\bin\mysql.exe -u root antiqua < C:\Users\vdab\Desktop\antiqua-master\backup_antiqua.sql
+
+- Hiermee wordt de back-up teruggezet in de database 'antiqua'.
+
+Let op:
+- Voer de commando's met '<' uit in CMD, niet in PowerShell of de MySQL prompt.
+- Vervang paden indien nodig voor jouw systeem.
+
+Klaar! Je hebt nu een handleiding voor back-up en herstel van je MySQL database.
