@@ -110,17 +110,13 @@
     {% set beschikbare_boeken = boeken | selectattr('sold', 'equalto', False) | list %}
     {% set verkochte_boeken = boeken | selectattr('sold', 'equalto', True) | list %}
 
-    <h4 class="mt-4"> Mijn Boeken</h4>
-    {% if beschikbare_boeken %}
-      <ul class="list-inline mt-4 mb-4">
-        <li class="list-inline-item fw-bold">Mijn Boeken</li>
-      </ul>
-      <div class="list-group">
+    {% if beschikbare_boeken and beschikbare_boeken|length > 0 %}
+      <h5 class="fw-bold mt-4">Mijn Boeken</h5>
+      <ul class="list-group mb-4">
         {% for boek in beschikbare_boeken %}
-          <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 rounded shadow-sm p-3">
+          <li class="list-group-item list-group-item-action flex-column align-items-start mb-3 rounded shadow-sm p-3">
             <h5 class="mb-1">{{ boek.title }}</h5>
             <small class="text-muted mb-2 d-block">door {{ boek.author }}</small>
-
             <div class="d-flex align-items-start mb-2">
               {% if boek.front_image %}
                 <img src="{{ url_for('static', filename='uploads/' ~ boek.front_image) }}" alt="Boekvoorkant" class="me-3 rounded" style="width: 80px; height: auto; object-fit: cover;">
@@ -135,7 +131,6 @@
                 </p>
               </div>
             </div>
-
             <div class="mt-2">
               <a href="{{ url_for('main.edit_book', book_id=boek.id) }}" class="btn btn-sm btn-outline-primary me-2">Bewerk</a>
               <a href="{{ url_for('main.book_analytics', book_id=boek.id) }}" class="btn btn-sm btn-outline-info me-2">Analyseer</a>
@@ -143,16 +138,97 @@
                 <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Weet je zeker dat je dit boek wilt verwijderen?');">Verwijder</button>
               </form>
             </div>
-          </div>
+          </li>
         {% endfor %}
-      </div>
-  {% endif %}
+      </ul>
+    {% endif %}
+    {% if beschikbare_postkaarten and beschikbare_postkaarten|length > 0 %}
+      <h5 class="fw-bold mt-4">Mijn Postkaarten</h5>
+      <ul class="list-group mb-4">
+        {% for kaart in beschikbare_postkaarten %}
+          <li class="list-group-item list-group-item-action flex-column align-items-start mb-3 rounded shadow-sm p-3">
+            <h5 class="mb-1">{{ kaart.title or 'Geen titel' }}</h5>
+            <small class="text-muted mb-2 d-block">{{ kaart.publisher}}</small>
+            {% if kaart.front_image_url %}
+              <img src="{{ url_for('static', filename=kaart.front_image_url) }}" alt="Voorkant" class="me-3 rounded" style="width: 80px; height: auto; object-fit: cover;">
+            {% endif %}
+            <p class="mb-0">
+              Staat: {{ kaart.condition or 'Onbekend' }}<br>
+              Jaar: {{ kaart.year or 'n.v.t.' }}
+            </p>
+            <div class="mt-2">
+              <a href="{{ url_for('main.edit_postcard', postcard_id=kaart.id) }}" class="btn btn-sm btn-outline-primary me-2">Bewerk</a>
+              <form action="{{ url_for('main.delete_postcard', postcard_id=kaart.id) }}" method="POST" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Weet je zeker dat je deze postkaart wilt verwijderen?');">Verwijder</button>
+              </form>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    {% if beschikbare_posters and beschikbare_posters|length > 0 %}
+      <h5 class="fw-bold mt-4">Mijn Posters</h5>
+      <ul class="list-group mb-4">
+        {% for poster in beschikbare_posters %}
+          <li class="list-group-item list-group-item-action flex-column align-items-start mb-3 rounded shadow-sm p-3">
+            <h5 class="mb-1">{{ poster.title or 'Geen titel' }}</h5>
+            <small class="text-muted mb-2 d-block">{{ poster.publisher}}</small>
+            {% if poster.front_image_url %}
+              <img src="{{ url_for('static', filename=poster.front_image_url) }}" alt="Voorkant" class="me-3 rounded" style="width: 80px; height: auto; object-fit: cover;">
+            {% endif %}
+            <p class="mb-0">
+                Staat: {{ poster.condition or 'Onbekend' }}<br>
+                Jaar: {{ poster.year or 'n.v.t.' }}
+              </p>
+              <div class="mt-2">
+                <a href="{{ url_for('main.edit_poster', poster_id=poster.id) }}" class="btn btn-sm btn-outline-primary me-2">Bewerk</a>
+                <form action="{{ url_for('main.delete_poster', poster_id=poster.id) }}" method="POST" style="display:inline;">
+                  <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Weet je zeker dat je deze poster wilt verwijderen?');">Verwijder</button>
+                </form>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% if beschikbare_kunst %}
+        <li class="list-group-item fw-bold">Mijn Kunst</li>
+        <div class="list-group">
+          {% for art in beschikbare_kunst %}
+            <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 rounded shadow-sm p-3">
+              <h5 class="mb-1">{{ art.title }}</h5>
+              <small class="text-muted mb-2 d-block">door {{ art.artist }}</small>
+              <div class="d-flex align-items-start mb-2">
+                {% if art.image_url %}
+                  <img src="{{ url_for('static', filename='uploads/' ~ art.image_url) }}" alt="Kunstwerk" class="me-3 rounded" style="width: 80px; height: auto; object-fit: cover;">
+                {% endif %}
+                <div>
+                  <p class="mb-0">
+                    {% if art.description %}
+                      {{ art.description.split()[:10] | join(' ') }}...
+                    {% else %}
+                      Geen beschrijving
+                    {% endif %}
+                  </p>
+                </div>
+              </div>
+              <div class="mt-2">
+                <a href="{{ url_for('main.edit_art', art_id=art.id) }}" class="btn btn-sm btn-outline-primary me-2">Bewerk</a>
+                <a href="{{ url_for('main.art_analytics', art_id=art.id) }}" class="btn btn-sm btn-outline-info me-2">Analyseer</a>
+                <form action="{{ url_for('main.delete_art', art_id=art.id) }}" method="POST" style="display:inline;">
+                  <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Weet je zeker dat je dit kunstwerk wilt verwijderen?');">Verwijder</button>
+                </form>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </ul>
 
   {# ------------------- POSTKAARTEN ------------------- #}
     {% set beschikbare_postkaarten = postkaarten | selectattr('sold', 'equalto', False) | list %}
     {% set verkochte_postkaarten = postkaarten | selectattr('sold', 'equalto', True) | list %}
 
-    <h4 class="mt-5"> Mijn Postkaarten</h4>
+    
     {% if beschikbare_postkaarten %}
       <ul class="list-inline mt-5 mb-4">
         <li class="list-inline-item fw-bold">Mijn Postkaarten</li>
@@ -187,7 +263,7 @@
     {% set beschikbare_posters = posters | selectattr('sold', 'equalto', False) | list %}
     {% set verkochte_posters = posters | selectattr('sold', 'equalto', True) | list %}
 
-    <h4 class="mt-5"> Mijn Posters</h4>
+    
     {% if beschikbare_posters %}
       <ul class="list-inline mt-5 mb-4">
         <li class="list-inline-item fw-bold">Mijn Posters</li>
@@ -222,7 +298,7 @@
     {% set beschikbare_kunst = kunst | selectattr('sold', 'equalto', False) | list %}
     {% set verkochte_kunst = kunst | selectattr('sold', 'equalto', True) | list %}
 
-    <h4 class="mt-5"> Mijn Kunst</h4>
+  
     {% if beschikbare_kunst %}
       <ul class="list-inline mt-5 mb-4">
         <li class="list-inline-item fw-bold">Mijn Kunst</li>
