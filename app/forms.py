@@ -71,7 +71,6 @@ class UpgradeAccountForm(FlaskForm):
     city = StringField('Stad', validators=[DataRequired(), Length(max=100)])
     business_name = StringField('Winkelnaam', validators=[DataRequired(), Length(max=150)])
     vat_number = StringField('BTW-nummer', validators=[DataRequired(), Length(max=32)])
-    image = FileField('Profielfoto', validators=[FileAllowed(['jpg', 'jpeg', 'png'], 'Alleen JPG of PNG toegestaan.')])
     show_on_map = BooleanField("Zichtbaar op de kaart")
     submit = SubmitField('Upgrade naar Pro')
 

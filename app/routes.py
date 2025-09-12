@@ -2446,10 +2446,6 @@ def upgrade_account():
         current_user.business_name = form.business_name.data
         current_user.vat_number = form.vat_number.data
         current_user.show_on_map = form.show_on_map.data
-        # Profielfoto opslaan
-        if form.image.data:
-            picture_file = save_picture(form.image.data)
-            current_user.image_file = picture_file
         current_user.account_type = "pro"
         current_user.pro_tier = "basic"
         db.session.commit()

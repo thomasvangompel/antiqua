@@ -15,13 +15,18 @@
     <h2>Jouw Profiel</h2>
 
     {% if current_user.account_type == 'pro' %}
-        <img src="{{ image_file }}" alt="Profielfoto" class="profile-pic rounded-circle mb-3"
-            id="profile-picture" style="cursor: pointer; width: 150px; height: 150px; object-fit: cover;">
-     {% endif %}
+        <label for="image-upload" style="cursor:pointer;">
+        {% if current_user.image_file == "default.png" or current_user.image_file == "default.jpg" %}
+            <span class="bi bi-person-circle profile-pic rounded-circle mb-3" style="font-size: 6rem;" id="profile-picture"></span>
+        {% else %}
+            <img src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}" alt="Profielfoto" class="profile-pic rounded-circle mb-3" id="profile-picture" style="cursor: pointer; width: 150px; height: 150px; object-fit: cover;">
+        {% endif %}
+        </label>
+    {% endif %}
 
-    
     <form method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
+        <input type="file" id="image-upload" name="image" style="display:none;" accept="image/*" onchange="previewProfilePic(this)">
 
         <!-- Verborgen input gekoppeld aan profielfoto -->
         <div class="mb-3" style="display: none;">
@@ -246,6 +251,30 @@ businessNameInput.addEventListener('input', () => {
     clearTimeout(debounceTimerBusiness);
     debounceTimerBusiness = setTimeout(checkBusinessName, 500);
 });
+</script>
+
+<script>
+function previewProfilePic(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            var pic = document.getElementById('profile-picture');
+            if (pic.tagName === 'IMG') {
+                pic.src = e.target.result;
+            } else {
+                // Vervang icon door img
+                var img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = pic.className;
+                img.id = 'profile-picture';
+                img.style.cssText = pic.style.cssText;
+                pic.parentNode.replaceChild(img, pic);
+            }
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+    setTimeout(function(){ input.form.submit(); }, 500);
+}
 </script>
 
 {% endblock %}
