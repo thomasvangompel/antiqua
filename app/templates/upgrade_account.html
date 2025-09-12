@@ -59,37 +59,15 @@
         </div>
       </div>
     </div>
-    <div class="row justify-content-center g-4 mb-4">
-      <div class="col-md-6">
-        <div class="card shadow h-100 bg-success text-white" style="height: 180px; border-radius: 0;">
-          <div class="card-body d-flex flex-column justify-content-center align-items-center">
-            <span class="fs-2 mb-2"><i class="bi bi-gem"></i></span>
-            <h5 class="card-title">Pro gratis</h5>
-            <p class="card-text">Tot 250 items volledig gratis!</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card shadow h-100 bg-primary text-white" style="height: 180px; border-radius: 0;">
-          <div class="card-body d-flex flex-column justify-content-center align-items-center">
-            <span class="fs-2 mb-2"><i class="bi bi-unlock"></i></span>
-            <h5 class="card-title">Pro betaald</h5>
-            <p class="card-text">Onbeperkt items voor €15,99 per maand.</p>
-          </div>
-        </div>
-      </div>
-    </div>
+  <!-- Pro gratis en Pro betaald kaarten verwijderd voor één duidelijke upgrade-knop -->
     <div class="row justify-content-center mb-4">
       <div class="col-lg-8 col-md-10">
         <div class="card shadow h-100" style="border-radius: 0;">
           <div class="card-body">
             <form method="POST" action="{{ url_for('main.upgrade_account') }}">
               <fieldset>
-                <legend class="fs-3 mb-3 text-success fw-bold d-flex align-items-center">
-                  <i class="bi bi-gem me-2"></i>
-                  Start gratis
-                </legend>
-                {% for field in form if field.type != 'CSRFToken' %}
+                {{ form.hidden_tag() }}
+                {% for field in form if field.name != 'csrf_token' and field.type != 'HiddenField' %}
                   {% if field.name == 'show_on_map' %}
                     <div class="form-check mb-3 text-start">
                       {{ field(class="form-check-input") }}
@@ -105,9 +83,6 @@
                     </div>
                   {% endif %}
                 {% endfor %}
-                <button type="submit" class="btn btn-success w-100 py-3 fs-5 fw-bold d-flex justify-content-center align-items-center border border-3 border-warning shadow-lg">
-                  <i class="bi bi-gem me-2"></i> Start gratis
-                </button>
               </fieldset>
             </form>
           </div>
