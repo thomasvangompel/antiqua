@@ -72,7 +72,7 @@
     <div class="d-flex flex-column flex-md-row align-items-center mb-4">
       <!-- Profielfoto -->
       {% if user.image_file == "default.png" or user.image_file == "default.jpg" %}
-        <span class="bi bi-person-circle profile-pic" style="font-size: 3rem;"></span>
+        <span class="bi bi-person-circle profile-pic" style="font-size: 6rem;"></span>
       {% else %}
         <img src="{{ url_for('static', filename='profile_pics/' + user.image_file) }}" alt="Profielfoto" class="profile-pic" />
       {% endif %}

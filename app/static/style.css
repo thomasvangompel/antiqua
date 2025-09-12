@@ -454,3 +454,82 @@ img {
 .slide6 { background: linear-gradient(to bottom, #f3e5f5, #e0f7fa); color: #222; }
 .slide7 { background: linear-gradient(to bottom, #e0e7ff, #e0f2f1); color: #222; }
 
+/* Fullscreen overlay menu styles - 100% breedte, geen zwarte randen, X blijft hamburger animatie */
+.fullscreen-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  min-width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  background: #fff;
+  z-index: 9999;
+  display: none;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  transition: opacity 0.3s ease;
+  box-shadow: none;
+}
+.fullscreen-menu-overlay.active {
+  display: flex;
+  opacity: 1;
+}
+.fullscreen-menu-content {
+  width: 100vw;
+  max-width: 100vw;
+  margin: 0;
+  text-align: center;
+  position: relative;
+  padding-top: 80px;
+  background: transparent;
+}
+.fullscreen-menu-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.fullscreen-menu-content .nav-link {
+  font-size: 2.2rem;
+  margin: 1.2rem 0;
+  color: #222;
+  font-weight: bold;
+  transition: color 0.2s;
+  width: 100vw;
+  max-width: 100vw;
+  background: transparent;
+}
+.fullscreen-menu-content .nav-link:hover {
+  color: #007bff;
+  background: rgba(0,123,255,0.07);
+}
+.close-menu-btn {
+  position: absolute;
+  top: 30px;
+  right: 40px;
+  font-size: 0;
+  background: none;
+  border: none;
+  color: #222;
+  cursor: pointer;
+  z-index: 10001;
+  line-height: 1;
+}
+/* Verberg de standaard X, hamburger animatie wordt gebruikt */
+.close-menu-btn::after {
+  content: '';
+}
+@media (max-width: 600px) {
+  .fullscreen-menu-content {
+    padding-top: 60px;
+  }
+  .close-menu-btn {
+    top: 10px;
+    right: 20px;
+  }
+}
+

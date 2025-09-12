@@ -68,6 +68,150 @@
     .container.mt-4 {
       flex: 1;
     }
+
+    .fullscreen-menu {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(255,255,255,0.98);
+      z-index: 2000;
+      display: none;
+      transition: opacity 0.3s;
+    }
+    .fullscreen-menu.active {
+      display: block;
+      opacity: 1;
+    }
+    .fullscreen-menu-content {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-close-x {
+      width: 60px;
+      height: 60px;
+      cursor: pointer;
+      z-index: 2100;
+    }
+
+    /* Fullscreen overlay menu styles - OVERRIDE alles, geen zwart, 100vw/100vh, geen border-radius, geen box-shadow */
+    .fullscreen-menu-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw !important;
+      min-width: 100vw !important;
+      height: 100vh !important;
+      min-height: 100vh !important;
+      background: #fff !important;
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      transition: opacity 0.3s ease;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      opacity: 1 !important;
+    }
+
+    .fullscreen-menu-overlay.active {
+      display: flex !important;
+      opacity: 1 !important;
+    }
+
+    .fullscreen-menu-content {
+      width: 100vw !important;
+      max-width: 100vw !important;
+      margin: 0 !important;
+      text-align: center;
+      position: relative;
+      padding-top: 80px;
+      background: transparent !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      height: auto !important;
+      transform: translateY(-80px);
+      opacity: 0;
+      transition: transform 1s cubic-bezier(.5,0,.5,1), opacity 1s cubic-bezier(.5,0,.5,1);
+    }
+
+    .fullscreen-menu-overlay.active .fullscreen-menu-content {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .fullscreen-menu-content ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .fullscreen-menu-content .nav-link {
+      font-size: 2.2rem;
+      margin: 1.2rem 0;
+      color: #222;
+      font-weight: bold;
+      transition: color 0.2s;
+      width: 100vw !important;
+      max-width: 100vw !important;
+      background: transparent !important;
+    }
+
+    .fullscreen-menu-content .nav-link:hover {
+      color: #007bff;
+      background: rgba(0,123,255,0.07);
+    }
+
+    .close-menu-btn {
+      position: absolute;
+      top: 30px;
+      right: 40px;
+      font-size: 0;
+      background: none;
+      border: none;
+      color: #222;
+      cursor: pointer;
+      z-index: 10001;
+      line-height: 1;
+    }
+
+    .close-menu-btn::after {
+      content: '';
+    }
+
+    /* Hamburger als sluitknop in overlay */
+    .fullscreen-menu-overlay .hamburger {
+      position: absolute;
+      top: 30px;
+      right: 40px;
+      z-index: 10001;
+      display: block;
+      cursor: pointer;
+    }
+    @media (max-width: 600px) {
+      .fullscreen-menu-overlay .hamburger {
+        top: 10px;
+        right: 20px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .fullscreen-menu-content {
+        padding-top: 60px;
+      }
+
+      .close-menu-btn {
+        top: 10px;
+        right: 20px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -75,69 +219,17 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white">
   <div class="container">
     <a class="navbar-brand brand-bordered" href="{{ url_for('main.home') }}">Antiqua.be</a>
-    <button class="navbar-toggler hamburger hamburger--slider border-0 shadow-none p-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler hamburger hamburger--slider border-0 shadow-none p-0" type="button" aria-label="Toggle navigation" id="hamburgerMenuBtn">
       <span class="hamburger-box">
         <span class="hamburger-inner"></span>
       </span>
     </button>
-<script>
-  // Hamburger animatie toggle
-  document.addEventListener('DOMContentLoaded', function() {
-    var toggler = document.querySelector('.navbar-toggler.hamburger');
-    var nav = document.getElementById('navbarNav');
-    if (toggler && nav) {
-      nav.addEventListener('show.bs.collapse', function() {
-        toggler.classList.add('is-active');
-      });
-      nav.addEventListener('hide.bs.collapse', function() {
-        toggler.classList.remove('is-active');
-      });
-    }
-  });
-</script>
-
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto align-items-lg-center text-black">
-
-        <!-- Mobiele winkelkar link - ALTIJD tonen -->
-        <li class="nav-item d-lg-none position-relative">
-          <a class="nav-link position-relative d-flex align-items-center" href="{{ url_for('main.cart') }}">
-            <span>Winkelkar</span>
-            {% if cart_count > 0 %}
-            <span class="badge bg-danger rounded-pill ms-2">
-              {{ cart_count }}
-              <span class="visually-hidden">items in winkelwagen</span>
-            </span>
-            {% endif %}
-          </a>
-        </li>
-
+    <div class="d-none d-lg-block ms-auto">
+      <ul class="navbar-nav align-items-lg-center text-black">
         {% if current_user.is_authenticated %}
-
-          <!-- Mobiele berichten link -->
-          <li class="nav-item d-lg-none">
-            <a class="nav-link position-relative d-flex align-items-center" href="{{ url_for('main.messages') }}">
-              <i class="fas fa-envelope me-1"></i>
-              {% if new_message_count > 0 %}
-              <span class="badge bg-green rounded-pill position-absolute top-0 start-10 translate-middle"
-                    style="transform: translate(-40%, 50%);">
-                {{ new_message_count }}
-                <span class="visually-hidden">nieuwe berichten</span>
-              </span>
-              {% endif %}
-              <span>Berichten</span>
-            </a>
-          </li>
-
-          <li class="nav-item">
+          <li class="nav-item d-none d-lg-block ms-3">
             <a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('main.logout') }}">Logout</a>
-          </li>
-
-          <!-- Desktop berichten icoon -->
           <li class="nav-item d-none d-lg-block ms-3 position-relative">
             <a class="nav-link" href="{{ url_for('main.messages') }}" title="Berichten">
               <i class="fas fa-envelope fa-lg"></i>
@@ -150,8 +242,6 @@
               {% endif %}
             </a>
           </li>
-
-          <!-- Desktop winkelwagen icoon -->
           <li class="nav-item d-none d-lg-block ms-3 position-relative">
             <a class="nav-link" href="{{ url_for('main.cart') }}" title="Winkelwagen">
               <i class="fas fa-shopping-cart fa-lg"></i>
@@ -162,17 +252,17 @@
               </span>
             </a>
           </li>
-
+          <li class="nav-item d-none d-lg-block ms-3">
+            <a class="nav-link" href="{{ url_for('main.logout') }}">Logout</a>
+          </li>
         {% else %}
-          <li class="nav-item">
+          <li class="nav-item d-none d-lg-block">
             <a class="nav-link" href="{{ url_for('main.login') }}">Login</a>
           </li>
           <span class="mx-2 d-none d-lg-inline">|</span>
-          <li class="nav-item">
+          <li class="nav-item d-none d-lg-block">
             <a class="nav-link" href="{{ url_for('main.register') }}">Registreer</a>
           </li>
-
-          <!-- Desktop winkelwagen icoon -->
           <li class="nav-item d-none d-lg-block ms-3 position-relative">
             <a class="nav-link" href="{{ url_for('main.cart') }}" title="Winkelwagen">
               <i class="fas fa-shopping-cart fa-lg"></i>
@@ -185,6 +275,45 @@
           </li>
         {% endif %}
       </ul>
+    </div>
+    <!-- Fullscreen overlay menu -->
+    <div id="fullscreenMenu" class="fullscreen-menu-overlay">
+      <button class="navbar-toggler hamburger hamburger--slider border-0 shadow-none p-0" type="button" aria-label="Sluit menu" id="hamburgerCloseBtn">
+        <span class="hamburger-box">
+          <span class="hamburger-inner"></span>
+        </span>
+      </button>
+      <div class="fullscreen-menu-content">
+        <ul class="navbar-nav text-black">
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main.home') }}">Home</a>
+          </li>
+          {% if current_user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main.messages') }}">Berichten</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main.cart') }}">Winkelkar</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main.logout') }}">Logout</a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main.login') }}">Login</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main.register') }}">Registreer</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main.cart') }}">Winkelkar</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
     </div>
   </div>
 </nav>
@@ -292,24 +421,54 @@
           headers: { 'Content-Type': 'application/json' }
         })
         .then(res => res.json())
-        .then(data => {
+        .then data => {
           if(data.success) {
             const badge = document.getElementById('cart-badge');
-            if (badge) {
-              badge.textContent = data.cart_count;
-              badge.style.display = data.cart_count > 0 ? 'inline-block' : 'none';
+            if(badge) {
+              badge.innerText = data.cart_item_count;
+              badge.classList.remove('d-none');
             }
-          } else {
-            alert('Fout bij toevoegen aan winkelwagen.');
           }
         })
-        .catch(() => alert('Serverfout bij toevoegen aan winkelwagen.'));
+        .catch(error => console.error('Error:', error));
       });
     });
   });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var hamburgerBtn = document.getElementById('hamburgerMenuBtn');
+  var overlay = document.getElementById('fullscreenMenu');
+  var hamburgerCloseBtn = document.getElementById('hamburgerCloseBtn');
+  function openMenu() {
+    overlay.classList.add('active');
+    hamburgerBtn.classList.add('is-active');
+    hamburgerCloseBtn.classList.add('is-active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeMenu() {
+    overlay.classList.remove('active');
+    hamburgerBtn.classList.remove('is-active');
+    hamburgerCloseBtn.classList.remove('is-active');
+    document.body.style.overflow = '';
+  }
+  hamburgerBtn.addEventListener('click', function() {
+    if (overlay.classList.contains('active')) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  });
+  hamburgerCloseBtn.addEventListener('click', closeMenu);
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeMenu();
+  });
+  overlay.querySelectorAll('.nav-link').forEach(function(link) {
+    link.addEventListener('click', closeMenu);
+  });
+});
+</script>
 
 {% block scripts %}{% endblock %}
-
 </body>
 </html>
