@@ -10,7 +10,7 @@ from app.utils import send_appointment_email
 import secrets
 from PIL import Image
 
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, logout_user
 
 
 import os
@@ -287,7 +287,10 @@ def save_picture(form_picture):
     random_hex = secrets.token_hex(8)
     _, f_ext = os.path.splitext(form_picture.filename)
     picture_fn = random_hex + f_ext
-    picture_path = os.path.join(current_app.root_path, 'static/profile_pics', picture_fn)
+    # Ensure directory exists
+    dir_path = os.path.join(current_app.root_path, 'static', 'profile_pics')
+    os.makedirs(dir_path, exist_ok=True)
+    picture_path = os.path.join(dir_path, picture_fn)
     output_size = (125, 125)
     i = Image.open(form_picture)
     i.thumbnail(output_size)
@@ -310,15 +313,16 @@ def inject_new_message_count():
 
 
 @main.route('/')
-@login_required
 def home():
-    if not profiel_is_ingevuld(current_user):
+    # Only enforce profile completeness for logged-in users
+    if current_user.is_authenticated and not profiel_is_ingevuld(current_user):
         flash('Vul eerst je profiel volledig in voordat je verder kunt!', 'warning')
         return redirect(url_for('main.profile'))
+
     verkopers_met_boeken_of_postkaarten = (
         User.query
         .filter(
-            or_(User.books.any(), User.postcards.any()),  # minstens één boek OF postkaart
+            or_(User.books.any(), User.postcards.any()),
             User.latitude.isnot(None),
             User.longitude.isnot(None),
             User.business_name.isnot(None),
@@ -326,7 +330,6 @@ def home():
         )
         .all()
     )
-
     return render_template("home.html", verkopers=verkopers_met_boeken_of_postkaarten)
 
 
@@ -610,7 +613,10 @@ def save_picture(form_picture):
     random_hex = secrets.token_hex(8)
     _, f_ext = os.path.splitext(form_picture.filename)
     picture_fn = random_hex + f_ext
-    picture_path = os.path.join(current_app.root_path, 'static/profile_pics', picture_fn)
+    # Ensure directory exists
+    dir_path = os.path.join(current_app.root_path, 'static', 'profile_pics')
+    os.makedirs(dir_path, exist_ok=True)
+    picture_path = os.path.join(dir_path, picture_fn)
 
     img = Image.open(form_picture)
 
@@ -2566,4 +2572,5 @@ def save_appointment_slots():
         db.session.commit()
         return jsonify({'status': 'success', 'message': f'Tijdsloten succesvol opgeslagen. Nieuw: {created_count}, overgeslagen: {skipped_count}', 'created': created_count, 'skipped': skipped_count})
     except Exception as e:
+        return jsonify({'status': 'error', 'errors': [str(e)]}), 500
         return jsonify({'status': 'error', 'errors': [str(e)]}), 500
